@@ -1,31 +1,35 @@
 import React, { useState } from "react";
-import { FiEye, FiEyeOff } from "react-icons/fi";
+import EnterOTPCode from "./EnterOTPCode";
 
 interface ForgotPasswordProps {
   onClose: () => void;
 }
 
 const ForgotPassword: React.FC<ForgotPasswordProps> = ({ onClose }) => {
-  const [oldPassword, setOldPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-
-  const [showOldPassword, setShowOldPassword] = useState(false);
-  const [showNewPassword, setShowNewPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [email, setEmail] = useState("");
+  const [enterOtpCode, setEnterOtpCode] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (newPassword !== confirmPassword) {
-      alert("Mật khẩu mới và nhập lại không khớp");
+
+    // Kiểm tra email có hợp lệ không
+    if (!email.trim()) {
+      alert("Vui lòng nhập email!");
       return;
     }
-    alert("Thay đổi mật khẩu thành công!");
-    onClose();
+
+    // TODO: Xử lý gửi email khôi phục mật khẩu ở đây
+    // Giả sử API call thành công
+
+    // Hiển thị modal EnterOTPCode thay vì đóng modal hiện tại
+    setEnterOtpCode(true);
+
+    // Không gọi onClose() ở đây nữa
+    // onClose(); // ← Xóa dòng này
   };
 
   return (
-    <div>
+    <>
       <div className="bg-white rounded-lg shadow-lg p-6 w-[400px] relative">
         {/* Nút đóng popup */}
         <button
@@ -36,74 +40,48 @@ const ForgotPassword: React.FC<ForgotPasswordProps> = ({ onClose }) => {
           ✕
         </button>
 
-        <h3 className="text-xl font-semibold mb-4 text-center">Quên mật khẩu</h3>
+        <h3 className="text-xl font-semibold mb-4 text-center">
+          Quên mật khẩu
+        </h3>
+        <p className="text-x2 text-[#323333] mb-4 text-center">
+          Vui lòng nhập email của bạn
+        </p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-
-          {/* Mật khẩu cũ */}
+          {/* Trường nhập email */}
           <div className="relative">
             <input
-              type={showOldPassword ? "text" : "password"}
-              placeholder="Mật khẩu cũ"
+              type="email"
+              placeholder="Email của bạn"
               className="w-full px-4 py-2 border rounded-md"
-              value={oldPassword}
-              onChange={(e) => setOldPassword(e.target.value)}
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               required
             />
-            <span
-              className="absolute right-4 top-2.5 cursor-pointer text-gray-600"
-              onClick={() => setShowOldPassword(!showOldPassword)}
-            >
-              {showOldPassword ? <FiEyeOff size={20} /> : <FiEye size={20} />}
-            </span>
-          </div>
-
-          {/* Mật khẩu mới */}
-          <div className="relative">
-            <input
-              type={showNewPassword ? "text" : "password"}
-              placeholder="Mật khẩu mới"
-              className="w-full px-4 py-2 border rounded-md"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              required
-            />
-            <span
-              className="absolute right-4 top-2.5 cursor-pointer text-gray-600"
-              onClick={() => setShowNewPassword(!showNewPassword)}
-            >
-              {showNewPassword ? <FiEyeOff size={20} /> : <FiEye size={20} />}
-            </span>
-          </div>
-
-          {/* Nhập lại mật khẩu */}
-          <div className="relative">
-            <input
-              type={showConfirmPassword ? "text" : "password"}
-              placeholder="Nhập lại mật khẩu mới"
-              className="w-full px-4 py-2 border rounded-md"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              required
-            />
-            <span
-              className="absolute right-4 top-2.5 cursor-pointer text-gray-600"
-              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-            >
-              {showConfirmPassword ? <FiEyeOff size={20} /> : <FiEye size={20} />}
-            </span>
           </div>
 
           {/* Nút submit */}
           <button
             type="submit"
-            className="w-full py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
+            className="w-full py-3 bg-[#2A9D8F] text-white rounded-md hover:bg-[#228B7E] transition"
           >
-            Thay đổi mật khẩu
+            Gửi mã OTP
           </button>
         </form>
       </div>
-    </div>
+
+      {/* Modal nhập mã OTP */}
+      {enterOtpCode && (
+        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex justify-center items-center z-50">
+          <EnterOTPCode
+            onClose={() => {
+              setEnterOtpCode(false);
+              onClose(); // Đóng cả modal ForgotPassword khi đóng EnterOTPCode
+            }}
+          />
+        </div>
+      )}
+    </>
   );
 };
 

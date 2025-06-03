@@ -80,7 +80,7 @@ export default function RegisterPage() {
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [errors, setErrors] = useState({});
+  // const [errors, setErrors] = useState({});
 
   // Danh sách lĩnh vực kinh doanh
   const businessFieldOptions = [
