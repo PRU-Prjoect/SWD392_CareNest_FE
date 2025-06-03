@@ -3,9 +3,9 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        momo: '#A50064',
-        zalopay: '#008FE5',
-        
+        momo: "#A50064",
+        zalopay: "#008FE5",
+
         primary: {
           50: "#eff6ff",
           100: "#dbeafe",
@@ -30,6 +30,8 @@ module.exports = {
           800: "#1f2937",
           900: "#111827",
         },
+        blue: { 100: "#E7F3F5" },
+
         success: {
           50: "#ecfdf5",
           500: "#10b981",
