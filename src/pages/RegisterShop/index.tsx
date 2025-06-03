@@ -18,17 +18,51 @@ import { useNavigate } from "react-router-dom";
 export default function RegisterPage() {
   const navigate = useNavigate();
 
-  // States cho form
-  const [formData, setFormData] = useState({
+  interface FormData {
+    businessName: string;
+    businessAddress: string;
+    phoneNumber: string;
+    email: string;
+    password: string;
+    confirmPassword: string;
+    businessFields: string[]; // Thay vì never[]
+    representativeName: string;
+    workScheduleType: string;
+    allWeekHours: {
+      startTime: string;
+      endTime: string;
+    };
+    customSchedule: {
+      monday: { isWorking: boolean; startTime: string; endTime: string };
+      tuesday: { isWorking: boolean; startTime: string; endTime: string };
+      wednesday: { isWorking: boolean; startTime: string; endTime: string };
+      thursday: { isWorking: boolean; startTime: string; endTime: string };
+      friday: { isWorking: boolean; startTime: string; endTime: string };
+      saturday: { isWorking: boolean; startTime: string; endTime: string };
+      sunday: { isWorking: boolean; startTime: string; endTime: string };
+    };
+  }
+
+  type DayKey =
+    | "monday"
+    | "tuesday"
+    | "wednesday"
+    | "thursday"
+    | "friday"
+    | "saturday"
+    | "sunday";
+
+  // Sử dụng interface trong useState
+  const [formData, setFormData] = useState<FormData>({
     businessName: "",
     businessAddress: "",
     phoneNumber: "",
     email: "",
     password: "",
     confirmPassword: "",
-    businessFields: [],
+    businessFields: [] as string[], // Khởi tạo đúng kiểu
     representativeName: "",
-    workScheduleType: "", // 'all-week' hoặc 'custom'
+    workScheduleType: "",
     allWeekHours: {
       startTime: "08:00",
       endTime: "17:00",
@@ -72,7 +106,7 @@ export default function RegisterPage() {
   ];
 
   // Xử lý thay đổi checkbox cho lĩnh vực kinh doanh
-  const handleBusinessFieldChange = (field) => {
+  const handleBusinessFieldChange = (field: string) => {
     setFormData((prev) => ({
       ...prev,
       businessFields: prev.businessFields.includes(field)
@@ -109,8 +143,12 @@ export default function RegisterPage() {
     }));
   };
 
-  // Xử lý thay đổi lịch tùy chỉnh
-  const handleCustomScheduleChange = (day, field, value) => {
+  // Cập nhật function với đúng kiểu
+  const handleCustomScheduleChange = (
+    day: DayKey,
+    field: "isWorking" | "startTime" | "endTime",
+    value: boolean | string
+  ) => {
     setFormData((prev) => ({
       ...prev,
       customSchedule: {
