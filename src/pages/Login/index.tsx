@@ -109,7 +109,7 @@ export default function LoginPage() {
                 Chưa có tài khoản?{" "}
                 <button
                   type="button"
-                  onClick={() => navigate("/register")}
+                  onClick={() => navigate("/registertype")}
                   className="text-[#2A9D8F] font-medium hover:underline"
                 >
                   Đăng ký ngay!

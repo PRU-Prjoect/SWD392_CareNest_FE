@@ -240,7 +240,7 @@ export default function RegisterPage() {
           <p className="text-sm text-center mt-4">
             Đã có tài khoản?{" "}
             <a
-              href="#"
+              href="/login"
               className="text-[#2A9D8F] font-semibold hover:underline"
             >
               Đăng nhập ngay!

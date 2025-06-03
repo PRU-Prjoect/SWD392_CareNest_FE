@@ -10,9 +10,8 @@ import TaskManager from "@/pages/Dashboard/TaskManager";
 import TaskReport from "@/pages/Dashboard/taskReport";
 import ServicePackage from "@/pages/Dashboard/ServicePackage";
 import WalletPage from "@/pages/Dashboard/Wallet";
-
-
-
+import RegisterType from "@/pages/RegisterType";
+import RegisterShop from "@/pages/RegisterShop";
 
 function AppRoutes() {
   return (
@@ -22,8 +21,11 @@ function AppRoutes() {
         <Route path="/home" element={<HomePage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/registertype" element={<RegisterType />} />
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/time-management" element={<PomodoroPage />} />
+        <Route path="/registershop" element={<RegisterShop />} />
+
         <Route
           path="/employee-management"
           element={
@@ -32,43 +34,40 @@ function AppRoutes() {
             </AppLayout>
           }
         />
-        <Route 
-          path="/task-manager" 
+        <Route
+          path="/task-manager"
           element={
             <AppLayout>
               <TaskManager />
             </AppLayout>
-          } 
+          }
         />
-        
-        <Route 
-          path="/task-report" 
+
+        <Route
+          path="/task-report"
           element={
             <AppLayout>
               <TaskReport />
             </AppLayout>
-          } 
+          }
         />
-        <Route 
-          path="/service-package" 
+        <Route
+          path="/service-package"
           element={
             <AppLayout>
               <ServicePackage />
             </AppLayout>
-          } 
-         />
+          }
+        />
 
-         <Route 
-          path="/wallet" 
+        <Route
+          path="/wallet"
           element={
             <AppLayout>
               <WalletPage />
             </AppLayout>
-          } 
-         />
-
-
-
+          }
+        />
       </Routes>
     </Router>
   );
