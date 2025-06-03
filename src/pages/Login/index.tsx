@@ -122,7 +122,7 @@ export default function LoginPage() {
         <div className="w-1/2 bg-[#E7F3F5] flex flex-col justify-center items-center">
           <div className="w-full max-w-4xl mx-auto p-4 md:p-6 lg:p-8 rounded-lg fixed-size">
             <img
-              src="/public/image/Xanh_dương_pastel_Cầu_vồng_Chương_trình_Đọc_viết_Logo-removebg-preview 1.png"
+              src="/public/image/ranbowlogo.png"
               alt="Logo"
               className="w-full h-auto object-contain max-w-full"
               style={{

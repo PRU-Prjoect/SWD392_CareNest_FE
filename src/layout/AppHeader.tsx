@@ -42,7 +42,7 @@ const AppHeader: React.FC = () => {
   }, []);
 
   return (
-    <header className="sticky top-0 flex w-full bg-blue-500 shadow-md z-50 border-b border-blue-600 dark:bg-gray-900 dark:border-gray-800">
+    <header className="sticky top-0 flex w-full bg-[#2A9D8F] shadow-md z-50 border-b border-blue-600 dark:bg-gray-900 dark:border-gray-800">
       <div className="flex flex-col items-center justify-between grow lg:flex-row lg:px-6">
         <div className="flex items-center justify-between w-full gap-2 px-3 py-3 border-b border-gray-200 dark:border-gray-800 sm:gap-4 lg:justify-normal lg:border-b-0 lg:px-0 lg:py-4">
           <button
@@ -86,14 +86,14 @@ const AppHeader: React.FC = () => {
           <Link to="/" className="lg:hidden">
             <img
               className="dark:hidden"
-              src="/image/hinh2-removebg-preview.png"
+              src="/public/image/ranbowlogo.png"
               alt="Logo"
               width={80}
               height={40}
             />
             <img
               className="hidden dark:block"
-              src="/image/hinh2-removebg-preview.png"
+              src="/public/image/ranbowlogo.png"
               alt="Logo"
               width={80}
               height={40}
@@ -122,7 +122,11 @@ const AppHeader: React.FC = () => {
         </div>
 
         {/* Right side of header */}
-        <div className={`${isApplicationMenuOpen ? "flex" : "hidden"} items-center justify-between w-full gap-4 px-5 py-4 lg:flex shadow-theme-md lg:justify-end lg:px-0 lg:shadow-none`}>
+        <div
+          className={`${
+            isApplicationMenuOpen ? "flex" : "hidden"
+          } items-center justify-between w-full gap-4 px-5 py-4 lg:flex shadow-theme-md lg:justify-end lg:px-0 lg:shadow-none`}
+        >
           <div className="flex items-center gap-4 2xsm:gap-6">
             <NotificationDropdown />
 
@@ -137,7 +141,8 @@ const AppHeader: React.FC = () => {
                   alt="User avatar"
                   className="object-cover w-full h-full"
                   onError={(e) => {
-                    (e.target as HTMLImageElement).src = "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='40' r='20' fill='%23ddd'/%3E%3Ccircle cx='50' cy='100' r='40' fill='%23ddd'/%3E%3C/svg%3E";
+                    (e.target as HTMLImageElement).src =
+                      "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='40' r='20' fill='%23ddd'/%3E%3Ccircle cx='50' cy='100' r='40' fill='%23ddd'/%3E%3C/svg%3E";
                   }}
                 />
               </button>
