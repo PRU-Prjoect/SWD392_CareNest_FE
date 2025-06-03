@@ -1,4 +1,4 @@
-// File: src/pages/RegisterPage.tsx
+// File: src/pages/RegisterPage.tsx (thêm vào form đăng ký)
 import { useState } from "react";
 import {
   User,
@@ -10,6 +10,8 @@ import {
   MapPin,
   Building,
   Briefcase,
+  Clock,
+  ChevronDown,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -24,8 +26,22 @@ export default function RegisterPage() {
     email: "",
     password: "",
     confirmPassword: "",
-    businessFields: [], // Mảng để lưu nhiều lựa chọn
+    businessFields: [],
     representativeName: "",
+    workScheduleType: "", // 'all-week' hoặc 'custom'
+    allWeekHours: {
+      startTime: "08:00",
+      endTime: "17:00",
+    },
+    customSchedule: {
+      monday: { isWorking: true, startTime: "08:00", endTime: "17:00" },
+      tuesday: { isWorking: true, startTime: "08:00", endTime: "17:00" },
+      wednesday: { isWorking: true, startTime: "08:00", endTime: "17:00" },
+      thursday: { isWorking: true, startTime: "08:00", endTime: "17:00" },
+      friday: { isWorking: true, startTime: "08:00", endTime: "17:00" },
+      saturday: { isWorking: true, startTime: "08:00", endTime: "14:00" },
+      sunday: { isWorking: false, startTime: "08:00", endTime: "17:00" },
+    },
   });
 
   const [showPassword, setShowPassword] = useState(false);
@@ -44,6 +60,17 @@ export default function RegisterPage() {
     "Chăm sóc đặc biệt",
   ];
 
+  // Danh sách các ngày trong tuần
+  const daysOfWeek = [
+    { key: "monday", label: "Thứ 2" },
+    { key: "tuesday", label: "Thứ 3" },
+    { key: "wednesday", label: "Thứ 4" },
+    { key: "thursday", label: "Thứ 5" },
+    { key: "friday", label: "Thứ 6" },
+    { key: "saturday", label: "Thứ 7" },
+    { key: "sunday", label: "Chủ nhật" },
+  ];
+
   // Xử lý thay đổi checkbox cho lĩnh vực kinh doanh
   const handleBusinessFieldChange = (field) => {
     setFormData((prev) => ({
@@ -54,7 +81,7 @@ export default function RegisterPage() {
     }));
   };
 
-  // Xử lý thay đổi input
+  // Xử lý thay đổi input thông thường
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -63,9 +90,41 @@ export default function RegisterPage() {
     }));
   };
 
+  // Xử lý thay đổi loại lịch làm việc
+  const handleWorkScheduleTypeChange = (e) => {
+    setFormData((prev) => ({
+      ...prev,
+      workScheduleType: e.target.value,
+    }));
+  };
+
+  // Xử lý thay đổi giờ làm việc toàn tuần
+  const handleAllWeekHoursChange = (field, value) => {
+    setFormData((prev) => ({
+      ...prev,
+      allWeekHours: {
+        ...prev.allWeekHours,
+        [field]: value,
+      },
+    }));
+  };
+
+  // Xử lý thay đổi lịch tùy chỉnh
+  const handleCustomScheduleChange = (day, field, value) => {
+    setFormData((prev) => ({
+      ...prev,
+      customSchedule: {
+        ...prev.customSchedule,
+        [day]: {
+          ...prev.customSchedule[day],
+          [field]: value,
+        },
+      },
+    }));
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Xử lý logic đăng ký ở đây
     console.log("Form data:", formData);
   };
 
@@ -163,11 +222,7 @@ export default function RegisterPage() {
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute top-3.5 right-3 cursor-pointer text-gray-500"
               >
-                {showPassword ? (
-                  <Lock className="w-5 h-5" />
-                ) : (
-                  <Lock className="w-5 h-5" />
-                )}
+                <Lock className="w-5 h-5" />
               </div>
             </div>
 
@@ -186,11 +241,7 @@ export default function RegisterPage() {
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                 className="absolute top-3.5 right-3 cursor-pointer text-gray-500"
               >
-                {showConfirmPassword ? (
-                  <Lock className="w-5 h-5" />
-                ) : (
-                  <Lock className="w-5 h-5" />
-                )}
+                <Lock className="w-5 h-5" />
               </div>
             </div>
 
@@ -216,6 +267,141 @@ export default function RegisterPage() {
                   </label>
                 ))}
               </div>
+            </div>
+
+            {/* Ngày làm việc */}
+            <div className="space-y-4">
+              <label className="flex items-center text-sm font-medium text-gray-700">
+                <Clock className="w-4 h-4 mr-2" />
+                Ngày làm việc:
+              </label>
+
+              {/* Dropdown chọn loại lịch */}
+              <div className="relative">
+                <select
+                  value={formData.workScheduleType}
+                  onChange={handleWorkScheduleTypeChange}
+                  className="w-full px-4 py-3 border rounded-lg pr-10 focus:outline-none focus:ring-2 focus:ring-[#2A9D8F] focus:border-transparent appearance-none bg-white"
+                  required
+                >
+                  <option value="">Chọn loại lịch làm việc</option>
+                  <option value="all-week">Toàn bộ các ngày trong tuần</option>
+                  <option value="custom">Tùy chỉnh</option>
+                </select>
+                <ChevronDown className="absolute top-3.5 right-3 w-5 h-5 text-gray-400 pointer-events-none" />
+              </div>
+
+              {/* Hiển thị component tương ứng */}
+              {formData.workScheduleType === "all-week" && (
+                <div className="border rounded-lg p-4 bg-gray-50">
+                  <h4 className="text-sm font-medium text-gray-700 mb-3">
+                    Giờ làm việc (áp dụng cho tất cả các ngày)
+                  </h4>
+                  <div className="flex items-center space-x-3">
+                    <div className="flex-1">
+                      <label className="block text-xs text-gray-600 mb-1">
+                        Giờ bắt đầu
+                      </label>
+                      <input
+                        type="time"
+                        value={formData.allWeekHours.startTime}
+                        onChange={(e) =>
+                          handleAllWeekHoursChange("startTime", e.target.value)
+                        }
+                        className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-[#2A9D8F]"
+                      />
+                    </div>
+                    <span className="text-gray-500 mt-6">-</span>
+                    <div className="flex-1">
+                      <label className="block text-xs text-gray-600 mb-1">
+                        Giờ kết thúc
+                      </label>
+                      <input
+                        type="time"
+                        value={formData.allWeekHours.endTime}
+                        onChange={(e) =>
+                          handleAllWeekHoursChange("endTime", e.target.value)
+                        }
+                        className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-[#2A9D8F]"
+                      />
+                    </div>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-2">
+                    Ví dụ: 8:00 - 17:00. Muốn tùy chỉnh chi tiết hơn, hãy chọn
+                    "Tùy chỉnh" ở trên.
+                  </p>
+                </div>
+              )}
+
+              {formData.workScheduleType === "custom" && (
+                <div className="border rounded-lg p-4 bg-gray-50 space-y-3">
+                  <h4 className="text-sm font-medium text-gray-700 mb-3">
+                    Tùy chỉnh lịch làm việc theo từng ngày
+                  </h4>
+                  {daysOfWeek.map((day) => (
+                    <div
+                      key={day.key}
+                      className="flex items-center space-x-3 p-3 bg-white rounded border"
+                    >
+                      <div className="w-20">
+                        <span className="text-sm font-medium text-gray-700">
+                          {day.label}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          checked={formData.customSchedule[day.key].isWorking}
+                          onChange={(e) =>
+                            handleCustomScheduleChange(
+                              day.key,
+                              "isWorking",
+                              e.target.checked
+                            )
+                          }
+                          className="rounded border-gray-300 text-[#2A9D8F] focus:ring-[#2A9D8F]"
+                        />
+                        <span className="text-xs text-gray-600">Làm việc</span>
+                      </div>
+
+                      {formData.customSchedule[day.key].isWorking && (
+                        <>
+                          <div className="flex-1">
+                            <input
+                              type="time"
+                              value={formData.customSchedule[day.key].startTime}
+                              onChange={(e) =>
+                                handleCustomScheduleChange(
+                                  day.key,
+                                  "startTime",
+                                  e.target.value
+                                )
+                              }
+                              className="w-full px-2 py-1 border rounded text-sm focus:outline-none focus:ring-1 focus:ring-[#2A9D8F]"
+                            />
+                          </div>
+                          <span className="text-gray-500 text-sm">-</span>
+                          <div className="flex-1">
+                            <input
+                              type="time"
+                              value={formData.customSchedule[day.key].endTime}
+                              onChange={(e) =>
+                                handleCustomScheduleChange(
+                                  day.key,
+                                  "endTime",
+                                  e.target.value
+                                )
+                              }
+                              className="w-full px-2 py-1 border rounded text-sm focus:outline-none focus:ring-1 focus:ring-[#2A9D8F]"
+                            />
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Tên người đại diện */}
