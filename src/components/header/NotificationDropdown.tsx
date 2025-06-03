@@ -87,7 +87,7 @@ export default function NotificationDropdown() {
                 <img
                   width={40}
                   height={40}
-                  src="/images/user/user-02.jpg"
+                  src="/image/avatar1.jpg"
                   alt="User"
                   className="w-full overflow-hidden rounded-full"
                 />
@@ -123,7 +123,7 @@ export default function NotificationDropdown() {
                 <img
                   width={40}
                   height={40}
-                  src="/images/user/user-03.jpg"
+                  src="/image/avatar4.jpg"
                   alt="User"
                   className="w-full overflow-hidden rounded-full"
                 />
@@ -159,7 +159,7 @@ export default function NotificationDropdown() {
                 <img
                   width={40}
                   height={40}
-                  src="/images/user/user-04.jpg"
+                  src="/image/avatar2.jpg"
                   alt="User"
                   className="w-full overflow-hidden rounded-full"
                 />
@@ -196,7 +196,7 @@ export default function NotificationDropdown() {
                 <img
                   width={40}
                   height={40}
-                  src="/images/user/user-05.jpg"
+                  src="image/avatar.jpg"
                   alt="User"
                   className="w-full overflow-hidden rounded-full"
                 />
@@ -232,7 +232,7 @@ export default function NotificationDropdown() {
                 <img
                   width={40}
                   height={40}
-                  src="/images/user/user-02.jpg"
+                  src="/image/avatar1.jpg"
                   alt="User"
                   className="w-full overflow-hidden rounded-full"
                 />

@@ -1,0 +1,39 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "name": "Phước Sang",
+      "avatar": "/image/avatar.jpg"
+    },
+    {
+      "id": 2,
+      "name": "Quốc Kiên",
+      "avatar": "/image/avatar2.jpg"
+    },
+    {
+      "id": 3,
+      "name": "Công Danh",
+      "avatar": "/image/avatar4.jpg"
+    }
+  ],
+  "tasks": [
+    {
+      "id": 1,
+      "list": "Todo",
+      "title": "Fix login bug",
+      "userId": 1
+    },
+    {
+      "id": 2,
+      "list": "Todo",
+      "title": "Design new button",
+      "userId": 2
+    },
+    {
+      "id": 3,
+      "list": "Todo",
+      "title": "Mún tăng lương",
+      "userId": 3
+    }
+  ]
+}

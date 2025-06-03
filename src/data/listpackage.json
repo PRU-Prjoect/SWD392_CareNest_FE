@@ -1,0 +1,28 @@
+[
+  {
+    "name": "Free",
+    "price": "Miễn phí",
+    "features": ["Tối đa 3 dự án", "3 người dùng"],
+    "buttonLabel": "Miễn phí",
+    "isActive": false
+  },
+  {
+    "name": "Pro",
+    "price": "299.000Đ/Tháng",
+    "features": ["Tối đa 10 dự án", "10 người dùng", "Tốc độ truy cập cao"],
+    "buttonLabel": "Đang sử dụng",
+    "isActive": true
+  },
+  {
+    "name": "Buiness",
+    "price": "599.000Đ/Tháng",
+    "features": [
+      "Không giới hạn dự án",
+      "Không giới hạn người dùng",
+      "Truy cập 24/7"
+    ],
+    "buttonLabel": "Mua",
+    "isActive": false
+  }
+]
+
