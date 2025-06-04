@@ -214,8 +214,9 @@ const AppSidebar: React.FC = () => {
             }`}
           />
           {(isExpanded || isHovered || isMobileOpen) && (
-            <span className="text-white font-semibold text-2xl select-none">
-              Pomodoro
+            <span className="font-semibold text-2xl select-none">
+              <span className="text-orange-500">Care</span>
+              <span className="text-white">Nest</span>{" "}
             </span>
           )}
         </Link>
