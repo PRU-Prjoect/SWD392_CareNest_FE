@@ -69,11 +69,13 @@ const MostBuy: React.FC = () => {
       <div className="container mx-auto px-4">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="inline-block">
-            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2 relative">
+          <div className="relative pb-3 w-full">
+            {" "}
+            {/* Changed to full width and added padding bottom */}
+            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
               LƯỢT ĐẶT NHIỀU NHẤT
-              <div className="absolute bottom-0 left-0 w-full h-1 bg-[#2A9D8F] rounded"></div>
             </h2>
+            <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-400 h-3 bg-[#2A9D8F] rounded"></div>
           </div>
         </div>
 
