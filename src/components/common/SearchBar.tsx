@@ -1,7 +1,3 @@
-// * SearchBar: Thanh tìm kiếm động, hỗ trợ nhiều loại trường (text, select, date)
-// ! Quản lý dropdown select riêng cho từng trường, tránh bị đóng mở đồng loạt
-// ? Nếu muốn thêm type mới (checkbox, radio...), cần bổ sung ở đây
-
 import React, { useState, useRef, useEffect } from "react";
 
 export interface SearchField {
@@ -84,16 +80,15 @@ const SearchBar: React.FC<SearchBarProps> = ({
 
   return (
     <form onSubmit={handleSubmit} className="mb-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 items-end">
-        {" "}
-        {/* Thêm items-end và điều chỉnh breakpoints */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 items-end">
+        {/* Giảm gap từ gap-4 xuống gap-3 */}
         {fields.map((field) => (
-          <div key={field.name} className="flex flex-col space-y-2">
-            {" "}
-            {/* Thêm space-y-2 */}
+          <div key={field.name} className="flex flex-col space-y-1">
+            {/* Giảm space-y từ space-y-2 xuống space-y-1 */}
             <label
               htmlFor={field.name}
-              className="block text-sm font-medium text-white leading-tight" // Thêm leading-tight
+              className="block text-xs font-medium text-white leading-tight"
+              // Giảm text từ text-sm xuống text-xs
             >
               {field.label}
             </label>
@@ -103,7 +98,8 @@ const SearchBar: React.FC<SearchBarProps> = ({
                 ref={(el) => setDropdownRef(field.name, el)}
               >
                 <div
-                  className="w-full px-4 py-3 min-h-[44px] border border-white bg-white text-gray-900 rounded-md flex items-center justify-between cursor-pointer hover:bg-gray-50 transition-colors duration-200" // Thêm min-h và py-3
+                  className="w-full px-3 py-2 min-h-[36px] border border-white bg-white text-gray-900 rounded-md flex items-center justify-between cursor-pointer hover:bg-gray-50 transition-colors duration-200 text-sm"
+                  // Giảm padding từ px-4 py-3 xuống px-3 py-2, min-h từ 44px xuống 36px, thêm text-sm
                   onClick={() => toggleDropdown(field.name)}
                 >
                   <span
@@ -114,9 +110,10 @@ const SearchBar: React.FC<SearchBarProps> = ({
                     {getSelectedLabel(field)}
                   </span>
                   <svg
-                    className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${
+                    className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${
                       openDropdown === field.name ? "rotate-180" : ""
-                    }`} // Thêm rotation animation
+                    }`}
+                    // Giảm kích thước icon từ w-5 h-5 xuống w-4 h-4
                     fill="currentColor"
                     viewBox="0 0 20 20"
                   >
@@ -128,9 +125,11 @@ const SearchBar: React.FC<SearchBarProps> = ({
                   </svg>
                 </div>
                 {openDropdown === field.name && (
-                  <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-auto">
+                  <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-48 overflow-auto">
+                    {/* Giảm max-h từ max-h-60 xuống max-h-48 */}
                     <div
-                      className="px-4 py-2 text-gray-500 cursor-pointer hover:bg-gray-100 transition-colors duration-150"
+                      className="px-3 py-1.5 text-gray-500 cursor-pointer hover:bg-gray-100 transition-colors duration-150 text-sm"
+                      // Giảm padding từ px-4 py-2 xuống px-3 py-1.5, thêm text-sm
                       onClick={() => selectOption(field.name, "")}
                     >
                       {field.placeholder}
@@ -138,11 +137,13 @@ const SearchBar: React.FC<SearchBarProps> = ({
                     {field.options?.map((option) => (
                       <div
                         key={option.value}
-                        className="px-4 py-2 cursor-pointer hover:bg-gray-100 flex items-center text-gray-900 transition-colors duration-150"
+                        className="px-3 py-1.5 cursor-pointer hover:bg-gray-100 flex items-center text-gray-900 transition-colors duration-150 text-sm"
+                        // Giảm padding từ px-4 py-2 xuống px-3 py-1.5, thêm text-sm
                         onClick={() => selectOption(field.name, option.value)}
                       >
                         {option.icon && (
-                          <span className="mr-2">{option.icon}</span>
+                          <span className="mr-2 text-sm">{option.icon}</span>
+                          // Thêm text-sm cho icon
                         )}
                         <span>{option.label}</span>
                       </div>
@@ -155,7 +156,8 @@ const SearchBar: React.FC<SearchBarProps> = ({
                 id={field.name}
                 type="date"
                 name={field.name}
-                className="w-full px-4 py-3 min-h-[44px] bg-white text-gray-900 border border-white rounded-md focus:outline-none focus:ring-2 focus:ring-white focus:border-white transition-all duration-200" // Thêm min-h và py-3
+                className="w-full px-3 py-2 min-h-[36px] bg-white text-gray-900 border border-white rounded-md focus:outline-none focus:ring-2 focus:ring-white focus:border-white transition-all duration-200 text-sm"
+                // Giảm padding từ px-4 py-3 xuống px-3 py-2, min-h từ 44px xuống 36px, thêm text-sm
                 value={values[field.name] || ""}
                 onChange={(e) => handleChange(field.name, e.target.value)}
               />
@@ -165,7 +167,8 @@ const SearchBar: React.FC<SearchBarProps> = ({
                 type="text"
                 name={field.name}
                 placeholder={field.placeholder}
-                className="w-full px-4 py-3 min-h-[44px] bg-white text-gray-900 border border-white rounded-md focus:outline-none focus:ring-2 focus:ring-white focus:border-white placeholder:text-gray-500 transition-all duration-200" // Thêm min-h và py-3
+                className="w-full px-3 py-2 min-h-[36px] bg-white text-gray-900 border border-white rounded-md focus:outline-none focus:ring-2 focus:ring-white focus:border-white placeholder:text-gray-500 transition-all duration-200 text-sm"
+                // Giảm padding từ px-4 py-3 xuống px-3 py-2, min-h từ 44px xuống 36px, thêm text-sm
                 value={values[field.name] || ""}
                 onChange={(e) => handleChange(field.name, e.target.value)}
               />
@@ -173,17 +176,16 @@ const SearchBar: React.FC<SearchBarProps> = ({
           </div>
         ))}
         {/* Button container */}
-        <div className="flex flex-col space-y-2">
-          {" "}
-          {/* Thêm space-y-2 để đồng bộ */}
-          <div className="text-sm font-medium text-transparent leading-tight select-none">
-            {" "}
-            {/* Thêm leading-tight và select-none */}
+        <div className="flex flex-col space-y-1">
+          {/* Giảm space-y từ space-y-2 xuống space-y-1 */}
+          <div className="text-xs font-medium text-transparent leading-tight select-none">
+            {/* Giảm text từ text-sm xuống text-xs */}
             &nbsp;
           </div>
           <button
             type="submit"
-            className="px-6 py-3 min-h-[44px] bg-white text-[#2A9D8F] font-semibold rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-white/50 active:bg-gray-100 transition-all duration-200 whitespace-nowrap shadow-sm hover:shadow-md" // Thêm min-h, py-3, và effects
+            className="px-4 py-2 min-h-[36px] bg-white text-[#2A9D8F] font-semibold rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-white/50 active:bg-gray-100 transition-all duration-200 whitespace-nowrap shadow-sm hover:shadow-md text-sm"
+            // Giảm padding từ px-6 py-3 xuống px-4 py-2, min-h từ 44px xuống 36px, thêm text-sm
           >
             {buttonLabel}
           </button>

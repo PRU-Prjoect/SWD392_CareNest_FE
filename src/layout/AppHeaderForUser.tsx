@@ -228,7 +228,7 @@ const AppHeaderForUser: React.FC<HeaderProps> = () => {
 
       {/* Thanh Filter */}
       <div className="bg-[#2A9D8F] border-t border-white/10">
-        <div className="w-full max-w-8xl mx-auto px-6 lg:px-8">
+        <div className="w-full max-w-8xl mx-auto px-6 lg:px-8 p-2">
           <SearchBar
             fields={filterFields}
             onSearch={handleSearch}
