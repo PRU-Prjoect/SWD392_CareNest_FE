@@ -10,6 +10,7 @@ import LoginPage from "../pages/Login";
 import RegisterPage from "@/pages/Register";
 import RegisterType from "@/pages/RegisterType";
 import ServiceDetail from "@/pages/ServiceDetail/ServiceDetail";
+import ServicesPage from "@/pages/Services/Service";
 
 const AppRoutes = () => {
   return (
@@ -36,6 +37,7 @@ const AppRoutes = () => {
         <Route path="/service-detail" element={<ServiceDetail />} />
 
         <Route path="/registertype" element={<RegisterType />} />
+        <Route path="/services" element={<ServicesPage />} />
       </Routes>
     </Router>
   );

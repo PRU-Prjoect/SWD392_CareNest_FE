@@ -79,7 +79,6 @@ const AppHeaderForUser: React.FC<HeaderProps> = () => {
 
   const handleSearch = (values: Record<string, string>) => {
     console.log("Filter values:", values);
-    // Xử lý logic filter ở đây
   };
 
   return (
