@@ -4,7 +4,7 @@ import AppLayoutForUser from "../../layout/AppLayoutForUser";
 import ServiceImages from "./components/ServiceImages";
 import ServiceInfo from "./components/ServiceInfo";
 import ServiceActions from "./components/ServiceActions";
-import type { Service } from "../../types/service";
+import type { Service } from "@/types/services";
 
 const mockService: Service = {
   id: "1",
