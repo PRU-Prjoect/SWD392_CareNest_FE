@@ -9,6 +9,7 @@ import HomePage from "../pages/Home";
 import LoginPage from "../pages/Login";
 import RegisterPage from "@/pages/Register";
 import RegisterType from "@/pages/RegisterType";
+import ServiceDetail from "@/pages/ServiceDetail/ServiceDetail";
 
 const AppRoutes = () => {
   return (
@@ -32,6 +33,8 @@ const AppRoutes = () => {
           }
         />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/service-detail" element={<ServiceDetail />} />
+
         <Route path="/registertype" element={<RegisterType />} />
       </Routes>
     </Router>
