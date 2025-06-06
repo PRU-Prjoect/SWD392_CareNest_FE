@@ -97,11 +97,11 @@ const AppHeaderForUser: React.FC<HeaderProps> = () => {
                 <img
                   src="/public/image/ranbowlogo.png"
                   alt="Logo"
-                  className="w-10 h-10 lg:w-17 lg:h-12 transition-all duration-300"
+                  className="w-10 h-10 lg:w-25 lg:h-20 transition-all duration-300"
                 />
                 <span className="font-semibold text-xl lg:text-2xl select-none hidden sm:block text-white">
-                  <span className="text-orange-300">Care</span>
-                  <span className="text-white">Nest</span>
+                  <span className="text-orange-300 text-5xl">Care</span>
+                  <span className="text-white text-5xl">Nest</span>
                 </span>
               </Link>
             </div>
