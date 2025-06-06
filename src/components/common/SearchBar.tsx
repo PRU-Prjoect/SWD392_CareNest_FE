@@ -84,15 +84,16 @@ const SearchBar: React.FC<SearchBarProps> = ({
 
   return (
     <form onSubmit={handleSubmit} className="mb-6">
-      <div className="flex flex-wrap -mx-2">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 items-end">
+        {" "}
+        {/* Thêm items-end và điều chỉnh breakpoints */}
         {fields.map((field) => (
-          <div
-            key={field.name}
-            className={`px-2 mb-4 ${field.width || "w-1/3"}`}
-          >
+          <div key={field.name} className="flex flex-col space-y-2">
+            {" "}
+            {/* Thêm space-y-2 */}
             <label
               htmlFor={field.name}
-              className="block text-sm font-medium text-white mb-1"
+              className="block text-sm font-medium text-white leading-tight" // Thêm leading-tight
             >
               {field.label}
             </label>
@@ -102,7 +103,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
                 ref={(el) => setDropdownRef(field.name, el)}
               >
                 <div
-                  className="w-full px-4 py-2 border border-white bg-white text-gray-900 rounded-md flex items-center justify-between cursor-pointer hover:bg-gray-50"
+                  className="w-full px-4 py-3 min-h-[44px] border border-white bg-white text-gray-900 rounded-md flex items-center justify-between cursor-pointer hover:bg-gray-50 transition-colors duration-200" // Thêm min-h và py-3
                   onClick={() => toggleDropdown(field.name)}
                 >
                   <span
@@ -113,7 +114,9 @@ const SearchBar: React.FC<SearchBarProps> = ({
                     {getSelectedLabel(field)}
                   </span>
                   <svg
-                    className="w-5 h-5 text-gray-400"
+                    className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${
+                      openDropdown === field.name ? "rotate-180" : ""
+                    }`} // Thêm rotation animation
                     fill="currentColor"
                     viewBox="0 0 20 20"
                   >
@@ -127,7 +130,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
                 {openDropdown === field.name && (
                   <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-auto">
                     <div
-                      className="px-4 py-2 text-gray-500 cursor-pointer hover:bg-gray-100"
+                      className="px-4 py-2 text-gray-500 cursor-pointer hover:bg-gray-100 transition-colors duration-150"
                       onClick={() => selectOption(field.name, "")}
                     >
                       {field.placeholder}
@@ -135,7 +138,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
                     {field.options?.map((option) => (
                       <div
                         key={option.value}
-                        className="px-4 py-2 cursor-pointer hover:bg-gray-100 flex items-center text-gray-900"
+                        className="px-4 py-2 cursor-pointer hover:bg-gray-100 flex items-center text-gray-900 transition-colors duration-150"
                         onClick={() => selectOption(field.name, option.value)}
                       >
                         {option.icon && (
@@ -152,7 +155,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
                 id={field.name}
                 type="date"
                 name={field.name}
-                className="w-full px-4 py-2 bg-white text-gray-900 border border-white rounded-md focus:outline-none focus:ring-2 focus:ring-white focus:border-white"
+                className="w-full px-4 py-3 min-h-[44px] bg-white text-gray-900 border border-white rounded-md focus:outline-none focus:ring-2 focus:ring-white focus:border-white transition-all duration-200" // Thêm min-h và py-3
                 value={values[field.name] || ""}
                 onChange={(e) => handleChange(field.name, e.target.value)}
               />
@@ -162,17 +165,25 @@ const SearchBar: React.FC<SearchBarProps> = ({
                 type="text"
                 name={field.name}
                 placeholder={field.placeholder}
-                className="w-full px-4 py-2 bg-white text-gray-900 border border-white rounded-md focus:outline-none focus:ring-2 focus:ring-white focus:border-white placeholder:text-gray-500"
+                className="w-full px-4 py-3 min-h-[44px] bg-white text-gray-900 border border-white rounded-md focus:outline-none focus:ring-2 focus:ring-white focus:border-white placeholder:text-gray-500 transition-all duration-200" // Thêm min-h và py-3
                 value={values[field.name] || ""}
                 onChange={(e) => handleChange(field.name, e.target.value)}
               />
             )}
           </div>
         ))}
-        <div className="px-2 mb-4 flex items-end">
+        {/* Button container */}
+        <div className="flex flex-col space-y-2">
+          {" "}
+          {/* Thêm space-y-2 để đồng bộ */}
+          <div className="text-sm font-medium text-transparent leading-tight select-none">
+            {" "}
+            {/* Thêm leading-tight và select-none */}
+            &nbsp;
+          </div>
           <button
             type="submit"
-            className="px-6 py-2 bg-white text-[#2A9D8F] font-semibold rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#2A9D8F] font-medium"
+            className="px-6 py-3 min-h-[44px] bg-white text-[#2A9D8F] font-semibold rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-white/50 active:bg-gray-100 transition-all duration-200 whitespace-nowrap shadow-sm hover:shadow-md" // Thêm min-h, py-3, và effects
           >
             {buttonLabel}
           </button>

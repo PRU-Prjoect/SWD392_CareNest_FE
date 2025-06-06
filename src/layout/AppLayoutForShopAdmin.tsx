@@ -30,7 +30,7 @@ const LayoutContent: React.FC<AppLayoutProps> = ({ children }) => {
   );
 };
 
-const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
+const AppLayoutForShopAdmin: React.FC<AppLayoutProps> = ({ children }) => {
   return (
     <SidebarProvider>
       <LayoutContent>{children}</LayoutContent>
@@ -38,4 +38,4 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   );
 };
 
-export default AppLayout;
+export default AppLayoutForShopAdmin;
