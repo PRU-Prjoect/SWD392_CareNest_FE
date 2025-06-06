@@ -184,10 +184,18 @@ const SearchBar: React.FC<SearchBarProps> = ({
           </div>
           <button
             type="submit"
-            className="px-4 py-2 min-h-[36px] bg-white text-[#2A9D8F] font-semibold rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-white/50 active:bg-gray-100 transition-all duration-200 whitespace-nowrap shadow-sm hover:shadow-md text-sm"
-            // Giảm padding từ px-6 py-3 xuống px-4 py-2, min-h từ 44px xuống 36px, thêm text-sm
+            className="flex items-center justify-center gap-2 px-4 py-2 min-h-[36px] bg-white text-[#2A9D8F] font-semibold rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-white/50 active:bg-gray-100 transition-all duration-200 whitespace-nowrap shadow-sm hover:shadow-md text-sm"
           >
             {buttonLabel}
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="w-5 h-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path d="M3 4a1 1 0 011-1h16a1 1 0 01.8 1.6L15 12.5V19a1 1 0 01-1.447.894l-4-2A1 1 0 019 17v-4.5L3.2 5.6A1 1 0 013 4z" />
+            </svg>
           </button>
         </div>
       </div>

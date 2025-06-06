@@ -73,7 +73,7 @@ const HighestRating: React.FC = () => {
             {" "}
             {/* Changed to full width and added padding bottom */}
             <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
-              ĐÁNH GIÁ CAO NHẤT
+              ĐÁNH GIÁ CAO NHẤT 💯
             </h2>
             <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-400 h-3 bg-[#2A9D8F] rounded"></div>
           </div>
