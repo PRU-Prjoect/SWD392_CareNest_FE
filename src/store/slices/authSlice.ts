@@ -1,85 +1,265 @@
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import authService from "../../services/authService";
+// src/store/slices/authSlice.ts
+import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import type { PayloadAction } from "@reduxjs/toolkit";
+import api from "@/config/axios";
+import { jwtDecode } from "jwt-decode";
 
-interface User {
+// Interfaces
+export interface User {
   id: string;
   email: string;
-  username: string;
+  name?: string;
+  role?: string;
+  username?: string;
 }
 
-interface AuthState {
+interface UserState {
+  isAuthenticated: boolean;
   user: User | null;
   token: string | null;
-  isLoading: boolean;
-  error: string | null;
-  isAuthenticated: boolean;
-  rememberMe: boolean;
+  loading: boolean;
+  error: {
+    code: number;
+    message: string;
+  } | null;
 }
 
-const initialState: AuthState = {
+interface DecodedToken {
+  "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress": string;
+  "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name": string;
+  "http://schemas.microsoft.com/ws/2008/06/identity/claims/role": string;
+  exp: number;
+  iss: string;
+  aud: string;
+}
+
+interface AuthResponse {
+  user: User;
+  token: string;
+}
+
+interface LoginRequest {
+  username: string;
+  password: string;
+}
+
+interface ErrorResponse {
+  error: number;
+  message: string;
+}
+
+// Initial state
+const initialState: UserState = {
+  isAuthenticated: false,
   user: null,
   token: null,
-  isLoading: false,
   error: null,
-  isAuthenticated: false,
-  rememberMe: false,
+  loading: false,
 };
 
-// Async thunk cho login
-export const loginUser = createAsyncThunk(
-  "auth/login",
-  async (
-    credentials: { email: string; password: string; rememberMe: boolean },
-    { rejectWithValue }
-  ) => {
-    try {
-      const response = await authService.login(credentials);
-      return response;
-    } catch (error: any) {
-      return rejectWithValue(error.message || "Login failed");
-    }
-  }
-);
+// Helper functions
+const saveAuthData = (data: AuthResponse) => {
+  localStorage.setItem("authToken", data.token);
+  localStorage.setItem("user", JSON.stringify(data.user));
+};
 
-const authSlice = createSlice({
+const clearAuthData = () => {
+  localStorage.removeItem("authToken");
+  localStorage.removeItem("user");
+  sessionStorage.removeItem("authToken");
+  sessionStorage.removeItem("user");
+};
+
+const createUserFromToken = (token: string): User => {
+  try {
+    const decoded: DecodedToken = jwtDecode(token);
+
+    return {
+      id: decoded["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"],
+      email:
+        decoded[
+          "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"
+        ],
+      name: decoded[
+        "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"
+      ],
+      username:
+        decoded["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"],
+      role: decoded[
+        "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
+      ],
+    };
+  } catch (error) {
+    console.error("Error decoding token:", error);
+    throw new Error("Token không hợp lệ");
+  }
+};
+
+// Async thunks
+export const Login = createAsyncThunk<
+  AuthResponse,
+  LoginRequest,
+  { rejectValue: ErrorResponse }
+>("auth/login", async (credentials, { rejectWithValue }) => {
+  try {
+    console.log("🚀 Sending login request:", credentials); // ✅ Debug log
+    console.log("🌐 API URL:", api.defaults.baseURL + "account/login");
+    const res = await api.post("account/login", credentials);
+    console.log("✅ Login response:", res.data); // ✅ Debug response
+
+    if (!res.data || !res.data.data) {
+      return rejectWithValue({
+        error: 1,
+        message: "Phản hồi từ server không hợp lệ",
+      });
+    }
+
+    const token = res.data.data;
+    const user = createUserFromToken(token);
+
+    return { user, token };
+  } catch (err: any) {
+    console.error("Login error:", err);
+
+    if (err.response && err.response.data) {
+      return rejectWithValue({
+        error: err.response.status || 1,
+        message: err.response.data.message || "Đăng nhập thất bại",
+      });
+    }
+
+    return rejectWithValue({
+      error: 1,
+      message: err.message || "Không thể kết nối đến máy chủ",
+    });
+  }
+});
+
+export const LoginNoRemember = createAsyncThunk<
+  AuthResponse,
+  LoginRequest,
+  { rejectValue: ErrorResponse }
+>("authNoRemember/login", async (credentials, { rejectWithValue }) => {
+  try {
+    const res = await api.post("account/login", credentials);
+
+    if (!res.data || !res.data.data) {
+      return rejectWithValue({
+        error: 1,
+        message: "Phản hồi từ server không hợp lệ",
+      });
+    }
+
+    const token = res.data.data;
+    const user = createUserFromToken(token);
+
+    return { user, token };
+  } catch (err: any) {
+    console.error("LoginNoRemember error:", err);
+
+    if (err.response && err.response.data) {
+      return rejectWithValue({
+        error: err.response.status || 1,
+        message: err.response.data.message || "Đăng nhập thất bại",
+      });
+    }
+
+    return rejectWithValue({
+      error: 1,
+      message: err.message || "Không thể kết nối đến máy chủ",
+    });
+  }
+});
+
+// Slice
+const userSlice = createSlice({
   name: "auth",
   initialState,
   reducers: {
-    logout: (state) => {
-      state.user = null;
-      state.token = null;
-      state.isAuthenticated = false;
-      state.error = null;
-      state.rememberMe = false;
-      localStorage.removeItem("token");
+    logout(state) {
+      Object.assign(state, initialState);
+      clearAuthData();
     },
-    clearError: (state) => {
-      state.error = null;
-    },
-    setRememberMe: (state, action) => {
-      state.rememberMe = action.payload;
+    restoreAuth(state) {
+      const token = localStorage.getItem("authToken");
+      const userStr = localStorage.getItem("user");
+
+      if (token && userStr) {
+        try {
+          const user = JSON.parse(userStr);
+          state.isAuthenticated = true;
+          state.token = token;
+          state.user = user;
+        } catch (error) {
+          console.error("Error restoring auth:", error);
+          clearAuthData();
+        }
+      }
     },
   },
   extraReducers: (builder) => {
     builder
-      .addCase(loginUser.pending, (state) => {
-        state.isLoading = true;
+      .addCase(Login.pending, (state) => {
+        state.loading = true;
         state.error = null;
       })
-      .addCase(loginUser.fulfilled, (state, action) => {
-        state.isLoading = false;
-        state.user = action.payload.user;
-        state.token = action.payload.token;
-        state.isAuthenticated = true;
-        state.rememberMe = action.payload.rememberMe;
-        localStorage.setItem("token", action.payload.token);
+      .addCase(
+        Login.fulfilled,
+        (state, action: PayloadAction<AuthResponse>) => {
+          state.loading = false;
+          state.isAuthenticated = true;
+          state.user = action.payload.user;
+          state.token = action.payload.token;
+          saveAuthData(action.payload);
+          state.error = null;
+        }
+      )
+      .addCase(Login.rejected, (state, action) => {
+        state.loading = false;
+        state.isAuthenticated = false;
+        if (action.payload) {
+          state.error = {
+            code: action.payload.error,
+            message: action.payload.message,
+          };
+        } else {
+          state.error = {
+            code: 1,
+            message: action.error.message || "Đăng nhập thất bại",
+          };
+        }
       })
-      .addCase(loginUser.rejected, (state, action) => {
-        state.isLoading = false;
-        state.error = action.payload as string;
+      .addCase(LoginNoRemember.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(
+        LoginNoRemember.fulfilled,
+        (state, action: PayloadAction<AuthResponse>) => {
+          state.loading = false;
+          state.isAuthenticated = true;
+          state.token = action.payload.token;
+          state.user = action.payload.user;
+          state.error = null;
+        }
+      )
+      .addCase(LoginNoRemember.rejected, (state, action) => {
+        state.loading = false;
+        state.isAuthenticated = false;
+        if (action.payload) {
+          state.error = {
+            code: action.payload.error,
+            message: action.payload.message,
+          };
+        } else {
+          state.error = {
+            code: 1,
+            message: action.error.message || "Đăng nhập thất bại",
+          };
+        }
       });
   },
 });
 
-export const { logout, clearError, setRememberMe } = authSlice.actions;
-export default authSlice.reducer;
+export const { logout, restoreAuth } = userSlice.actions;
+export default userSlice.reducer;

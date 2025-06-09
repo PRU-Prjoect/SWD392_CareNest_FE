@@ -1,18 +1,18 @@
+// src/pages/Login/hooks/useLoginForm.ts
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useLocation } from "react-router-dom";
-import { loginUser, clearError } from "../../../store/slices/authSlice";
-import { validateLogin } from "../utils/loginValidation";
-import type { RootState, AppDispatch } from "../../../store";
+import { Login, LoginNoRemember } from "../../../store/slices/authSlice";
+import type { RootState, AppDispatch } from "../../../store/store";
 
 interface LoginFormData {
-  email: string;
+  username: string;
   password: string;
   rememberMe: boolean;
 }
 
 interface FormErrors {
-  email?: string;
+  username?: string;
   password?: string;
 }
 
@@ -21,12 +21,12 @@ export const useLoginForm = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const { isLoading, error, isAuthenticated } = useSelector(
+  const { loading, error, isAuthenticated, user } = useSelector(
     (state: RootState) => state.auth
   );
 
   const [formData, setFormData] = useState<LoginFormData>({
-    email: "",
+    username: "",
     password: "",
     rememberMe: false,
   });
@@ -42,29 +42,49 @@ export const useLoginForm = () => {
     if (field in formErrors && formErrors[field as keyof FormErrors]) {
       setFormErrors((prev: FormErrors) => ({ ...prev, [field]: undefined }));
     }
+  };
 
-    if (error) {
-      dispatch(clearError());
+  const validateForm = () => {
+    const errors: FormErrors = {};
+
+    if (!formData.username) {
+      errors.username = "Tên đăng nhập không được để trống";
+    } else if (formData.username.length < 3) {
+      errors.username = "Tên đăng nhập phải có ít nhất 3 ký tự";
     }
+
+    if (!formData.password) {
+      errors.password = "Mật khẩu không được để trống";
+    } else if (formData.password.length < 6) {
+      errors.password = "Mật khẩu phải có ít nhất 6 ký tự";
+    }
+
+    return errors;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const errors = validateLogin(formData);
+    const errors = validateForm();
     if (Object.keys(errors).length > 0) {
       setFormErrors(errors);
       return;
     }
 
     try {
-      const result = await dispatch(loginUser(formData));
-      if (loginUser.fulfilled.match(result)) {
-        const from = (location.state as any)?.from?.pathname || "/dashboard";
-        navigate(from, { replace: true });
-      }
-    } catch (error) {
-      console.error("Login error:", error);
+      const loginAction = formData.rememberMe ? Login : LoginNoRemember;
+
+      await dispatch(
+        loginAction({
+          username: formData.username,
+          password: formData.password,
+        })
+      ).unwrap();
+
+      const from = (location.state as any)?.from?.pathname || "/dashboard";
+      navigate(from, { replace: true });
+    } catch (error: any) {
+      console.error("Login failed:", error);
     }
   };
 
@@ -72,9 +92,10 @@ export const useLoginForm = () => {
     formData,
     formErrors,
     showPassword,
-    isLoading,
+    loading,
     error,
     isAuthenticated,
+    user,
     handleInputChange,
     handleSubmit,
     setShowPassword,

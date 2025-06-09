@@ -4,7 +4,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { logout } from "../../store/slices/authSlice";
 import Button from "../../components/ui/Button";
 import { TaskIcon } from "../ui/Icons";
-import type { RootState } from "../../store";
+import type { RootState } from "../../store/store";
 
 const Navbar: React.FC = () => {
   const dispatch = useDispatch();

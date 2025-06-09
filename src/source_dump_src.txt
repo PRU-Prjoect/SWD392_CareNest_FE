@@ -18,6 +18,7 @@ src/
 │   ├── common/
 │   │   ├── ChartTab.tsx
 │   │   ├── ComponentCard.tsx
+│   │   ├── FilterBar.tsx
 │   │   ├── GridShape.tsx
 │   │   ├── PageBreadCrumb.tsx
 │   │   ├── ScrollToTop.tsx
@@ -135,6 +136,8 @@ src/
 │   └── PageMeta.tsx
 ├── config/
 │   └── axios.ts
+├── configs/
+│   └── axios.ts
 ├── context/
 │   ├── SidebarContext.tsx
 │   └── ThemeContext.tsx
@@ -180,13 +183,16 @@ src/
 │   ├── Home/
 │   │   ├── components/
 │   │   │   ├── HeroBanner.tsx
+│   │   │   ├── HighestRating.tsx
 │   │   │   ├── LatestServices.tsx
+│   │   │   ├── MostBuy.tsx
 │   │   │   ├── ServiceCard.tsx
 │   │   │   └── ServiceCategories.tsx
 │   │   ├── HomePage.tsx
 │   │   └── index.tsx
 │   ├── Login/
 │   │   ├── components/
+│   │   │   ├── AuthWrapper.tsx
 │   │   │   ├── EnterOTPCode.tsx
 │   │   │   ├── ForgotPassword.tsx
 │   │   │   ├── LoginForm.tsx
@@ -206,6 +212,14 @@ src/
 │   │   └── index.tsx
 │   ├── RegisterType/
 │   │   └── index.tsx
+│   ├── ServiceDetail/
+│   │   ├── components/
+│   │   │   ├── ServiceActions.tsx
+│   │   │   ├── ServiceImages.tsx
+│   │   │   └── ServiceInfo.tsx
+│   │   └── ServiceDetail.tsx
+│   ├── Services/
+│   │   └── Service.tsx
 │   ├── Settings/
 │   │   └── index.tsx
 │   ├── SignUp/
@@ -230,9 +244,10 @@ src/
 ├── store/
 │   ├── slices/
 │   │   └── authSlice.ts
-│   └── index.ts
+│   └── store.ts
 ├── types/
 │   ├── auth.ts
+│   ├── services.ts
 │   └── user.ts
 ├── utils/
 ├── App.css
@@ -247,64 +262,80 @@ src/
 
 ### App.tsx
 ```tsx
-
+// src/App.tsx
+import { useEffect } from "react";
+import { useDispatch } from "react-redux";
+import { AuthWrapper } from "./pages/Login/components/AuthWrapper";
+import { restoreAuth } from "./store/slices/authSlice";
+import type { AppDispatch } from "./store/store";
 import AppRoutes from "./routes/index";
 
 function App() {
-  return <AppRoutes />;
- 
+  const dispatch = useDispatch<AppDispatch>();
+
+  useEffect(() => {
+    dispatch(restoreAuth());
+  }, [dispatch]);
+
+  return (
+    <AuthWrapper>
+      <AppRoutes />
+    </AuthWrapper>
+  );
 }
 
 export default App;
+
 ```
 
 ### main.tsx
 ```tsx
-// import { createRoot } from "react-dom/client";
-// import "./index.css";
-// import "swiper/swiper-bundle.css";
-// import "flatpickr/dist/flatpickr.css";
-// import App from "./App";
-// import { AppWrapper } from "./components/PageMeta";
-// import { ThemeProvider } from "./context/ThemeContext";
-// import { ToastContainer } from "react-toastify";
-// import { PersistGate } from "redux-persist/integration/react";
-// import { persistor } from "./store";
-// import "./index.css";
+// src/main.tsx
+import React from "react";
+import ReactDOM from "react-dom/client";
+import { Provider } from "react-redux";
+import { BrowserRouter } from "react-router-dom";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { store } from "./store/store";
+import { setLogoutCallback, updateStateToken } from "./config/axios"; // ✅ Đường dẫn đúng
+import { logout } from "./store/slices/authSlice";
+import App from "./App";
+import "./index.css";
 
-// createRoot(document.getElementById("root")!).render(
-//   <ThemeProvider>
-//     <AppWrapper>
-//       <PersistGate loading={null} persistor={persistor}>
-//         <App />
-//       </PersistGate>
-//       <ToastContainer
-//         position="top-right"
-//         autoClose={3000}
-//         hideProgressBar={false}
-//         newestOnTop={false}
-//         closeOnClick
-//         rtl={false}
-//         pauseOnFocusLoss
-//         draggable
-//         pauseOnHover
-//         // ✅ Thiết lập z-index cao
-//         style={{ zIndex: 99999 }}
-//         toastStyle={{ zIndex: 99999 }}
-//       />{" "}
-//     </AppWrapper>
-//   </ThemeProvider>
-// );
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import App from './App';
-import './index.css';
+// ✅ Thiết lập callback cho axios interceptor
+store.subscribe(() => {
+  const state = store.getState();
+  updateStateToken(state.auth.token);
+});
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
+setLogoutCallback(() => {
+  store.dispatch(logout());
+});
+
+ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <App />
-  </React.StrictMode>,
+    <Provider store={store}>
+      <BrowserRouter>
+        <App />
+        <ToastContainer
+          position="top-right"
+          autoClose={3000}
+          hideProgressBar={false}
+          newestOnTop={false}
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+          style={{ zIndex: 99999 }}
+          toastStyle={{ zIndex: 99999 }}
+        />
+      </BrowserRouter>
+    </Provider>
+  </React.StrictMode>
 );
+
 ```
 
 ### svg.d.ts
@@ -442,6 +473,226 @@ export default ComponentCard;
 
 ```
 
+### components\common\FilterBar.tsx
+```tsx
+// components/common/FilterBar.tsx
+import React, { useState, useRef, useEffect } from "react";
+
+interface FilterOption {
+  value: string;
+  label: string;
+  icon?: React.ReactNode;
+}
+
+interface FilterConfig {
+  name: string;
+  label: string;
+  placeholder: string;
+  options: FilterOption[];
+}
+
+interface FilterBarProps {
+  onFilter: (filters: Record<string, string>) => void;
+}
+
+const FilterBar: React.FC<FilterBarProps> = ({ onFilter }) => {
+  const [activeFilters, setActiveFilters] = useState<Record<string, string>>(
+    {}
+  );
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  const dropdownRefs = useRef<Record<string, HTMLDivElement | null>>({});
+
+  // Cấu hình các filter
+  const filterConfigs: FilterConfig[] = [
+    {
+      name: "location",
+      label: "Địa điểm",
+      placeholder: "Chọn địa điểm",
+      options: [
+        { value: "", label: "Tất cả địa điểm" },
+        { value: "hanoi", label: "Hà Nội" },
+        { value: "hcm", label: "TP. Hồ Chí Minh" },
+        { value: "danang", label: "Đà Nẵng" },
+        { value: "haiphong", label: "Hải Phòng" },
+      ],
+    },
+    {
+      name: "petType",
+      label: "Loại thú",
+      placeholder: "Chọn loại thú",
+      options: [
+        { value: "", label: "Tất cả loại thú" },
+        { value: "dog", label: "🐕 Chó" },
+        { value: "cat", label: "🐱 Mèo" },
+        { value: "bird", label: "🐦 Chim" },
+        { value: "fish", label: "🐠 Cá" },
+        { value: "rabbit", label: "🐰 Thỏ" },
+      ],
+    },
+    {
+      name: "sortBy",
+      label: "Sắp xếp",
+      placeholder: "Sắp xếp theo",
+      options: [
+        { value: "newest", label: "Mới nhất" },
+        { value: "price_asc", label: "Giá tăng dần" },
+        { value: "price_desc", label: "Giá giảm dần" },
+        { value: "rating", label: "Đánh giá cao nhất" },
+        { value: "distance", label: "Khoảng cách gần nhất" },
+      ],
+    },
+    {
+      name: "priceRange",
+      label: "Khoảng giá",
+      placeholder: "Chọn khoảng giá",
+      options: [
+        { value: "", label: "Tất cả giá" },
+        { value: "0-100", label: "Dưới 100k" },
+        { value: "100-300", label: "100k - 300k" },
+        { value: "300-500", label: "300k - 500k" },
+        { value: "500-1000", label: "500k - 1tr" },
+        { value: "1000+", label: "Trên 1tr" },
+      ],
+    },
+  ];
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        openDropdown &&
+        dropdownRefs.current[openDropdown] &&
+        !dropdownRefs.current[openDropdown]?.contains(event.target as Node)
+      ) {
+        setOpenDropdown(null);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [openDropdown]);
+
+  const toggleDropdown = (filterName: string) => {
+    setOpenDropdown((prev) => (prev === filterName ? null : filterName));
+  };
+
+  const selectOption = (filterName: string, value: string) => {
+    const newFilters = {
+      ...activeFilters,
+      [filterName]: value,
+    };
+    setActiveFilters(newFilters);
+    setOpenDropdown(null);
+    onFilter(newFilters);
+  };
+
+  const getSelectedLabel = (config: FilterConfig) => {
+    if (!activeFilters[config.name]) return config.placeholder;
+    const selectedOption = config.options.find(
+      (opt) => opt.value === activeFilters[config.name]
+    );
+    return selectedOption ? selectedOption.label : config.placeholder;
+  };
+
+  const clearAllFilters = () => {
+    setActiveFilters({});
+    onFilter({});
+  };
+
+  const hasActiveFilters = Object.values(activeFilters).some(
+    (value) => value !== ""
+  );
+
+  return (
+    <div className="py-4">
+      <div className="flex flex-wrap items-center gap-3">
+        {filterConfigs.map((config) => (
+          <div
+            key={config.name}
+            className="relative"
+            ref={(el) => {
+              dropdownRefs.current[config.name] = el;
+            }}
+          >
+            <button
+              onClick={() => toggleDropdown(config.name)}
+              className={`
+                flex items-center gap-2 px-4 py-2 bg-white rounded-lg border 
+                hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-white/50
+                transition-all duration-200 min-w-[160px] justify-between
+                ${
+                  activeFilters[config.name]
+                    ? "border-orange-300 bg-orange-50"
+                    : "border-gray-200"
+                }
+              `}
+            >
+              <span
+                className={`text-sm ${
+                  activeFilters[config.name]
+                    ? "text-gray-900 font-medium"
+                    : "text-gray-600"
+                }`}
+              >
+                {getSelectedLabel(config)}
+              </span>
+              <svg
+                className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${
+                  openDropdown === config.name ? "rotate-180" : ""
+                }`}
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </button>
+
+            {openDropdown === config.name && (
+              <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-auto">
+                {config.options.map((option) => (
+                  <button
+                    key={option.value}
+                    className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                    onClick={() => selectOption(config.name, option.value)}
+                  >
+                    {option.icon && <span>{option.icon}</span>}
+                    <span>{option.label}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        ))}
+
+        {hasActiveFilters && (
+          <button
+            onClick={clearAllFilters}
+            className="flex items-center gap-2 px-4 py-2 text-sm text-white bg-orange-500 hover:bg-orange-600 rounded-lg transition-colors duration-200"
+          >
+            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+              <path
+                fillRule="evenodd"
+                d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                clipRule="evenodd"
+              />
+            </svg>
+            Xóa bộ lọc
+          </button>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default FilterBar;
+
+```
+
 ### components\common\GridShape.tsx
 ```tsx
 export default function GridShape() {
@@ -538,11 +789,8 @@ export function ScrollToTop() {
 
 ### components\common\SearchBar.tsx
 ```tsx
-// * SearchBar: Thanh tìm kiếm động, hỗ trợ nhiều loại trường (text, select, date)
-// ! Quản lý dropdown select riêng cho từng trường, tránh bị đóng mở đồng loạt
-// ? Nếu muốn thêm type mới (checkbox, radio...), cần bổ sung ở đây
-
 import React, { useState, useRef, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 export interface SearchField {
   name: string;
@@ -571,6 +819,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
   const [values, setValues] = React.useState<Record<string, string>>({});
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const dropdownRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -598,6 +847,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    navigate("/services");
     onSearch(values);
   };
 
@@ -624,15 +874,15 @@ const SearchBar: React.FC<SearchBarProps> = ({
 
   return (
     <form onSubmit={handleSubmit} className="mb-6">
-      <div className="flex flex-wrap -mx-2">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 items-end">
+        {/* Giảm gap từ gap-4 xuống gap-3 */}
         {fields.map((field) => (
-          <div
-            key={field.name}
-            className={`px-2 mb-4 ${field.width || "w-1/3"}`}
-          >
+          <div key={field.name} className="flex flex-col space-y-1">
+            {/* Giảm space-y từ space-y-2 xuống space-y-1 */}
             <label
               htmlFor={field.name}
-              className="block text-sm font-medium text-white mb-1"
+              className="block text-xs font-medium text-white leading-tight"
+              // Giảm text từ text-sm xuống text-xs
             >
               {field.label}
             </label>
@@ -642,7 +892,8 @@ const SearchBar: React.FC<SearchBarProps> = ({
                 ref={(el) => setDropdownRef(field.name, el)}
               >
                 <div
-                  className="w-full px-4 py-2 border border-white bg-white text-gray-900 rounded-md flex items-center justify-between cursor-pointer hover:bg-gray-50"
+                  className="w-full px-3 py-2 min-h-[36px] border border-white bg-white text-gray-900 rounded-md flex items-center justify-between cursor-pointer hover:bg-gray-50 transition-colors duration-200 text-sm"
+                  // Giảm padding từ px-4 py-3 xuống px-3 py-2, min-h từ 44px xuống 36px, thêm text-sm
                   onClick={() => toggleDropdown(field.name)}
                 >
                   <span
@@ -653,7 +904,10 @@ const SearchBar: React.FC<SearchBarProps> = ({
                     {getSelectedLabel(field)}
                   </span>
                   <svg
-                    className="w-5 h-5 text-gray-400"
+                    className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${
+                      openDropdown === field.name ? "rotate-180" : ""
+                    }`}
+                    // Giảm kích thước icon từ w-5 h-5 xuống w-4 h-4
                     fill="currentColor"
                     viewBox="0 0 20 20"
                   >
@@ -665,9 +919,11 @@ const SearchBar: React.FC<SearchBarProps> = ({
                   </svg>
                 </div>
                 {openDropdown === field.name && (
-                  <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-auto">
+                  <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-48 overflow-auto">
+                    {/* Giảm max-h từ max-h-60 xuống max-h-48 */}
                     <div
-                      className="px-4 py-2 text-gray-500 cursor-pointer hover:bg-gray-100"
+                      className="px-3 py-1.5 text-gray-500 cursor-pointer hover:bg-gray-100 transition-colors duration-150 text-sm"
+                      // Giảm padding từ px-4 py-2 xuống px-3 py-1.5, thêm text-sm
                       onClick={() => selectOption(field.name, "")}
                     >
                       {field.placeholder}
@@ -675,11 +931,13 @@ const SearchBar: React.FC<SearchBarProps> = ({
                     {field.options?.map((option) => (
                       <div
                         key={option.value}
-                        className="px-4 py-2 cursor-pointer hover:bg-gray-100 flex items-center text-gray-900"
+                        className="px-3 py-1.5 cursor-pointer hover:bg-gray-100 flex items-center text-gray-900 transition-colors duration-150 text-sm"
+                        // Giảm padding từ px-4 py-2 xuống px-3 py-1.5, thêm text-sm
                         onClick={() => selectOption(field.name, option.value)}
                       >
                         {option.icon && (
-                          <span className="mr-2">{option.icon}</span>
+                          <span className="mr-2 text-sm">{option.icon}</span>
+                          // Thêm text-sm cho icon
                         )}
                         <span>{option.label}</span>
                       </div>
@@ -692,7 +950,8 @@ const SearchBar: React.FC<SearchBarProps> = ({
                 id={field.name}
                 type="date"
                 name={field.name}
-                className="w-full px-4 py-2 bg-white text-gray-900 border border-white rounded-md focus:outline-none focus:ring-2 focus:ring-white focus:border-white"
+                className="w-full px-3 py-2 min-h-[36px] bg-white text-gray-900 border border-white rounded-md focus:outline-none focus:ring-2 focus:ring-white focus:border-white transition-all duration-200 text-sm"
+                // Giảm padding từ px-4 py-3 xuống px-3 py-2, min-h từ 44px xuống 36px, thêm text-sm
                 value={values[field.name] || ""}
                 onChange={(e) => handleChange(field.name, e.target.value)}
               />
@@ -702,19 +961,35 @@ const SearchBar: React.FC<SearchBarProps> = ({
                 type="text"
                 name={field.name}
                 placeholder={field.placeholder}
-                className="w-full px-4 py-2 bg-white text-gray-900 border border-white rounded-md focus:outline-none focus:ring-2 focus:ring-white focus:border-white placeholder:text-gray-500"
+                className="w-full px-3 py-2 min-h-[36px] bg-white text-gray-900 border border-white rounded-md focus:outline-none focus:ring-2 focus:ring-white focus:border-white placeholder:text-gray-500 transition-all duration-200 text-sm"
+                // Giảm padding từ px-4 py-3 xuống px-3 py-2, min-h từ 44px xuống 36px, thêm text-sm
                 value={values[field.name] || ""}
                 onChange={(e) => handleChange(field.name, e.target.value)}
               />
             )}
           </div>
         ))}
-        <div className="px-2 mb-4 flex items-end">
+        {/* Button container */}
+        <div className="flex flex-col space-y-1">
+          {/* Giảm space-y từ space-y-2 xuống space-y-1 */}
+          <div className="text-xs font-medium text-transparent leading-tight select-none">
+            {/* Giảm text từ text-sm xuống text-xs */}
+            &nbsp;
+          </div>
           <button
             type="submit"
-            className="px-6 py-2 bg-white text-[#2A9D8F] font-semibold rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#2A9D8F] font-medium"
+            className="flex items-center justify-center gap-2 px-4 py-2 min-h-[36px] bg-white text-[#2A9D8F] font-semibold rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-white/50 active:bg-gray-100 transition-all duration-200 whitespace-nowrap shadow-sm hover:shadow-md text-sm"
           >
             {buttonLabel}
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="w-5 h-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path d="M3 4a1 1 0 011-1h16a1 1 0 01.8 1.6L15 12.5V19a1 1 0 01-1.447.894l-4-2A1 1 0 019 17v-4.5L3.2 5.6A1 1 0 013 4z" />
+            </svg>
           </button>
         </div>
       </div>
@@ -2800,7 +3075,10 @@ export default function UserDropdown() {
         className="flex items-center text-gray-700 dropdown-toggle dark:text-gray-400"
       >
         <span className="mr-3 overflow-hidden rounded-full h-11 w-11">
-          <img src="/images/user/owner.jpg" alt="User" />
+          <img
+            src="https://i.pinimg.com/736x/74/8d/12/748d12be165d3a74b07cb0870e34550d.jpg"
+            alt="User"
+          />
         </span>
 
         <span className="block mr-1 font-medium text-theme-sm">Musharof</span>
@@ -3140,10 +3418,94 @@ import React from "react";
 
 const Footer: React.FC = () => {
   return (
-    <footer className="bg-white border-t border-gray-200">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-        <div className="text-center text-gray-600">
-          <p>&copy; 2025 Task Manager. Được phát triển với ❤️</p>
+    <footer className="bg-gray-200 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+          {/* Logo CareNest */}
+          <div className="flex items-center justify-center md:justify-start">
+            <div className="text-3xl md:text-4xl font-bold">
+              <span className="text-orange-400">Care</span>
+              <span className="text-gray-600">Nest</span>
+            </div>
+          </div>
+
+          {/* Thông tin liên hệ */}
+          <div className="flex flex-col md:flex-row items-center gap-6 md:gap-8 text-gray-600 text-sm">
+            {/* Địa chỉ */}
+            <div className="flex items-center gap-2">
+              <svg
+                className="w-5 h-5 text-gray-500"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
+                  clipRule="evenodd"
+                />
+              </svg>
+              <span>Đường D9, Khu Công nghệ cao TP.HCM</span>
+            </div>
+            {/* Số điện thoại */}
+            <div className="flex items-center gap-2">
+              <svg
+                className="w-5 h-5 text-gray-500"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
+              </svg>
+              <span>0-xxx-xxx-xxx/0-xxx-xxx-xxx</span>
+            </div>
+
+            <div className="flex items-center gap-4 mt-4">
+              <a href="#" className="text-gray-500 hover:text-orange-400">
+                <svg
+                  className="w-6 h-6"
+                  fill="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  {/* Facebook icon */}
+                </svg>
+              </a>
+              <a href="#" className="text-gray-500 hover:text-orange-400">
+                <svg
+                  className="w-6 h-6"
+                  fill="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  {/* Instagram icon */}
+                </svg>
+              </a>
+            </div>
+            {/* Email */}
+            <div className="flex items-center gap-2">
+              <svg
+                className="w-5 h-5 text-gray-500"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
+                <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
+              </svg>
+              <span>carenest@gmail.com</span>
+            </div>
+            {/* Website */}
+            <div className="flex items-center gap-2">
+              <svg
+                className="w-5 h-5 text-gray-500"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M4.083 9h1.946c.089-1.546.383-2.97.837-4.118A6.004 6.004 0 004.083 9zM10 2a8 8 0 100 16 8 8 0 000-16zm0 2c-.076 0-.232.032-.465.262-.238.234-.497.623-.737 1.182-.389.907-.673 2.142-.766 3.556h3.936c-.093-1.414-.377-2.649-.766-3.556-.24-.559-.499-.948-.737-1.182C10.232 4.032 10.076 4 10 4zm3.971 5c-.089-1.546-.383-2.97-.837-4.118A6.004 6.004 0 0115.917 9h-1.946zm-2.003 2H8.032c.093 1.414.377 2.649.766 3.556.24.559.499.948.737 1.182.233.23.389.262.465.262.076 0 .232-.032.465-.262.238-.234.497-.623.737-1.182.389-.907.673-2.142.766-3.556zm1.166 4.118c.454-1.148.748-2.572.837-4.118h1.946a6.004 6.004 0 01-2.783 4.118zm-6.268 0C6.412 13.97 6.118 12.546 6.03 11H4.083a6.004 6.004 0 002.783 4.118z"
+                  clipRule="evenodd"
+                />
+              </svg>
+              <span>carenet.com</span>
+            </div>
+          </div>
         </div>
       </div>
     </footer>
@@ -3162,7 +3524,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { logout } from "../../store/slices/authSlice";
 import Button from "../../components/ui/Button";
 import { TaskIcon } from "../ui/Icons";
-import type { RootState } from "../../store";
+import type { RootState } from "../../store/store";
 
 const Navbar: React.FC = () => {
   const dispatch = useDispatch();
@@ -3738,7 +4100,7 @@ const Button: React.FC<ButtonProps> = ({
   // Variant Classes
   const variantClasses = {
     primary:
-      "bg-brand-500 text-white shadow-theme-xs hover:bg-brand-600 disabled:bg-brand-300",
+      "bg-orange-500 text-white shadow-theme-xs hover:bg-brand-600 disabled:bg-brand-300",
     outline:
       "bg-white text-gray-700 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-400 dark:ring-gray-700 dark:hover:bg-white/[0.03] dark:hover:text-gray-300",
   };
@@ -4052,39 +4414,137 @@ export const Spinner: React.FC<SpinnerProps> = ({ size = "md", className }) => {
 
 ### config\axios.ts
 ```ts
-import axios from 'axios';
+// src/config/axios.ts
+import axios, { AxiosError } from "axios";
+import type { InternalAxiosRequestConfig } from "axios";
+import { toast } from "react-toastify";
+import baseURL from "../../api.json";
 
-const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
+let stateToken: string | null = null;
+let logoutCallback: (() => void) | null = null;
+
+// ✅ Export function này
+export const setLogoutCallback = (callback: () => void) => {
+  logoutCallback = callback;
+};
+
+// ✅ Export function này
+export const updateStateToken = (token: string | null) => {
+  stateToken = token;
+};
+
+const api = axios.create({
+  baseURL: baseURL.BaseURL,
 });
 
-apiClient.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
+const handleBefore = (config: InternalAxiosRequestConfig) => {
+  const token = localStorage.getItem("authToken") || stateToken;
 
-apiClient.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      // Xử lý lỗi xác thực
-      localStorage.removeItem('token');
-      window.location.href = '/login';
-    }
-    return Promise.reject(error);
+  if (token) {
+    config.headers["Authorization"] = `Bearer ${token}`;
   }
-);
+  return config;
+};
 
-export default apiClient;
+const handleRequestError = (error: AxiosError) => {
+  console.error("Request error:", error);
+  return Promise.reject(error);
+};
+
+const logoutUser = () => {
+  localStorage.removeItem("authToken");
+  updateStateToken(null);
+
+  if (logoutCallback) {
+    logoutCallback();
+  }
+};
+
+const handleResponseError = (error: AxiosError) => {
+  if (error.response?.status === 401) {
+    logoutUser();
+    toast.error(
+      "Phiên đăng nhập không hợp lệ hoặc đã hết hạn. Vui lòng đăng nhập lại."
+    );
+    window.location.href = "/login";
+  }
+
+  console.error("Response error:", error);
+  return Promise.reject(error);
+};
+
+api.interceptors.request.use(handleBefore, handleRequestError);
+api.interceptors.response.use((response) => response, handleResponseError);
+
+export { logoutUser };
+export default api;
+
+```
+
+### configs\axios.ts
+```ts
+// src/config/axios.ts
+import axios, { AxiosError } from "axios";
+import type { InternalAxiosRequestConfig } from "axios";
+import { toast } from "react-toastify";
+import baseURL from "../../api.json";
+
+let stateToken: string | null = null;
+let logoutCallback: (() => void) | null = null;
+
+export const setLogoutCallback = (callback: () => void) => {
+  logoutCallback = callback;
+};
+
+export const updateStateToken = (token: string | null) => {
+  stateToken = token;
+};
+
+const api = axios.create({
+  baseURL: baseURL.BaseURL,
+});
+
+const handleBefore = (config: InternalAxiosRequestConfig) => {
+  const token = localStorage.getItem("authToken") || stateToken;
+
+  if (token) {
+    config.headers["Authorization"] = `Bearer ${token}`;
+  }
+  return config;
+};
+
+const handleRequestError = (error: AxiosError) => {
+  console.error("Request error:", error);
+  return Promise.reject(error);
+};
+
+const logoutUser = () => {
+  localStorage.removeItem("authToken");
+  updateStateToken(null);
+
+  if (logoutCallback) {
+    logoutCallback();
+  }
+};
+
+const handleResponseError = (error: AxiosError) => {
+  if (error.response?.status === 401) {
+    logoutUser();
+    toast.error(
+      "Phiên đăng nhập không hợp lệ hoặc đã hết hạn. Vui lòng đăng nhập lại."
+    );
+    window.location.href = "/login";
+  }
+
+  console.error("Response error:", error);
+  return Promise.reject(error);
+};
+
+api.interceptors.request.use(handleBefore, handleRequestError);
+api.interceptors.response.use((response) => response, handleResponseError);
+
+export { logoutUser };
+export default api;
 
 ```
 
@@ -4418,94 +4878,132 @@ export default AppHeaderForAdmin;
 import { useState } from "react";
 import NotificationDropdown from "../components/header/NotificationDropdown";
 import UserDropdown from "../components/header/UserDropdown";
+import SearchBar from "../components/common/SearchBar";
 import { Link } from "react-router-dom";
+import type { SearchField } from "../components/common/SearchBar";
 
 interface HeaderProps {
   onClick?: () => void;
   onToggle?: () => void;
 }
 
-const AppHeaderForUser: React.FC<HeaderProps> = ({ onClick, onToggle }) => {
+const AppHeaderForUser: React.FC<HeaderProps> = () => {
   const [isApplicationMenuOpen, setApplicationMenuOpen] = useState(false);
 
   const toggleApplicationMenu = () => {
     setApplicationMenuOpen(!isApplicationMenuOpen);
   };
 
+  // Định nghĩa các trường filter
+  const filterFields: SearchField[] = [
+    {
+      name: "location",
+      label: "Địa điểm",
+      placeholder: "Chọn địa điểm",
+      type: "select",
+      width: "w-1/4",
+      options: [
+        { value: "hanoi", label: "Hà Nội" },
+        { value: "hcm", label: "TP. Hồ Chí Minh" },
+        { value: "danang", label: "Đà Nẵng" },
+        { value: "haiphong", label: "Hải Phòng" },
+      ],
+    },
+    {
+      name: "petType",
+      label: "Loại thú",
+      placeholder: "Chọn loại thú cưng",
+      type: "select",
+      width: "w-1/4",
+      options: [
+        { value: "dog", label: "🐕 Chó" },
+        { value: "cat", label: "🐱 Mèo" },
+        { value: "bird", label: "🐦 Chim" },
+        { value: "fish", label: "🐠 Cá" },
+        { value: "rabbit", label: "🐰 Thỏ" },
+      ],
+    },
+    {
+      name: "sortBy",
+      label: "Sắp xếp",
+      placeholder: "Sắp xếp theo",
+      type: "select",
+      width: "w-1/4",
+      options: [
+        { value: "price_asc", label: "Giá tăng dần" },
+        { value: "price_desc", label: "Giá giảm dần" },
+        { value: "rating", label: "Đánh giá cao nhất" },
+        { value: "distance", label: "Khoảng cách gần nhất" },
+        { value: "newest", label: "Mới nhất" },
+      ],
+    },
+    {
+      name: "priceRange",
+      label: "Khoảng giá",
+      placeholder: "Chọn khoảng giá",
+      type: "select",
+      width: "w-1/4",
+      options: [
+        { value: "0-100", label: "Dưới 100k" },
+        { value: "100-300", label: "100k - 300k" },
+        { value: "300-500", label: "300k - 500k" },
+        { value: "500-1000", label: "500k - 1tr" },
+        { value: "1000+", label: "Trên 1tr" },
+      ],
+    },
+  ];
+
+  const handleSearch = (values: Record<string, string>) => {
+    console.log("Filter values:", values);
+  };
+
   return (
-    <header
-      className="sticky top-0 flex w-full backdrop-blur-md z-50 transition-all duration-300"
-      style={{ backgroundColor: "#2A9D8F" }}
-    >
-      <div className="w-full max-w-7xl mx-auto px-4 lg:px-6">
-        <div className="flex items-center justify-between h-16 lg:h-20">
-          {/* Logo và tên ứng dụng - Bên trái */}
-          <div className="flex items-center space-x-3 flex-shrink-0">
-            <Link to="/" className="flex items-center space-x-3">
-              <img
-                src="/public/image/ranbowlogo.png"
-                alt="Logo"
-                className="w-10 h-10 lg:w-12 lg:h-12 transition-all duration-300"
-              />
-              <span className="font-semibold text-xl lg:text-2xl select-none hidden sm:block text-white">
-                <span className="text-orange-300">Care</span>
-                <span className="text-white">Nest</span>
-              </span>
-            </Link>
-          </div>
-
-          {/* Search bar - Ở giữa, chỉ hiện trên desktop */}
-          <div className="hidden lg:flex flex-1 justify-center max-w-2xl mx-8">
-            <form className="w-full">
-              <div className="relative">
-                <input
-                  type="text"
-                  placeholder="Tìm tên dịch vụ"
-                  className="h-12 w-full rounded-lg border-0 bg-white py-3 pl-4 pr-24 text-sm text-gray-800 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-white/50"
+    <>
+      {/* Header chính */}
+      <header
+        className="sticky top-0 flex w-full backdrop-blur-md z-50 transition-all duration-300"
+        style={{ backgroundColor: "#2A9D8F" }}
+      >
+        <div className="w-full max-w-8xl mx-auto px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16 lg:h-20">
+            {/* Logo và tên ứng dụng - Bên trái */}
+            <div className="flex items-center space-x-3 flex-shrink-0">
+              <Link to="/" className="flex items-center space-x-3">
+                <img
+                  src="/public/image/ranbowlogo.png"
+                  alt="Logo"
+                  className="w-10 h-10 lg:w-25 lg:h-20 transition-all duration-300"
                 />
-                <button
-                  type="submit"
-                  className="absolute right-2 top-1/2 -translate-y-1/2 bg-[#2A9D8F] hover:bg-[#238276] text-white px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200"
-                >
-                  Tìm kiếm
-                </button>
-              </div>
-            </form>
-          </div>
+                <span className="font-semibold text-xl lg:text-2xl select-none hidden sm:block text-white">
+                  <span className="text-orange-300 text-5xl">Care</span>
+                  <span className="text-white text-5xl">Nest</span>
+                </span>
+              </Link>
+            </div>
 
-          {/* Mobile menu button - Chỉ hiện trên mobile */}
-          <button
-            onClick={toggleApplicationMenu}
-            className="flex items-center justify-center w-10 h-10 text-white rounded-lg hover:bg-white/10 lg:hidden"
-          >
-            <svg
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                fillRule="evenodd"
-                clipRule="evenodd"
-                d="M5.99902 10.4951C6.82745 10.4951 7.49902 11.1667 7.49902 11.9951V12.0051C7.49902 12.8335 6.82745 13.5051 5.99902 13.5051C5.1706 13.5051 4.49902 12.8335 4.49902 12.0051V11.9951C4.49902 11.1667 5.1706 10.4951 5.99902 10.4951ZM17.999 10.4951C18.8275 10.4951 19.499 11.1667 19.499 11.9951V12.0051C19.499 12.8335 18.8275 13.5051 17.999 13.5051C17.1706 13.5051 16.499 12.8335 16.499 12.0051V11.9951C16.499 11.1667 17.1706 10.4951 17.999 10.4951ZM13.499 11.9951C13.499 11.1667 12.8275 10.4951 11.999 10.4951C11.1706 10.4951 10.499 11.1667 10.499 11.9951V12.0051C10.499 12.8335 11.1706 13.5051 11.999 13.5051C12.8275 13.5051 13.499 12.8335 13.499 12.0051V11.9951Z"
-                fill="currentColor"
-              />
-            </svg>
-          </button>
+            {/* Search bar - Ở giữa, chỉ hiện trên desktop */}
+            <div className="hidden lg:flex flex-1 justify-center max-w-2xl mx-8">
+              <form className="w-full">
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Tìm tên dịch vụ"
+                    className="h-12 w-full rounded-lg border-0 bg-white py-3 pl-4 pr-24 text-sm text-gray-800 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-white/50"
+                  />
+                  <button
+                    type="submit"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 bg-[#2A9D8F] hover:bg-[#238276] text-white px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200"
+                  >
+                    Tìm kiếm
+                  </button>
+                </div>
+              </form>
+            </div>
 
-          {/* Notifications, User menu và Giỏ hàng - Bên phải */}
-          <div className="hidden lg:flex items-center gap-4 flex-shrink-0">
-            {/* Notification */}
-            <NotificationDropdown />
-
-            {/* User dropdown */}
-            <UserDropdown />
-
-            {/* Giỏ hàng */}
-            <Link
-              to="/cart"
-              className="relative flex items-center justify-center w-11 h-11 text-white rounded-full hover:bg-white/10 transition-colors duration-200"
+            {/* Mobile menu button */}
+            <button
+              onClick={toggleApplicationMenu}
+              className="flex items-center justify-center w-10 h-10 text-white rounded-lg hover:bg-white/10 lg:hidden"
             >
               <svg
                 width="24"
@@ -4515,51 +5013,25 @@ const AppHeaderForUser: React.FC<HeaderProps> = ({ onClick, onToggle }) => {
                 xmlns="http://www.w3.org/2000/svg"
               >
                 <path
-                  d="M3 3H5L5.4 5M7 13H17L21 5H5.4M7 13L5.4 5M7 13L4.7 15.3C4.3 15.7 4.6 16.5 5.1 16.5H17M17 13V16.5M9 19.5C9.8 19.5 10.5 20.2 10.5 21S9.8 22.5 9 22.5 7.5 21.8 7.5 21 8.2 19.5 9 19.5ZM20 19.5C20.8 19.5 21.5 20.2 21.5 21S20.8 22.5 20 22.5 18.5 21.8 18.5 21 19.2 19.5 20 19.5Z"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
+                  fillRule="evenodd"
+                  clipRule="evenodd"
+                  d="M5.99902 10.4951C6.82745 10.4951 7.49902 11.1667 7.49902 11.9951V12.0051C7.49902 12.8335 6.82745 13.5051 5.99902 13.5051C5.1706 13.5051 4.49902 12.8335 4.49902 12.0051V11.9951C4.49902 11.1667 5.1706 10.4951 5.99902 10.4951ZM17.999 10.4951C18.8275 10.4951 19.499 11.1667 19.499 11.9951V12.0051C19.499 12.8335 18.8275 13.5051 17.999 13.5051C17.1706 13.5051 16.499 12.8335 16.499 12.0051V11.9951C16.499 11.1667 17.1706 10.4951 17.999 10.4951ZM13.499 11.9951C13.499 11.1667 12.8275 10.4951 11.999 10.4951C11.1706 10.4951 10.499 11.1667 10.499 11.9951V12.0051C10.499 12.8335 11.1706 13.5051 11.999 13.5051C12.8275 13.5051 13.499 12.8335 13.499 12.0051V11.9951Z"
+                  fill="currentColor"
                 />
               </svg>
-              {/* Badge số lượng sản phẩm trong giỏ */}
-              <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center text-[10px] font-medium">
-                3
-              </span>
-            </Link>
-          </div>
-        </div>
+            </button>
 
-        {/* Mobile search bar */}
-        {isApplicationMenuOpen && (
-          <div className="lg:hidden pb-4">
-            <form>
-              <div className="relative">
-                <input
-                  type="text"
-                  placeholder="Tìm tên dịch vụ"
-                  className="h-11 w-full rounded-lg border-0 bg-white py-3 pl-4 pr-20 text-sm text-gray-800 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-white/50"
-                />
-                <button
-                  type="submit"
-                  className="absolute right-2 top-1/2 -translate-y-1/2 bg-[#2A9D8F] hover:bg-[#238276] text-white px-3 py-1.5 rounded text-sm font-medium"
-                >
-                  Tìm kiếm
-                </button>
-              </div>
-            </form>
-
-            {/* Mobile menu items */}
-            <div className="flex items-center justify-between mt-4 pt-4 border-t border-white/20">
+            {/* Notifications, User menu và Giỏ hàng */}
+            <div className="hidden lg:flex items-center gap-4 flex-shrink-0">
               <NotificationDropdown />
               <UserDropdown />
               <Link
                 to="/cart"
-                className="relative flex items-center justify-center w-10 h-10 text-white rounded-full hover:bg-white/10"
+                className="relative flex items-center justify-center w-11 h-11 text-white rounded-full hover:bg-white/10 transition-colors duration-200"
               >
                 <svg
-                  width="20"
-                  height="20"
+                  width="24"
+                  height="24"
                   viewBox="0 0 24 24"
                   fill="none"
                   xmlns="http://www.w3.org/2000/svg"
@@ -4572,15 +5044,74 @@ const AppHeaderForUser: React.FC<HeaderProps> = ({ onClick, onToggle }) => {
                     strokeLinejoin="round"
                   />
                 </svg>
-                <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center text-[9px] font-medium">
+                <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center text-[10px] font-medium">
                   3
                 </span>
               </Link>
             </div>
           </div>
-        )}
+          {/* Mobile search và menu */}
+          {isApplicationMenuOpen && (
+            <div className="lg:hidden pb-4">
+              <form>
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Tìm tên dịch vụ"
+                    className="h-11 w-full rounded-lg border-0 bg-white py-3 pl-4 pr-20 text-sm text-gray-800 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-white/50"
+                  />
+                  <button
+                    type="submit"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 bg-[#2A9D8F] hover:bg-[#238276] text-white px-3 py-1.5 rounded text-sm font-medium"
+                  >
+                    Tìm kiếm
+                  </button>
+                </div>
+              </form>
+
+              <div className="flex items-center justify-between mt-4 pt-4 border-t border-white/20">
+                <NotificationDropdown />
+                <UserDropdown />
+                <Link
+                  to="/cart"
+                  className="relative flex items-center justify-center w-10 h-10 text-white rounded-full hover:bg-white/10"
+                >
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M3 3H5L5.4 5M7 13H17L21 5H5.4M7 13L5.4 5M7 13L4.7 15.3C4.3 15.7 4.6 16.5 5.1 16.5H17M17 13V16.5M9 19.5C9.8 19.5 10.5 20.2 10.5 21S9.8 22.5 9 22.5 7.5 21.8 7.5 21 8.2 19.5 9 19.5ZM20 19.5C20.8 19.5 21.5 20.2 21.5 21S20.8 22.5 20 22.5 18.5 21.8 18.5 21 19.2 19.5 20 19.5Z"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                  <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center text-[9px] font-medium">
+                    3
+                  </span>
+                </Link>
+              </div>
+            </div>
+          )}
+        </div>
+      </header>
+
+      {/* Thanh Filter */}
+      <div className="bg-[#2A9D8F] border-t border-white/10">
+        <div className="w-full max-w-8xl mx-auto px-6 lg:px-8 p-2">
+          <SearchBar
+            fields={filterFields}
+            onSearch={handleSearch}
+            buttonLabel="Lọc kết quả"
+          />
+        </div>
       </div>
-    </header>
+    </>
   );
 };
 
@@ -7018,6 +7549,8 @@ import React from "react";
 import ServiceCategories from "./components/ServiceCategories";
 import LatestServices from "./components/LatestServices";
 import HeroBanner from "./components/HeroBanner";
+import HighestRating from "./components/HighestRating";
+import MostBuy from "./components/MostBuy";
 
 const HomePage: React.FC = () => {
   return (
@@ -7030,6 +7563,10 @@ const HomePage: React.FC = () => {
 
       {/* Latest Services */}
       <LatestServices />
+      {/* Highest Rating */}
+      <HighestRating></HighestRating>
+      {/* Most Buy */}
+      <MostBuy></MostBuy>
     </div>
   );
 };
@@ -7045,7 +7582,7 @@ import React from "react";
 
 const HeroBanner: React.FC = () => {
   return (
-    <section className="bg-gradient-to-r from-[#2A9D8F] to-[#21867A] text-white py-16">
+    <section className="bg-gradient-to-r from-[#2A9D8F] to-[#8518c4] text-white py-16">
       <div className="container mx-auto px-4 text-center">
         <h1 className="text-4xl md:text-6xl font-bold mb-6">
           Chăm sóc thú cưng <br />
@@ -7063,6 +7600,170 @@ const HeroBanner: React.FC = () => {
 };
 
 export default HeroBanner;
+
+```
+
+### pages\Home\components\HighestRating.tsx
+```tsx
+// pages/Home/components/LatestServices.tsx
+import React from "react";
+import Card from "../../../components/ui/Card";
+import Button from "../../../components/ui/Button";
+
+interface Service {
+  id: number;
+  title: string;
+  price: string;
+  image: string;
+  rating?: number;
+  reviews?: number;
+}
+
+const highestRating: Service[] = [
+  {
+    id: 1,
+    title: "Cắt tỉa lông",
+    price: "200.000 đ",
+    image: "/public/image/service1.jpg",
+    rating: 4.8,
+    reviews: 124,
+  },
+  {
+    id: 2,
+    title: "Cắt tỉa lông",
+    price: "200.000 đ",
+    image: "/public/image/service2.jpg",
+    rating: 4.9,
+    reviews: 89,
+  },
+  {
+    id: 3,
+    title: "Cắt tỉa lông",
+    price: "200.000 đ",
+    image: "/public/image/service3.jpg",
+    rating: 4.7,
+    reviews: 156,
+  },
+  {
+    id: 4,
+    title: "Cắt tỉa lông",
+    price: "200.000 đ",
+    image: "/public/image/service4.jpg",
+    rating: 4.8,
+    reviews: 203,
+  },
+  {
+    id: 5,
+    title: "Cắt tỉa lông",
+    price: "200.000 đ",
+    image: "/public/image/service5.jpg",
+    rating: 4.9,
+    reviews: 178,
+  },
+  {
+    id: 6,
+    title: "Cắt tỉa lông",
+    price: "200.000 đ",
+    image: "/public/image/service6.jpg",
+    rating: 4.6,
+    reviews: 92,
+  },
+];
+
+const HighestRating: React.FC = () => {
+  return (
+    <section className="py-12 bg-gray-50">
+      <div className="container mx-auto px-4">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <div className="relative pb-3 w-full">
+            {" "}
+            {/* Changed to full width and added padding bottom */}
+            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
+              ĐÁNH GIÁ CAO NHẤT 💯
+            </h2>
+            <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-400 h-3 bg-[#2A9D8F] rounded"></div>
+          </div>
+        </div>
+
+        {/* Services Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
+          {highestRating.map((service) => (
+            <ServiceCard key={service.id} service={service} />
+          ))}
+        </div>
+
+        {/* View More Button */}
+        <div className="text-center mt-8">
+          <Button
+            variant="outline"
+            size="md"
+            className="border-[#2A9D8F] text-[#2A9D8F] hover:bg-[#2A9D8F] hover:text-white"
+          >
+            Xem thêm dịch vụ
+          </Button>
+        </div>
+      </div>
+    </section>
+  );
+};
+
+// Service Card Component
+interface ServiceCardProps {
+  service: Service;
+}
+
+const ServiceCard: React.FC<ServiceCardProps> = ({ service }) => {
+  return (
+    <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-200 cursor-pointer group">
+      {/* Image */}
+      <div className="relative overflow-hidden">
+        <img
+          src={service.image}
+          alt={service.title}
+          className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-200"
+          onError={(e) => {
+            // Fallback image
+            (e.target as HTMLImageElement).src =
+              "https://i.pinimg.com/736x/26/c7/35/26c7355fe46f62d84579857c6f8c4ea5.jpg";
+          }}
+        />
+        {service.rating && (
+          <div className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-full flex items-center gap-1">
+            <span className="text-yellow-500 text-sm">⭐</span>
+            <span className="text-xs font-medium">{service.rating}</span>
+          </div>
+        )}
+      </div>
+
+      {/* Content */}
+      <div className="p-4">
+        <h3 className="font-semibold text-gray-900 mb-2 group-hover:text-[#2A9D8F] transition-colors duration-200">
+          {service.title}
+        </h3>
+        <div className="flex items-center justify-between">
+          <span className="text-lg font-bold text-[#2A9D8F]">
+            {service.price}
+          </span>
+          {service.reviews && (
+            <span className="text-xs text-gray-500">
+              ({service.reviews} đánh giá)
+            </span>
+          )}
+        </div>
+        <Button
+          variant="primary"
+          size="sm"
+          className="w-full mt-3 bg-[#2A9D8F] hover:bg-[#238276]"
+        >
+          Đặt ngay
+        </Button>
+      </div>
+    </Card>
+  );
+};
+
+export default HighestRating;
 
 ```
 
@@ -7139,11 +7840,12 @@ const LatestServices: React.FC = () => {
       <div className="container mx-auto px-4">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="inline-block">
-            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2 relative">
-              DỊCH VỤ MỚI NHẤT
-              <div className="absolute bottom-0 left-0 w-full h-1 bg-[#2A9D8F] rounded"></div>
+          <div className="relative pb-3 w-full">
+            {/* Changed to full width and added padding bottom */}
+            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
+              DỊCH VỤ MỚI NHẤT 📰
             </h2>
+            <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-400 h-3 bg-[#2A9D8F] rounded"></div>
           </div>
         </div>
 
@@ -7186,7 +7888,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({ service }) => {
           onError={(e) => {
             // Fallback image
             (e.target as HTMLImageElement).src =
-              "https://via.placeholder.com/300x200?text=Service+Image";
+              "https://i.pinimg.com/736x/38/f4/f2/38f4f2d8652c7aa795f5e3ee75b5919c.jpg";
           }}
         />
         {service.rating && (
@@ -7225,6 +7927,170 @@ const ServiceCard: React.FC<ServiceCardProps> = ({ service }) => {
 };
 
 export default LatestServices;
+
+```
+
+### pages\Home\components\MostBuy.tsx
+```tsx
+// pages/Home/components/LatestServices.tsx
+import React from "react";
+import Card from "../../../components/ui/Card";
+import Button from "../../../components/ui/Button";
+
+interface Service {
+  id: number;
+  title: string;
+  price: string;
+  image: string;
+  rating?: number;
+  reviews?: number;
+}
+
+const mostBuy: Service[] = [
+  {
+    id: 1,
+    title: "Cắt tỉa lông",
+    price: "200.000 đ",
+    image: "/public/image/service1.jpg",
+    rating: 4.8,
+    reviews: 124,
+  },
+  {
+    id: 2,
+    title: "Cắt tỉa lông",
+    price: "200.000 đ",
+    image: "/public/image/service2.jpg",
+    rating: 4.9,
+    reviews: 89,
+  },
+  {
+    id: 3,
+    title: "Cắt tỉa lông",
+    price: "200.000 đ",
+    image: "/public/image/service3.jpg",
+    rating: 4.7,
+    reviews: 156,
+  },
+  {
+    id: 4,
+    title: "Cắt tỉa lông",
+    price: "200.000 đ",
+    image: "/public/image/service4.jpg",
+    rating: 4.8,
+    reviews: 203,
+  },
+  {
+    id: 5,
+    title: "Cắt tỉa lông",
+    price: "200.000 đ",
+    image: "/public/image/service5.jpg",
+    rating: 4.9,
+    reviews: 178,
+  },
+  {
+    id: 6,
+    title: "Cắt tỉa lông",
+    price: "200.000 đ",
+    image: "/public/image/service6.jpg",
+    rating: 4.6,
+    reviews: 92,
+  },
+];
+
+const MostBuy: React.FC = () => {
+  return (
+    <section className="py-12 bg-gray-50">
+      <div className="container mx-auto px-4">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <div className="relative pb-3 w-full">
+            {" "}
+            {/* Changed to full width and added padding bottom */}
+            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
+              LƯỢT ĐẶT NHIỀU NHẤT 👍
+            </h2>
+            <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-400 h-3 bg-[#2A9D8F] rounded"></div>
+          </div>
+        </div>
+
+        {/* Services Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
+          {mostBuy.map((service) => (
+            <ServiceCard key={service.id} service={service} />
+          ))}
+        </div>
+
+        {/* View More Button */}
+        <div className="text-center mt-8">
+          <Button
+            variant="outline"
+            size="md"
+            className="border-[#2A9D8F] text-[#2A9D8F] hover:bg-[#2A9D8F] hover:text-white"
+          >
+            Xem thêm dịch vụ
+          </Button>
+        </div>
+      </div>
+    </section>
+  );
+};
+
+// Service Card Component
+interface ServiceCardProps {
+  service: Service;
+}
+
+const ServiceCard: React.FC<ServiceCardProps> = ({ service }) => {
+  return (
+    <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-200 cursor-pointer group">
+      {/* Image */}
+      <div className="relative overflow-hidden">
+        <img
+          src={service.image}
+          alt={service.title}
+          className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-200"
+          onError={(e) => {
+            // Fallback image
+            (e.target as HTMLImageElement).src =
+              "https://i.pinimg.com/736x/c3/4c/dc/c34cdcf73b7bea6856f82d93c200f874.jpg";
+          }}
+        />
+        {service.rating && (
+          <div className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-full flex items-center gap-1">
+            <span className="text-yellow-500 text-sm">⭐</span>
+            <span className="text-xs font-medium">{service.rating}</span>
+          </div>
+        )}
+      </div>
+
+      {/* Content */}
+      <div className="p-4">
+        <h3 className="font-semibold text-gray-900 mb-2 group-hover:text-[#2A9D8F] transition-colors duration-200">
+          {service.title}
+        </h3>
+        <div className="flex items-center justify-between">
+          <span className="text-lg font-bold text-[#2A9D8F]">
+            {service.price}
+          </span>
+          {service.reviews && (
+            <span className="text-xs text-gray-500">
+              ({service.reviews} đánh giá)
+            </span>
+          )}
+        </div>
+        <Button
+          variant="primary"
+          size="sm"
+          className="w-full mt-3 bg-[#2A9D8F] hover:bg-[#238276]"
+        >
+          Đặt ngay
+        </Button>
+      </div>
+    </Card>
+  );
+};
+
+export default MostBuy;
 
 ```
 
@@ -7268,7 +8134,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
           onError={(e) => {
             // Fallback image nếu không load được
             (e.target as HTMLImageElement).src =
-              "https://via.placeholder.com/300x200?text=Service+Image";
+              "hhttps://i.pinimg.com/736x/38/f4/f2/38f4f2d8652c7aa795f5e3ee75b5919c.jpg";
           }}
         />
 
@@ -7396,35 +8262,43 @@ export default ServiceCategories;
 
 ### pages\Login\index.tsx
 ```tsx
-import { useState } from "react";
+// src/pages/Login/index.tsx
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import ForgotPassword from "./components/ForgotPassword";
 import { FiEye, FiEyeOff } from "react-icons/fi";
+import { useLoginForm } from "./hooks/useLoginForm";
+import ForgotPassword from "./components/ForgotPassword";
 
-/**
- * Component Trang Đăng Nhập
- * Hiển thị trang đăng nhập với form email/mật khẩu và chức năng quên mật khẩu
- */
 export default function LoginPage() {
-  // Hook để điều hướng trang
   const navigate = useNavigate();
-
-  // Quản lý trạng thái cho các trường form và điều khiển giao diện
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
+
+  const {
+    formData,
+    formErrors,
+    showPassword,
+    loading,
+    error,
+    isAuthenticated,
+    handleInputChange,
+    handleSubmit,
+    setShowPassword,
+  } = useLoginForm();
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate("/", { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
 
   return (
     <>
       <div className="flex h-screen relative">
-        {/* Nút về trang chủ ở góc phải trên */}
         <button
           onClick={() => navigate("/")}
           className="absolute top-6 right-6 p-2 rounded hover:bg-gray-200"
           aria-label="Trang chủ"
         >
-          {/* Biểu tượng ngôi nhà SVG */}
           <svg
             xmlns="http://www.w3.org/2000/svg"
             className="h-6 w-6 text-[#2A9D8F]"
@@ -7440,49 +8314,84 @@ export default function LoginPage() {
             />
           </svg>
         </button>
-        {/* Phần bên phải - Form đăng nhập */}
+
         <div className="w-1/2 flex items-center justify-center bg-white">
           <div className="w-full max-w-md p-8 shadow-lg rounded-xl border">
-            {/* Tiêu đề form */}
             <h2 className="text-2xl font-bold text-center mb-6">Đăng nhập</h2>
-            <p className="text-center   text-gray-600 mb-6">
+            <p className="text-center text-gray-600 mb-6">
               Chào mừng bạn trở lại!
             </p>
 
-            {/* Form đăng nhập */}
-            <form className="space-y-4">
-              {/* Ô nhập email */}
-              <input
-                type="email"
-                placeholder="Email"
-                className="w-full px-4 py-3 border rounded-md"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
+            {error && (
+              <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+                {error.message}
+              </div>
+            )}
 
-              {/* Ô nhập mật khẩu với nút ẩn/hiện */}
-              <div className="relative">
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
                 <input
-                  type={showPassword ? "text" : "password"}
-                  placeholder="Mật khẩu"
-                  className="w-full px-4 py-3 border rounded-md"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  type="text"
+                  placeholder="Tên đăng nhập"
+                  className={`w-full px-4 py-3 border rounded-md ${
+                    formErrors.username ? "border-red-500" : "border-gray-300"
+                  }`}
+                  value={formData.username}
+                  onChange={(e) =>
+                    handleInputChange("username", e.target.value)
+                  }
+                  disabled={loading}
                 />
-
-                {/* Nút chuyển đổi ẩn/hiện mật khẩu */}
-                <span
-                  className="absolute right-4 top-3 cursor-pointer text-gray-600"
-                  onClick={() => setShowPassword(!showPassword)}
-                >
-                  {showPassword ? <FiEyeOff size={20} /> : <FiEye size={20} />}
-                </span>
+                {formErrors.username && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {formErrors.username}
+                  </p>
+                )}
               </div>
 
-              {/* Phần ghi nhớ mật khẩu và quên mật khẩu */}
+              <div>
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Mật khẩu"
+                    className={`w-full px-4 py-3 border rounded-md ${
+                      formErrors.password ? "border-red-500" : "border-gray-300"
+                    }`}
+                    value={formData.password}
+                    onChange={(e) =>
+                      handleInputChange("password", e.target.value)
+                    }
+                    disabled={loading}
+                  />
+                  <span
+                    className="absolute right-4 top-3 cursor-pointer text-gray-600"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? (
+                      <FiEyeOff size={20} />
+                    ) : (
+                      <FiEye size={20} />
+                    )}
+                  </span>
+                </div>
+                {formErrors.password && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {formErrors.password}
+                  </p>
+                )}
+              </div>
+
               <div className="flex items-center justify-between text-sm">
                 <label className="flex items-center gap-2">
-                  <input type="checkbox" className="accent-blue-600" />
+                  <input
+                    type="checkbox"
+                    className="accent-blue-600"
+                    checked={formData.rememberMe}
+                    onChange={(e) =>
+                      handleInputChange("rememberMe", e.target.checked)
+                    }
+                    disabled={loading}
+                  />
                   Ghi nhớ mật khẩu?
                 </label>
                 <button
@@ -7494,15 +8403,18 @@ export default function LoginPage() {
                 </button>
               </div>
 
-              {/* Nút đăng nhập */}
               <button
                 type="submit"
-                className="w-full py-3 bg-[#2A9D8F] text-white rounded-md hover:bg-[#228B7E] transition"
+                disabled={loading}
+                className={`w-full py-3 text-white rounded-md transition ${
+                  loading
+                    ? "bg-gray-400 cursor-not-allowed"
+                    : "bg-[#2A9D8F] hover:bg-[#228B7E]"
+                }`}
               >
-                Đăng nhập
+                {loading ? "Đang đăng nhập..." : "Đăng nhập"}
               </button>
 
-              {/* Liên kết đăng ký */}
               <p className="text-center text-sm mt-4">
                 Chưa có tài khoản?{" "}
                 <button
@@ -7516,7 +8428,7 @@ export default function LoginPage() {
             </form>
           </div>
         </div>
-        {/* Phần bên trái - Khu vực trang trí với logo */}
+
         <div className="w-1/2 bg-[#E7F3F5] flex flex-col justify-center items-center">
           <div className="w-full max-w-4xl mx-auto p-4 md:p-6 lg:p-8 rounded-lg fixed-size">
             <img
@@ -7528,7 +8440,7 @@ export default function LoginPage() {
                 width: "auto",
                 height: "auto",
                 objectFit: "contain",
-                userSelect: "none", // Không cho phép chọn
+                userSelect: "none",
                 transform: "scale(1)",
                 transformOrigin: "center center",
               }}
@@ -7537,7 +8449,6 @@ export default function LoginPage() {
         </div>
       </div>
 
-      {/* Modal quên mật khẩu */}
       {showForgotPassword && (
         <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex justify-center items-center z-50">
           <ForgotPassword onClose={() => setShowForgotPassword(false)} />
@@ -7546,6 +8457,30 @@ export default function LoginPage() {
     </>
   );
 }
+
+```
+
+### pages\Login\components\AuthWrapper.tsx
+```tsx
+// src/components/AuthWrapper.tsx
+import { useEffect } from "react";
+import { useDispatch } from "react-redux";
+import { restoreAuth } from "../../../store/slices/authSlice";
+import type { AppDispatch } from "../../../store/store";
+
+interface AuthWrapperProps {
+  children: React.ReactNode;
+}
+
+export const AuthWrapper: React.FC<AuthWrapperProps> = ({ children }) => {
+  const dispatch = useDispatch<AppDispatch>();
+
+  useEffect(() => {
+    dispatch(restoreAuth());
+  }, [dispatch]);
+
+  return <>{children}</>;
+};
 
 ```
 
@@ -7809,21 +8744,21 @@ export default ForgotPassword;
 
 ### pages\Login\hooks\useLoginForm.ts
 ```ts
+// src/pages/Login/hooks/useLoginForm.ts
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useLocation } from "react-router-dom";
-import { loginUser, clearError } from "../../../store/slices/authSlice";
-import { validateLogin } from "../utils/loginValidation";
-import type { RootState, AppDispatch } from "../../../store";
+import { Login, LoginNoRemember } from "../../../store/slices/authSlice";
+import type { RootState, AppDispatch } from "../../../store/store";
 
 interface LoginFormData {
-  email: string;
+  username: string;
   password: string;
   rememberMe: boolean;
 }
 
 interface FormErrors {
-  email?: string;
+  username?: string;
   password?: string;
 }
 
@@ -7832,12 +8767,12 @@ export const useLoginForm = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const { isLoading, error, isAuthenticated } = useSelector(
+  const { loading, error, isAuthenticated, user } = useSelector(
     (state: RootState) => state.auth
   );
 
   const [formData, setFormData] = useState<LoginFormData>({
-    email: "",
+    username: "",
     password: "",
     rememberMe: false,
   });
@@ -7853,29 +8788,49 @@ export const useLoginForm = () => {
     if (field in formErrors && formErrors[field as keyof FormErrors]) {
       setFormErrors((prev: FormErrors) => ({ ...prev, [field]: undefined }));
     }
+  };
 
-    if (error) {
-      dispatch(clearError());
+  const validateForm = () => {
+    const errors: FormErrors = {};
+
+    if (!formData.username) {
+      errors.username = "Tên đăng nhập không được để trống";
+    } else if (formData.username.length < 3) {
+      errors.username = "Tên đăng nhập phải có ít nhất 3 ký tự";
     }
+
+    if (!formData.password) {
+      errors.password = "Mật khẩu không được để trống";
+    } else if (formData.password.length < 6) {
+      errors.password = "Mật khẩu phải có ít nhất 6 ký tự";
+    }
+
+    return errors;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const errors = validateLogin(formData);
+    const errors = validateForm();
     if (Object.keys(errors).length > 0) {
       setFormErrors(errors);
       return;
     }
 
     try {
-      const result = await dispatch(loginUser(formData));
-      if (loginUser.fulfilled.match(result)) {
-        const from = (location.state as any)?.from?.pathname || "/dashboard";
-        navigate(from, { replace: true });
-      }
-    } catch (error) {
-      console.error("Login error:", error);
+      const loginAction = formData.rememberMe ? Login : LoginNoRemember;
+
+      await dispatch(
+        loginAction({
+          username: formData.username,
+          password: formData.password,
+        })
+      ).unwrap();
+
+      const from = (location.state as any)?.from?.pathname || "/dashboard";
+      navigate(from, { replace: true });
+    } catch (error: any) {
+      console.error("Login failed:", error);
     }
   };
 
@@ -7883,9 +8838,10 @@ export const useLoginForm = () => {
     formData,
     formErrors,
     showPassword,
-    isLoading,
+    loading,
     error,
     isAuthenticated,
+    user,
     handleInputChange,
     handleSubmit,
     setShowPassword,
@@ -7896,36 +8852,37 @@ export const useLoginForm = () => {
 
 ### pages\Login\utils\loginValidation.ts
 ```ts
+// utils/loginValidation.ts
 interface LoginFormData {
-    email: string;
-    password: string;
+  username: string; // ✅ Đổi từ email sang username
+  password: string;
+}
+
+interface LoginFormErrors {
+  username?: string; // ✅ Đổi từ email sang username
+  password?: string;
+}
+
+export const validateLogin = (data: LoginFormData): LoginFormErrors => {
+  const errors: LoginFormErrors = {};
+
+  // ✅ Validate username thay vì email
+  if (!data.username) {
+    errors.username = "Tên đăng nhập không được để trống";
+  } else if (data.username.length < 3) {
+    errors.username = "Tên đăng nhập phải có ít nhất 3 ký tự";
   }
-  
-  interface LoginFormErrors {
-    email?: string;
-    password?: string;
+
+  // Validate password
+  if (!data.password) {
+    errors.password = "Mật khẩu không được để trống";
+  } else if (data.password.length < 6) {
+    errors.password = "Mật khẩu phải có ít nhất 6 ký tự";
   }
-  
-  export const validateLogin = (data: LoginFormData): LoginFormErrors => {
-    const errors: LoginFormErrors = {};
-  
-    // Validate email
-    if (!data.email) {
-      errors.email = 'Email không được để trống';
-    } else if (!/\S+@\S+\.\S+/.test(data.email)) {
-      errors.email = 'Email không hợp lệ';
-    }
-  
-    // Validate password
-    if (!data.password) {
-      errors.password = 'Mật khẩu không được để trống';
-    } else if (data.password.length < 6) {
-      errors.password = 'Mật khẩu phải có ít nhất 6 ký tự';
-    }
-  
-    return errors;
-  };
-  
+
+  return errors;
+};
+
 ```
 
 ### pages\NotFound\index.tsx
@@ -8833,6 +9790,420 @@ export default function RegisterType() {
 
 ```
 
+### pages\ServiceDetail\ServiceDetail.tsx
+```tsx
+import React, { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import AppLayoutForUser from "../../layout/AppLayoutForUser";
+import ServiceImages from "./components/ServiceImages";
+import ServiceInfo from "./components/ServiceInfo";
+import ServiceActions from "./components/ServiceActions";
+import type { Service } from "@/types/services";
+
+const mockService: Service = {
+  id: "1",
+  name: "Cắt tỉa lông",
+  images: [
+    "/image/pet-grooming-1.jpg",
+    "/image/pet-grooming-2.jpg",
+    "/image/pet-grooming-3.jpg",
+  ],
+  rating: 5,
+  reviewCount: 20,
+  bookingCount: 100,
+  category: "Grooming",
+  originalPrice: 230000,
+  currentPrice: 200000,
+  discount: 15,
+  petTypes: ["Thỏ", "Mèo", "Chó"],
+  duration: 60,
+  description: "Dịch vụ cắt tỉa lông chuyên nghiệp cho thú cưng...",
+};
+
+const ServiceDetail: React.FC = () => {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const [service, setService] = useState<Service | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchService = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        // Simulate API call với mock data
+        await new Promise((resolve) => setTimeout(resolve, 1000)); // 1 giây để test
+
+        // Giả lập tìm service theo id
+        if (id === "1" || id) {
+          // Accept any id for demo
+          setService(mockService);
+        } else {
+          setError("Service không tồn tại");
+        }
+      } catch (err) {
+        console.error("Error fetching service:", err);
+        setError("Có lỗi xảy ra khi tải dữ liệu");
+      } finally {
+        setLoading(false); // ✅ Luôn reset loading
+      }
+    };
+
+    if (id) {
+      fetchService();
+    } else {
+      setLoading(false);
+      setError("Không có ID service");
+    }
+  }, [id]); // ✅ Dependency array đúng
+
+  const handleAddToCart = () => {
+    console.log("Added to cart:", service?.id);
+  };
+
+  const handleBookNow = () => {
+    if (service?.id) {
+      navigate(`/booking/${service.id}`);
+    }
+  };
+
+  // Loading state
+  if (loading) {
+    return (
+      <AppLayoutForUser>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Đang tải thông tin dịch vụ...</p>
+          </div>
+        </div>
+      </AppLayoutForUser>
+    );
+  }
+
+  // Error state
+  if (error || !service) {
+    return (
+      <AppLayoutForUser>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">
+              {error || "Không tìm thấy dịch vụ"}
+            </h2>
+            <p className="text-gray-600 mb-4">
+              Dịch vụ bạn tìm kiếm không tồn tại hoặc đã bị xóa.
+            </p>
+            <button
+              onClick={() => navigate("/services")}
+              className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700"
+            >
+              Quay lại danh sách dịch vụ
+            </button>
+          </div>
+        </div>
+      </AppLayoutForUser>
+    );
+  }
+
+  // Success state
+  return (
+    <AppLayoutForUser>
+      <div className="min-h-screen bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div>
+              <ServiceImages
+                images={service.images}
+                serviceName={service.name}
+              />
+            </div>
+            <div className="space-y-6">
+              <ServiceInfo service={service} />
+              <ServiceActions
+                onAddToCart={handleAddToCart}
+                onBookNow={handleBookNow}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    </AppLayoutForUser>
+  );
+};
+
+export default ServiceDetail;
+
+```
+
+### pages\ServiceDetail\components\ServiceActions.tsx
+```tsx
+import React from "react";
+import Button from "../../../components/ui/Button";
+
+interface ServiceActionsProps {
+  onAddToCart: () => void;
+  onBookNow: () => void;
+}
+
+const ServiceActions: React.FC<ServiceActionsProps> = ({
+  onAddToCart,
+  onBookNow,
+}) => {
+  return (
+    <div className="flex gap-3">
+      <Button
+        variant="outline"
+        onClick={onAddToCart}
+        className="flex-1 flex items-center justify-center gap-2 border-2 border-teal-600 text-teal-600 hover:bg-teal-50"
+      >
+        <svg
+          className="h-5 w-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6.5-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m8 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01"
+          />
+        </svg>
+        Thêm vào giỏ
+      </Button>
+
+      <Button
+        variant="primary"
+        onClick={onBookNow}
+        className="flex-1 bg-teal-600 hover:bg-teal-700"
+      >
+        Đặt ngay
+      </Button>
+    </div>
+  );
+};
+
+export default ServiceActions;
+
+```
+
+### pages\ServiceDetail\components\ServiceImages.tsx
+```tsx
+import React, { useState } from "react";
+
+interface ServiceImagesProps {
+  images: string[];
+  serviceName: string;
+}
+
+const ServiceImages: React.FC<ServiceImagesProps> = ({
+  images,
+  serviceName,
+}) => {
+  const [selectedImage, setSelectedImage] = useState(0);
+
+  return (
+    <div className="space-y-4">
+      {/* Ảnh chính */}
+      <div className="aspect-square w-full overflow-hidden rounded-lg bg-gray-100">
+        <img
+          src={images[selectedImage]}
+          alt={serviceName}
+          className="h-full w-full object-cover"
+        />
+      </div>
+
+      {/* Ảnh thu nhỏ */}
+      <div className="flex space-x-2">
+        {images.map((image, index) => (
+          <button
+            key={index}
+            onClick={() => setSelectedImage(index)}
+            className={`aspect-square w-20 overflow-hidden rounded-md border-2 ${
+              selectedImage === index ? "border-orange-500" : "border-gray-200"
+            }`}
+          >
+            <img
+              src={image}
+              alt={`${serviceName} ${index + 1}`}
+              className="h-full w-full object-cover"
+            />
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+export default ServiceImages;
+
+```
+
+### pages\ServiceDetail\components\ServiceInfo.tsx
+```tsx
+import React from "react";
+import Badge from "../../../components/ui/Badge";
+import type { Service } from "../../../types/service";
+
+interface ServiceInfoProps {
+  service: Service;
+}
+
+const ServiceInfo: React.FC<ServiceInfoProps> = ({ service }) => {
+  return (
+    <div className="space-y-4">
+      {/* Tên và category */}
+      <div className="flex items-center gap-3">
+        <h1 className="text-2xl font-bold text-gray-900">{service.name}</h1>
+        <Badge variant="secondary">{service.category}</Badge>
+      </div>
+
+      {/* Rating và thống kê */}
+      <div className="flex items-center gap-4 text-sm text-gray-600">
+        <div className="flex items-center gap-1">
+          <div className="flex text-yellow-400">
+            {[...Array(5)].map((_, i) => (
+              <svg
+                key={i}
+                className={`h-4 w-4 ${
+                  i < service.rating ? "fill-current" : "fill-gray-200"
+                }`}
+                viewBox="0 0 20 20"
+              >
+                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+              </svg>
+            ))}
+          </div>
+          <span>{service.rating}</span>
+        </div>
+        <span>{service.reviewCount} đánh giá</span>
+        <span>Lượt đặt {service.bookingCount}</span>
+      </div>
+
+      {/* Giá */}
+      <div className="space-y-2">
+        <p className="text-sm font-medium text-gray-600">Giá sốc</p>
+        <div className="flex items-center gap-3">
+          <span className="text-3xl font-bold text-gray-900">
+            {service.currentPrice.toLocaleString("vi-VN")}đ
+          </span>
+          {service.discount && (
+            <>
+              <span className="text-lg text-gray-500 line-through">
+                {service.originalPrice.toLocaleString("vi-VN")}đ
+              </span>
+              <Badge variant="destructive">-{service.discount}%</Badge>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* Thông tin dịch vụ */}
+      <div className="space-y-3">
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium text-gray-700">Loại thú:</span>
+          <div className="flex gap-2">
+            {service.petTypes.map((type) => (
+              <Badge key={type} variant="outline">
+                {type}
+              </Badge>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium text-gray-700">
+            Thời gian thực hiện:
+          </span>
+          <div className="flex items-center gap-1 rounded-full bg-gray-100 px-3 py-1">
+            <svg
+              className="h-4 w-4 text-gray-500"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
+              <path
+                fillRule="evenodd"
+                d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"
+                clipRule="evenodd"
+              />
+            </svg>
+            <span className="text-sm text-gray-700">
+              {service.duration} phút
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default ServiceInfo;
+
+```
+
+### pages\Services\Service.tsx
+```tsx
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import FilterBar from "@/components/common/FilterBar";
+
+// Mock data service
+const mockServices = Array.from({ length: 12 }).map((_, idx) => ({
+  id: idx + 1,
+  name: "Cắt tỉa lông",
+  price: 200000,
+  sold: 143,
+  location: "Hồ Chí Minh",
+}));
+
+const ServicesPage: React.FC = () => {
+  const [services, setServices] = useState(mockServices);
+  const navigate = useNavigate();
+
+  // Xử lý filter (hiện tại chỉ filter giả lập)
+  const handleFilter = (filters: Record<string, string>) => {
+    // TODO: Sau này fetch API với filters, hiện tại chỉ mock
+    setServices(mockServices); // Giữ nguyên
+  };
+
+  // Khi click vào service
+  const handleServiceClick = (id: number) => {
+    navigate(`/service-detail/${id}`);
+  };
+
+  return (
+    <div className="container mx-auto px-4 py-6">
+      <FilterBar onFilter={handleFilter} />
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+        {services.map((service) => (
+          <div
+            key={service.id}
+            onClick={() => handleServiceClick(service.id)}
+            className="cursor-pointer bg-white rounded-lg shadow p-4 flex flex-col items-center hover:shadow-lg transition"
+          >
+            <div className="w-full h-28 bg-gray-100 rounded mb-3"></div>
+            <div className="text-center">
+              <div className="font-medium text-gray-800">{service.name}</div>
+              <div className="text-orange-600 font-semibold mt-1">
+                {service.price.toLocaleString()} đ
+              </div>
+              <div className="text-xs text-gray-400 mt-1">
+                Đã bán: {service.sold} &nbsp;|&nbsp; {service.location}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+export default ServicesPage;
+
+```
+
 ### pages\Settings\index.tsx
 ```tsx
 
@@ -9513,43 +10884,28 @@ export default function Buttons() {
 
 ### routes\index.tsx
 ```tsx
-// routes/index.tsx - Đảm bảo chỉ dùng 1 layout
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import AppLayoutForUser from "../layout/AppLayoutForUser";
-// ❌ KHÔNG import AppLayout nếu đang dùng AppLayoutForUser
-// import AppLayout from "../layout/AppLayout";
-
-// Import pages
-import HomePage from "../pages/Home";
+// src/routes/index.tsx
+import { Routes, Route, Navigate } from "react-router-dom";
+import { ProtectedRoute } from "../services/ProtectedRoute";
 import LoginPage from "../pages/Login";
-import RegisterPage from "@/pages/Register";
-import RegisterType from "@/pages/RegisterType";
+import HomePage from "../pages/Home";
+import DashboardPage from "../pages/Dashboard";
 
 const AppRoutes = () => {
   return (
-    <Router>
-      <Routes>
-        {/* ✅ CHỈ dùng 1 layout */}
-        <Route
-          path="/"
-          element={
-            <AppLayoutForUser>
-              <HomePage />
-            </AppLayoutForUser>
-          }
-        />
-        <Route
-          path="/login"
-          element={
-            <AppLayoutForUser>
-              <LoginPage />
-            </AppLayoutForUser>
-          }
-        />
-        <Route path="/register" element={<RegisterPage />} />
-        <Route path="/registertype" element={<RegisterType />} />
-      </Routes>
-    </Router>
+    <Routes>
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/home" element={<HomePage />} />
+      <Route
+        path="/dashboard"
+        element={
+          <ProtectedRoute>
+            <HomePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route path="/" element={<Navigate to="/home" />} />
+    </Routes>
   );
 };
 
@@ -9610,18 +10966,24 @@ export default authService;
 
 ### services\ProtectedRoute.tsx
 ```tsx
-import React, { type ReactNode } from "react";
-import { Navigate, useLocation } from "react-router-dom";
+// src/services/ProtectedRoute.tsx
 import { useSelector } from "react-redux";
-import type { RootState } from "../store";
+import { Navigate, useLocation } from "react-router-dom";
+import type { RootState } from "../store/store";
 
 interface ProtectedRouteProps {
-  children: ReactNode;
+  children: React.ReactNode;
 }
 
-const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  const { isAuthenticated } = useSelector((state: RootState) => state.auth);
+export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
+  const { isAuthenticated, loading } = useSelector(
+    (state: RootState) => state.auth
+  );
   const location = useLocation();
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
 
   if (!isAuthenticated) {
     return <Navigate to="/login" state={{ from: location }} replace />;
@@ -9630,46 +10992,26 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   return <>{children}</>;
 };
 
-export default ProtectedRoute;
-
 ```
 
-### store\index.ts
+### store\store.ts
 ```ts
+// src/store/store.ts
 import { configureStore } from "@reduxjs/toolkit";
-import { persistStore, persistReducer } from "redux-persist";
-import storage from "redux-persist/lib/storage"; // localStorage
-import { combineReducers } from "@reduxjs/toolkit";
-
-// Import các reducer
 import authReducer from "./slices/authSlice";
 
-// Combine tất cả reducers
-const rootReducer = combineReducers({
-  auth: authReducer,
-});
-const persistConfig = {
-  key: "roots",
-  storage,
-};
-// Tạo persisted reducer
-const persistedReducer = persistReducer(persistConfig, rootReducer);
-
-// Cấu hình store với persisted reducer
 export const store = configureStore({
-  reducer: persistedReducer,
+  reducer: {
+    auth: authReducer,
+  },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: {
-        ignoredActions: ["persist/PERSIST", "persist/REHYDRATE"],
+        ignoredActions: ["persist/PERSIST"],
       },
     }),
 });
 
-// Tạo persistor
-export const persistor = persistStore(store);
-
-// Định nghĩa kiểu RootState và AppDispatch từ store
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;
 
@@ -9677,96 +11019,293 @@ export type AppDispatch = typeof store.dispatch;
 
 ### store\slices\authSlice.ts
 ```ts
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import authService from "../../services/authService";
+// src/store/slices/authSlice.ts
+import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import type { PayloadAction } from "@reduxjs/toolkit";
+import api from "@/config/axios";
+import { jwtDecode } from "jwt-decode";
 
-interface User {
+// Interfaces
+export interface User {
   id: string;
   email: string;
-  username: string;
+  name?: string;
+  role?: string;
+  username?: string;
 }
 
-interface AuthState {
+interface UserState {
+  isAuthenticated: boolean;
   user: User | null;
   token: string | null;
-  isLoading: boolean;
-  error: string | null;
-  isAuthenticated: boolean;
-  rememberMe: boolean;
+  loading: boolean;
+  error: {
+    code: number;
+    message: string;
+  } | null;
 }
 
-const initialState: AuthState = {
+interface DecodedToken {
+  "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress": string;
+  "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name": string;
+  "http://schemas.microsoft.com/ws/2008/06/identity/claims/role": string;
+  exp: number;
+  iss: string;
+  aud: string;
+}
+
+interface AuthResponse {
+  user: User;
+  token: string;
+}
+
+interface LoginRequest {
+  username: string;
+  password: string;
+}
+
+interface ErrorResponse {
+  error: number;
+  message: string;
+}
+
+// Initial state
+const initialState: UserState = {
+  isAuthenticated: false,
   user: null,
   token: null,
-  isLoading: false,
   error: null,
-  isAuthenticated: false,
-  rememberMe: false,
+  loading: false,
 };
 
-// Async thunk cho login
-export const loginUser = createAsyncThunk(
-  "auth/login",
-  async (
-    credentials: { email: string; password: string; rememberMe: boolean },
-    { rejectWithValue }
-  ) => {
-    try {
-      const response = await authService.login(credentials);
-      return response;
-    } catch (error: any) {
-      return rejectWithValue(error.message || "Login failed");
-    }
-  }
-);
+// Helper functions
+const saveAuthData = (data: AuthResponse) => {
+  localStorage.setItem("authToken", data.token);
+  localStorage.setItem("user", JSON.stringify(data.user));
+};
 
-const authSlice = createSlice({
+const clearAuthData = () => {
+  localStorage.removeItem("authToken");
+  localStorage.removeItem("user");
+  sessionStorage.removeItem("authToken");
+  sessionStorage.removeItem("user");
+};
+
+const createUserFromToken = (token: string): User => {
+  try {
+    const decoded: DecodedToken = jwtDecode(token);
+
+    return {
+      id: decoded["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"],
+      email:
+        decoded[
+          "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"
+        ],
+      name: decoded[
+        "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"
+      ],
+      username:
+        decoded["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"],
+      role: decoded[
+        "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
+      ],
+    };
+  } catch (error) {
+    console.error("Error decoding token:", error);
+    throw new Error("Token không hợp lệ");
+  }
+};
+
+// Async thunks
+export const Login = createAsyncThunk<
+  AuthResponse,
+  LoginRequest,
+  { rejectValue: ErrorResponse }
+>("auth/login", async (credentials, { rejectWithValue }) => {
+  try {
+    const res = await api.post("account/login", credentials);
+
+    if (!res.data || !res.data.data) {
+      return rejectWithValue({
+        error: 1,
+        message: "Phản hồi từ server không hợp lệ",
+      });
+    }
+
+    const token = res.data.data;
+    const user = createUserFromToken(token);
+
+    return { user, token };
+  } catch (err: any) {
+    console.error("Login error:", err);
+
+    if (err.response && err.response.data) {
+      return rejectWithValue({
+        error: err.response.status || 1,
+        message: err.response.data.message || "Đăng nhập thất bại",
+      });
+    }
+
+    return rejectWithValue({
+      error: 1,
+      message: err.message || "Không thể kết nối đến máy chủ",
+    });
+  }
+});
+
+export const LoginNoRemember = createAsyncThunk<
+  AuthResponse,
+  LoginRequest,
+  { rejectValue: ErrorResponse }
+>("authNoRemember/login", async (credentials, { rejectWithValue }) => {
+  try {
+    const res = await api.post("account/login", credentials);
+
+    if (!res.data || !res.data.data) {
+      return rejectWithValue({
+        error: 1,
+        message: "Phản hồi từ server không hợp lệ",
+      });
+    }
+
+    const token = res.data.data;
+    const user = createUserFromToken(token);
+
+    return { user, token };
+  } catch (err: any) {
+    console.error("LoginNoRemember error:", err);
+
+    if (err.response && err.response.data) {
+      return rejectWithValue({
+        error: err.response.status || 1,
+        message: err.response.data.message || "Đăng nhập thất bại",
+      });
+    }
+
+    return rejectWithValue({
+      error: 1,
+      message: err.message || "Không thể kết nối đến máy chủ",
+    });
+  }
+});
+
+// Slice
+const userSlice = createSlice({
   name: "auth",
   initialState,
   reducers: {
-    logout: (state) => {
-      state.user = null;
-      state.token = null;
-      state.isAuthenticated = false;
-      state.error = null;
-      state.rememberMe = false;
-      localStorage.removeItem("token");
+    logout(state) {
+      Object.assign(state, initialState);
+      clearAuthData();
     },
-    clearError: (state) => {
-      state.error = null;
-    },
-    setRememberMe: (state, action) => {
-      state.rememberMe = action.payload;
+    restoreAuth(state) {
+      const token = localStorage.getItem("authToken");
+      const userStr = localStorage.getItem("user");
+
+      if (token && userStr) {
+        try {
+          const user = JSON.parse(userStr);
+          state.isAuthenticated = true;
+          state.token = token;
+          state.user = user;
+        } catch (error) {
+          console.error("Error restoring auth:", error);
+          clearAuthData();
+        }
+      }
     },
   },
   extraReducers: (builder) => {
     builder
-      .addCase(loginUser.pending, (state) => {
-        state.isLoading = true;
+      .addCase(Login.pending, (state) => {
+        state.loading = true;
         state.error = null;
       })
-      .addCase(loginUser.fulfilled, (state, action) => {
-        state.isLoading = false;
-        state.user = action.payload.user;
-        state.token = action.payload.token;
-        state.isAuthenticated = true;
-        state.rememberMe = action.payload.rememberMe;
-        localStorage.setItem("token", action.payload.token);
+      .addCase(
+        Login.fulfilled,
+        (state, action: PayloadAction<AuthResponse>) => {
+          state.loading = false;
+          state.isAuthenticated = true;
+          state.user = action.payload.user;
+          state.token = action.payload.token;
+          saveAuthData(action.payload);
+          state.error = null;
+        }
+      )
+      .addCase(Login.rejected, (state, action) => {
+        state.loading = false;
+        state.isAuthenticated = false;
+        if (action.payload) {
+          state.error = {
+            code: action.payload.error,
+            message: action.payload.message,
+          };
+        } else {
+          state.error = {
+            code: 1,
+            message: action.error.message || "Đăng nhập thất bại",
+          };
+        }
       })
-      .addCase(loginUser.rejected, (state, action) => {
-        state.isLoading = false;
-        state.error = action.payload as string;
+      .addCase(LoginNoRemember.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(
+        LoginNoRemember.fulfilled,
+        (state, action: PayloadAction<AuthResponse>) => {
+          state.loading = false;
+          state.isAuthenticated = true;
+          state.token = action.payload.token;
+          state.user = action.payload.user;
+          state.error = null;
+        }
+      )
+      .addCase(LoginNoRemember.rejected, (state, action) => {
+        state.loading = false;
+        state.isAuthenticated = false;
+        if (action.payload) {
+          state.error = {
+            code: action.payload.error,
+            message: action.payload.message,
+          };
+        } else {
+          state.error = {
+            code: 1,
+            message: action.error.message || "Đăng nhập thất bại",
+          };
+        }
       });
   },
 });
 
-export const { logout, clearError, setRememberMe } = authSlice.actions;
-export default authSlice.reducer;
+export const { logout, restoreAuth } = userSlice.actions;
+export default userSlice.reducer;
 
 ```
 
 ### types\auth.ts
 ```ts
+
+```
+
+### types\services.ts
+```ts
+export interface Service {
+  id: string;
+  name: string;
+  images: string[];
+  rating: number;
+  reviewCount: number;
+  bookingCount: number;
+  category: string;
+  originalPrice: number;
+  currentPrice: number;
+  discount?: number;
+  petTypes: string[];
+  duration: number; // phút
+  description?: string;
+}
 
 ```
 

@@ -1,33 +1,68 @@
-import axios from 'axios';
+// src/config/axios.ts
+import axios, { AxiosError } from "axios";
+import type { InternalAxiosRequestConfig } from "axios";
+import { toast } from "react-toastify";
 
-const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
+let stateToken: string | null = null;
+let logoutCallback: (() => void) | null = null;
+
+// ✅ Export function này
+export const setLogoutCallback = (callback: () => void) => {
+  logoutCallback = callback;
+};
+
+// ✅ Export function này
+export const updateStateToken = (token: string | null) => {
+  stateToken = token;
+};
+
+const api = axios.create({
+  baseURL: "https://carenest-api.lighttail.com/api/",
+  timeout: 10000,
   headers: {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
+    Accept: "application/json",
   },
 });
 
-apiClient.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
+const handleBefore = (config: InternalAxiosRequestConfig) => {
+  const token = localStorage.getItem("authToken") || stateToken;
 
-apiClient.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      // Xử lý lỗi xác thực
-      localStorage.removeItem('token');
-      window.location.href = '/login';
-    }
-    return Promise.reject(error);
+  if (token) {
+    config.headers["Authorization"] = `Bearer ${token}`;
   }
-);
+  return config;
+};
 
-export default apiClient;
+const handleRequestError = (error: AxiosError) => {
+  console.error("Request error:", error);
+  return Promise.reject(error);
+};
+
+const logoutUser = () => {
+  localStorage.removeItem("authToken");
+  updateStateToken(null);
+
+  if (logoutCallback) {
+    logoutCallback();
+  }
+};
+
+const handleResponseError = (error: AxiosError) => {
+  if (error.response?.status === 401) {
+    logoutUser();
+    toast.error(
+      "Phiên đăng nhập không hợp lệ hoặc đã hết hạn. Vui lòng đăng nhập lại."
+    );
+    window.location.href = "/login";
+  }
+
+  console.error("Response error:", error);
+  return Promise.reject(error);
+};
+
+api.interceptors.request.use(handleBefore, handleRequestError);
+api.interceptors.response.use((response) => response, handleResponseError);
+
+export { logoutUser };
+export default api;
