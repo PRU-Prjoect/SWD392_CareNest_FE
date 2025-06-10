@@ -95,18 +95,35 @@ const createUserFromToken = (token: string): User => {
   }
 };
 
-// Async thunks
+// ✅ ASYNC THUNKS với GET request và query parameters
+// ✅ ASYNC THUNKS với GET request và query parameters
 export const Login = createAsyncThunk<
   AuthResponse,
   LoginRequest,
   { rejectValue: ErrorResponse }
 >("auth/login", async (credentials, { rejectWithValue }) => {
   try {
-    console.log("🚀 Sending login request:", credentials); // ✅ Debug log
-    console.log("🌐 API URL:", api.defaults.baseURL + "account/login");
-    const res = await api.post("account/login", credentials);
-    console.log("✅ Login response:", res.data); // ✅ Debug response
+    console.log("🚀 Sending login request:", credentials);
 
+    // ✅ Tạo URLSearchParams theo spec backend
+    const formData = new URLSearchParams();
+    formData.append("username", credentials.username); // snake_case
+    formData.append("password", credentials.password);
+
+    console.log("📦 Form data:", formData.toString());
+    console.log("🌐 API URL:", api.defaults.baseURL + "account/login");
+
+    // In the Login thunk
+    const res = await api.get(`account/login?${formData.toString()}`, {
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+    });
+
+    console.log("✅ Login response:", res.data);
+    console.log("🌐 Request URL:", res.config.url); // Để xem URL được tạo
+
+    // ✅ Kiểm tra response theo structure mới
     if (!res.data || !res.data.data) {
       return rejectWithValue({
         error: 1,
@@ -120,10 +137,11 @@ export const Login = createAsyncThunk<
     return { user, token };
   } catch (err: any) {
     console.error("Login error:", err);
+    console.error("Error response:", err.response?.data);
 
     if (err.response && err.response.data) {
       return rejectWithValue({
-        error: err.response.status || 1,
+        error: 1,
         message: err.response.data.message || "Đăng nhập thất bại",
       });
     }
@@ -141,7 +159,18 @@ export const LoginNoRemember = createAsyncThunk<
   { rejectValue: ErrorResponse }
 >("authNoRemember/login", async (credentials, { rejectWithValue }) => {
   try {
-    const res = await api.post("account/login", credentials);
+    // ✅ Tương tự cho LoginNoRemember
+    const formData = new URLSearchParams();
+    formData.append("username", credentials.username);
+    formData.append("password", credentials.password);
+
+    const res = await api.get(`account/login?${formData.toString()}`, {
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+    });
+
+    console.log("✅ Response status:", res.status);
 
     if (!res.data || !res.data.data) {
       return rejectWithValue({
@@ -155,11 +184,12 @@ export const LoginNoRemember = createAsyncThunk<
 
     return { user, token };
   } catch (err: any) {
-    console.error("LoginNoRemember error:", err);
+    console.error("❌ Error status:", err.response?.status);
+    console.error("❌ Error data:", err.response?.data);
 
     if (err.response && err.response.data) {
       return rejectWithValue({
-        error: err.response.status || 1,
+        error: 1,
         message: err.response.data.message || "Đăng nhập thất bại",
       });
     }
@@ -171,7 +201,7 @@ export const LoginNoRemember = createAsyncThunk<
   }
 });
 
-// Slice
+// Slice (giữ nguyên)
 const userSlice = createSlice({
   name: "auth",
   initialState,
