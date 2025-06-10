@@ -1,266 +1,524 @@
 # TỔNG HỢP MÃ NGUỒN DỰ ÁN
 # ==================================================
-# Đường dẫn: D:\KÌ 7\SWD392_CareNest_FE\src
-# Công nghệ phát hiện: javascript, nextjs, react, typescript
+# Đường dẫn: D:\KÌ 7\SWD392_CareNest_FE
+# Công nghệ phát hiện: javascript, python, react, typescript
 # ==================================================
 
 ## CẤU TRÚC THƯ MỤC
 ```
-src/
-├── assets/
-│   ├── ZaloPay.jpg
-│   ├── iconMomo.svg
-│   ├── momoPay.jpg
-│   ├── react.svg
-│   ├── wallet-svgrepo-com.svg
-│   └── zalopay-seeklogo.svg
-├── components/
-│   ├── common/
-│   │   ├── ChartTab.tsx
-│   │   ├── ComponentCard.tsx
-│   │   ├── FilterBar.tsx
-│   │   ├── GridShape.tsx
-│   │   ├── PageBreadCrumb.tsx
-│   │   ├── ScrollToTop.tsx
-│   │   └── SearchBar.tsx
-│   ├── form/
-│   │   ├── form-elements/
-│   │   │   ├── CheckboxComponents.tsx
-│   │   │   ├── DefaultInputs.tsx
-│   │   │   ├── DropZone.tsx
-│   │   │   ├── FileInputExample.tsx
-│   │   │   ├── InputGroup.tsx
-│   │   │   ├── InputStates.tsx
-│   │   │   ├── RadioButtons.tsx
-│   │   │   ├── SelectInputs.tsx
-│   │   │   ├── TextAreaInput.tsx
-│   │   │   └── ToggleSwitch.tsx
-│   │   ├── group-input/
-│   │   │   └── PhoneInput.tsx
-│   │   ├── input/
-│   │   │   ├── Checkbox.tsx
-│   │   │   ├── FileInput.tsx
-│   │   │   ├── InputField.tsx
-│   │   │   ├── Radio.tsx
-│   │   │   ├── RadioSm.tsx
-│   │   │   └── TextArea.tsx
-│   │   ├── switch/
-│   │   │   └── Switch.tsx
-│   │   ├── Form.tsx
-│   │   ├── Label.tsx
-│   │   ├── MultiSelect.tsx
-│   │   ├── Select.tsx
-│   │   └── date-picker.tsx
-│   ├── header/
-│   │   ├── Header.tsx
-│   │   ├── NotificationDropdown.tsx
-│   │   └── UserDropdown.tsx
-│   ├── icons/
-│   │   ├── alert-hexa.svg
-│   │   ├── alert.svg
-│   │   ├── angle-down.svg
-│   │   ├── angle-left.svg
-│   │   ├── angle-right.svg
-│   │   ├── angle-up.svg
-│   │   ├── arrow-down.svg
-│   │   ├── arrow-right.svg
-│   │   ├── arrow-up.svg
-│   │   ├── audio.svg
-│   │   ├── bolt.svg
-│   │   ├── box-cube.svg
-│   │   ├── box-line.svg
-│   │   ├── box.svg
-│   │   ├── calendar.svg
-│   │   ├── calender-line.svg
-│   │   ├── chat.svg
-│   │   ├── check-circle.svg
-│   │   ├── check-line.svg
-│   │   ├── chevron-down.svg
-│   │   ├── chevron-left.svg
-│   │   ├── chevron-up.svg
-│   │   ├── close-line.svg
-│   │   ├── close.svg
-│   │   ├── copy.svg
-│   │   ├── docs.svg
-│   │   ├── dollar-line.svg
-│   │   ├── download.svg
-│   │   ├── envelope.svg
-│   │   ├── eye-close.svg
-│   │   ├── eye.svg
-│   │   ├── file.svg
-│   │   ├── folder.svg
-│   │   ├── grid.svg
-│   │   ├── group.svg
-│   │   ├── horizontal-dots.svg
-│   │   ├── index.ts
-│   │   ├── info-error.svg
-│   │   ├── info-hexa.svg
-│   │   ├── info.svg
-│   │   ├── list.svg
-│   │   ├── lock.svg
-│   │   ├── mail-line.svg
-│   │   ├── moredot.svg
-│   │   ├── page.svg
-│   │   ├── paper-plane.svg
-│   │   ├── pencil.svg
-│   │   ├── pie-chart.svg
-│   │   ├── plug-in.svg
-│   │   ├── plus.svg
-│   │   ├── shooting-star.svg
-│   │   ├── table.svg
-│   │   ├── task-icon.svg
-│   │   ├── time.svg
-│   │   ├── trash.svg
-│   │   ├── user-circle.svg
-│   │   ├── user-line.svg
-│   │   └── videos.svg
+SWD392_CareNest_FE/
+├── .git/
+├── node_modules/
+├── public/
+│   ├── image/
+│   │   ├── Xanh_dương_pastel_Cầu_vồng_Chương_trình_Đọc_viết_Logo-removebg-preview 1.png
+│   │   ├── avata11.jpg
+│   │   ├── avatar.jpg
+│   │   ├── avatar1.jpg
+│   │   ├── avatar2.jpg
+│   │   ├── avatar4.jpg
+│   │   ├── hinh1-removebg-preview.png
+│   │   ├── hinh1.jpg
+│   │   ├── hinh2-removebg-preview.png
+│   │   ├── hinh2.jpg
+│   │   ├── illustration.svg
+│   │   └── ranbowlogo.png
+│   └── vite.svg
+├── src/
+│   ├── assets/
+│   │   ├── ZaloPay.jpg
+│   │   ├── iconMomo.svg
+│   │   ├── momoPay.jpg
+│   │   ├── react.svg
+│   │   ├── wallet-svgrepo-com.svg
+│   │   └── zalopay-seeklogo.svg
+│   ├── components/
+│   │   ├── common/
+│   │   │   ├── ChartTab.tsx
+│   │   │   ├── ComponentCard.tsx
+│   │   │   ├── FilterBar.tsx
+│   │   │   ├── GridShape.tsx
+│   │   │   ├── PageBreadCrumb.tsx
+│   │   │   ├── ScrollToTop.tsx
+│   │   │   └── SearchBar.tsx
+│   │   ├── form/
+│   │   │   ├── form-elements/
+│   │   │   │   ├── CheckboxComponents.tsx
+│   │   │   │   ├── DefaultInputs.tsx
+│   │   │   │   ├── DropZone.tsx
+│   │   │   │   ├── FileInputExample.tsx
+│   │   │   │   ├── InputGroup.tsx
+│   │   │   │   ├── InputStates.tsx
+│   │   │   │   ├── RadioButtons.tsx
+│   │   │   │   ├── SelectInputs.tsx
+│   │   │   │   ├── TextAreaInput.tsx
+│   │   │   │   └── ToggleSwitch.tsx
+│   │   │   ├── group-input/
+│   │   │   │   └── PhoneInput.tsx
+│   │   │   ├── input/
+│   │   │   │   ├── Checkbox.tsx
+│   │   │   │   ├── FileInput.tsx
+│   │   │   │   ├── InputField.tsx
+│   │   │   │   ├── Radio.tsx
+│   │   │   │   ├── RadioSm.tsx
+│   │   │   │   └── TextArea.tsx
+│   │   │   ├── switch/
+│   │   │   │   └── Switch.tsx
+│   │   │   ├── Form.tsx
+│   │   │   ├── Label.tsx
+│   │   │   ├── MultiSelect.tsx
+│   │   │   ├── Select.tsx
+│   │   │   └── date-picker.tsx
+│   │   ├── header/
+│   │   │   ├── Header.tsx
+│   │   │   ├── NotificationDropdown.tsx
+│   │   │   └── UserDropdown.tsx
+│   │   ├── icons/
+│   │   │   ├── alert-hexa.svg
+│   │   │   ├── alert.svg
+│   │   │   ├── angle-down.svg
+│   │   │   ├── angle-left.svg
+│   │   │   ├── angle-right.svg
+│   │   │   ├── angle-up.svg
+│   │   │   ├── arrow-down.svg
+│   │   │   ├── arrow-right.svg
+│   │   │   ├── arrow-up.svg
+│   │   │   ├── audio.svg
+│   │   │   ├── bolt.svg
+│   │   │   ├── box-cube.svg
+│   │   │   ├── box-line.svg
+│   │   │   ├── box.svg
+│   │   │   ├── calendar.svg
+│   │   │   ├── calender-line.svg
+│   │   │   ├── chat.svg
+│   │   │   ├── check-circle.svg
+│   │   │   ├── check-line.svg
+│   │   │   ├── chevron-down.svg
+│   │   │   ├── chevron-left.svg
+│   │   │   ├── chevron-up.svg
+│   │   │   ├── close-line.svg
+│   │   │   ├── close.svg
+│   │   │   ├── copy.svg
+│   │   │   ├── docs.svg
+│   │   │   ├── dollar-line.svg
+│   │   │   ├── download.svg
+│   │   │   ├── envelope.svg
+│   │   │   ├── eye-close.svg
+│   │   │   ├── eye.svg
+│   │   │   ├── file.svg
+│   │   │   ├── folder.svg
+│   │   │   ├── grid.svg
+│   │   │   ├── group.svg
+│   │   │   ├── horizontal-dots.svg
+│   │   │   ├── index.ts
+│   │   │   ├── info-error.svg
+│   │   │   ├── info-hexa.svg
+│   │   │   ├── info.svg
+│   │   │   ├── list.svg
+│   │   │   ├── lock.svg
+│   │   │   ├── mail-line.svg
+│   │   │   ├── moredot.svg
+│   │   │   ├── page.svg
+│   │   │   ├── paper-plane.svg
+│   │   │   ├── pencil.svg
+│   │   │   ├── pie-chart.svg
+│   │   │   ├── plug-in.svg
+│   │   │   ├── plus.svg
+│   │   │   ├── shooting-star.svg
+│   │   │   ├── table.svg
+│   │   │   ├── task-icon.svg
+│   │   │   ├── time.svg
+│   │   │   ├── trash.svg
+│   │   │   ├── user-circle.svg
+│   │   │   ├── user-line.svg
+│   │   │   └── videos.svg
+│   │   ├── layout/
+│   │   │   ├── BannerPage.tsx
+│   │   │   ├── Footer.tsx
+│   │   │   ├── NavHome.tsx
+│   │   │   └── Navbar.tsx
+│   │   ├── ui/
+│   │   │   ├── Alert.tsx
+│   │   │   ├── Avatar.tsx
+│   │   │   ├── Badge.tsx
+│   │   │   ├── Button.tsx
+│   │   │   ├── Card.tsx
+│   │   │   ├── Dropdown.tsx
+│   │   │   ├── DropdownItem.tsx
+│   │   │   ├── Icons.tsx
+│   │   │   ├── Input.tsx
+│   │   │   ├── Modal.tsx
+│   │   │   ├── Pagination.tsx
+│   │   │   ├── Spinner.tsx
+│   │   │   └── Tabs.tsx
+│   │   └── PageMeta.tsx
+│   ├── config/
+│   │   └── axios.ts
+│   ├── context/
+│   │   ├── SidebarContext.tsx
+│   │   └── ThemeContext.tsx
+│   ├── data/
+│   │   ├── listpackage.json
+│   │   ├── project.json
+│   │   └── tasks.json
+│   ├── hooks/
+│   │   └── useAuth.ts
 │   ├── layout/
-│   │   ├── BannerPage.tsx
-│   │   ├── Footer.tsx
-│   │   ├── NavHome.tsx
-│   │   └── Navbar.tsx
-│   ├── ui/
-│   │   ├── Alert.tsx
-│   │   ├── Avatar.tsx
-│   │   ├── Badge.tsx
-│   │   ├── Button.tsx
-│   │   ├── Card.tsx
-│   │   ├── Dropdown.tsx
-│   │   ├── DropdownItem.tsx
-│   │   ├── Icons.tsx
-│   │   ├── Input.tsx
-│   │   ├── Modal.tsx
-│   │   ├── Pagination.tsx
-│   │   ├── Spinner.tsx
-│   │   └── Tabs.tsx
-│   └── PageMeta.tsx
-├── config/
-│   └── axios.ts
-├── configs/
-│   └── axios.ts
-├── context/
-│   ├── SidebarContext.tsx
-│   └── ThemeContext.tsx
-├── data/
-│   ├── listpackage.json
-│   ├── project.json
-│   └── tasks.json
-├── hooks/
-│   └── useAuth.ts
-├── layout/
-│   ├── AppHeader.tsx
-│   ├── AppHeaderForAdmin.tsx
-│   ├── AppHeaderForUser.tsx
-│   ├── AppLayout.tsx
-│   ├── AppLayoutForShopAdmin.tsx
-│   ├── AppLayoutForUser.tsx
-│   ├── AppSidebar.tsx
-│   ├── AppSidebarForShopAdmin.tsx
-│   ├── Backdrop.tsx
-│   └── SidebarWidget.tsx
-├── pages/
-│   ├── Checkout/
-│   │   └── index.tsx
-│   ├── Dashboard/
-│   │   ├── component/
-│   │   │   ├── Wallet/
-│   │   │   │   ├── walletHistory.tsx
-│   │   │   │   └── walletModal.tsx
-│   │   │   ├── DaskboardContent.tsx
-│   │   │   ├── MainDashboard.tsx
-│   │   │   ├── PomodoroForm.tsx
-│   │   │   └── PomodoroTimer.tsx
-│   │   ├── DashboardPage.tsx
-│   │   ├── ServicePackage.tsx
-│   │   ├── TaskManager.tsx
-│   │   ├── TimeManagement.tsx
-│   │   ├── Wallet.tsx
-│   │   ├── employeeManagement.tsx
+│   │   ├── AppHeader.tsx
+│   │   ├── AppHeaderForAdmin.tsx
+│   │   ├── AppHeaderForUser.tsx
+│   │   ├── AppLayout.tsx
+│   │   ├── AppLayoutForShopAdmin.tsx
+│   │   ├── AppLayoutForUser.tsx
+│   │   ├── AppSidebar.tsx
+│   │   ├── AppSidebarForShopAdmin.tsx
+│   │   ├── Backdrop.tsx
+│   │   └── SidebarWidget.tsx
+│   ├── pages/
+│   │   ├── Checkout/
+│   │   │   └── index.tsx
+│   │   ├── Dashboard/
+│   │   │   ├── component/
+│   │   │   │   ├── Wallet/
+│   │   │   │   │   ├── walletHistory.tsx
+│   │   │   │   │   └── walletModal.tsx
+│   │   │   │   ├── DaskboardContent.tsx
+│   │   │   │   ├── MainDashboard.tsx
+│   │   │   │   ├── PomodoroForm.tsx
+│   │   │   │   └── PomodoroTimer.tsx
+│   │   │   ├── DashboardPage.tsx
+│   │   │   ├── ServicePackage.tsx
+│   │   │   ├── TaskManager.tsx
+│   │   │   ├── TimeManagement.tsx
+│   │   │   ├── Wallet.tsx
+│   │   │   ├── employeeManagement.tsx
+│   │   │   ├── index.tsx
+│   │   │   └── taskReport.tsx
+│   │   ├── Forms/
+│   │   │   └── FormElements.tsx
+│   │   ├── Home/
+│   │   │   ├── components/
+│   │   │   │   ├── HeroBanner.tsx
+│   │   │   │   ├── HighestRating.tsx
+│   │   │   │   ├── LatestServices.tsx
+│   │   │   │   ├── MostBuy.tsx
+│   │   │   │   ├── ServiceCard.tsx
+│   │   │   │   └── ServiceCategories.tsx
+│   │   │   ├── HomePage.tsx
+│   │   │   └── index.tsx
+│   │   ├── Login/
+│   │   │   ├── components/
+│   │   │   │   ├── AuthWrapper.tsx
+│   │   │   │   ├── EnterOTPCode.tsx
+│   │   │   │   ├── ForgotPassword.tsx
+│   │   │   │   ├── LoginForm.tsx
+│   │   │   │   └── SocialLogin.tsx
+│   │   │   ├── hooks/
+│   │   │   │   └── useLoginForm.ts
+│   │   │   ├── utils/
+│   │   │   │   └── loginValidation.ts
+│   │   │   └── index.tsx
+│   │   ├── NotFound/
+│   │   │   └── index.tsx
+│   │   ├── Profile/
+│   │   │   └── index.tsx
+│   │   ├── Register/
+│   │   │   └── index.tsx
+│   │   ├── RegisterShop/
+│   │   │   └── index.tsx
+│   │   ├── RegisterType/
+│   │   │   └── index.tsx
+│   │   ├── ServiceDetail/
+│   │   │   ├── components/
+│   │   │   │   ├── ServiceActions.tsx
+│   │   │   │   ├── ServiceImages.tsx
+│   │   │   │   └── ServiceInfo.tsx
+│   │   │   └── ServiceDetail.tsx
+│   │   ├── Services/
+│   │   │   └── Service.tsx
+│   │   ├── Settings/
+│   │   │   └── index.tsx
+│   │   ├── SignUp/
+│   │   │   ├── components/
+│   │   │   ├── hooks/
+│   │   │   ├── utils/
+│   │   │   └── SignUp.tsx
+│   │   ├── Tables/
+│   │   │   └── BasicTables.tsx
+│   │   └── UiElements/
+│   │       ├── Alerts.tsx
+│   │       ├── Avatars.tsx
+│   │       ├── Badges.tsx
+│   │       └── Buttons.tsx
+│   ├── routes/
 │   │   ├── index.tsx
-│   │   └── taskReport.tsx
-│   ├── Forms/
-│   │   └── FormElements.tsx
-│   ├── Home/
-│   │   ├── components/
-│   │   │   ├── HeroBanner.tsx
-│   │   │   ├── HighestRating.tsx
-│   │   │   ├── LatestServices.tsx
-│   │   │   ├── MostBuy.tsx
-│   │   │   ├── ServiceCard.tsx
-│   │   │   └── ServiceCategories.tsx
-│   │   ├── HomePage.tsx
-│   │   └── index.tsx
-│   ├── Login/
-│   │   ├── components/
-│   │   │   ├── AuthWrapper.tsx
-│   │   │   ├── EnterOTPCode.tsx
-│   │   │   ├── ForgotPassword.tsx
-│   │   │   ├── LoginForm.tsx
-│   │   │   └── SocialLogin.tsx
-│   │   ├── hooks/
-│   │   │   └── useLoginForm.ts
-│   │   ├── utils/
-│   │   │   └── loginValidation.ts
-│   │   └── index.tsx
-│   ├── NotFound/
-│   │   └── index.tsx
-│   ├── Profile/
-│   │   └── index.tsx
-│   ├── Register/
-│   │   └── index.tsx
-│   ├── RegisterShop/
-│   │   └── index.tsx
-│   ├── RegisterType/
-│   │   └── index.tsx
-│   ├── ServiceDetail/
-│   │   ├── components/
-│   │   │   ├── ServiceActions.tsx
-│   │   │   ├── ServiceImages.tsx
-│   │   │   └── ServiceInfo.tsx
-│   │   └── ServiceDetail.tsx
-│   ├── Services/
-│   │   └── Service.tsx
-│   ├── Settings/
-│   │   └── index.tsx
-│   ├── SignUp/
-│   │   ├── components/
-│   │   ├── hooks/
-│   │   ├── utils/
-│   │   └── SignUp.tsx
-│   ├── Tables/
-│   │   └── BasicTables.tsx
-│   └── UiElements/
-│       ├── Alerts.tsx
-│       ├── Avatars.tsx
-│       ├── Badges.tsx
-│       └── Buttons.tsx
-├── routes/
-│   ├── index.tsx
-│   ├── privateRoutes.ts
-│   └── publicRoutes.ts
-├── services/
-│   ├── ProtectedRoute.tsx
-│   └── authService.ts
-├── store/
-│   ├── slices/
-│   │   └── authSlice.ts
-│   └── store.ts
-├── types/
-│   ├── auth.ts
-│   ├── services.ts
-│   └── user.ts
-├── utils/
-├── App.css
-├── App.tsx
-├── index.css
-├── main.tsx
-├── svg.d.ts
-└── vite-env.d.ts
+│   │   ├── privateRoutes.ts
+│   │   └── publicRoutes.ts
+│   ├── services/
+│   │   ├── ProtectedRoute.tsx
+│   │   └── authService.ts
+│   ├── store/
+│   │   ├── slices/
+│   │   │   └── authSlice.ts
+│   │   └── store.ts
+│   ├── types/
+│   │   ├── auth.ts
+│   │   ├── services.ts
+│   │   └── user.ts
+│   ├── utils/
+│   ├── App.css
+│   ├── App.tsx
+│   ├── index.css
+│   ├── main.tsx
+│   ├── svg.d.ts
+│   └── vite-env.d.ts
+├── .env
+├── .gitignore
+├── README.md
+├── eslint.config.js
+├── index.html
+├── messages.ts
+├── nginx.conf
+├── package-lock.json
+├── package.json
+├── postcss.config.js
+├── tailwind.config.js
+├── tsconfig.app.json
+├── tsconfig.json
+├── tsconfig.node.json
+├── tsconfig.tsbuildinfo
+├── vite.config.ts
+└── yarn.lock
 ```
 
 ## NỘI DUNG CÁC FILE
 
-### App.tsx
+### eslint.config.js
+```js
+import js from "@eslint/js";
+import globals from "globals";
+import reactHooks from "eslint-plugin-react-hooks";
+import reactRefresh from "eslint-plugin-react-refresh";
+import tseslint from "typescript-eslint";
+
+export default tseslint.config(
+  { ignores: ["dist"] },
+  {
+    extends: [js.configs.recommended, ...tseslint.configs.recommended],
+    files: ["**/*.{ts,tsx}"],
+    languageOptions: {
+      ecmaVersion: 2020,
+      globals: globals.browser,
+    },
+    plugins: {
+      "react-hooks": reactHooks,
+      "react-refresh": reactRefresh,
+    },
+    rules: {
+      ...reactHooks.configs.recommended.rules,
+      "react-refresh/only-export-components": [
+        "warn",
+        { allowConstantExport: true },
+      ],
+    },
+  }
+);
+
+```
+
+### messages.ts
+```ts
+export const MESSAGES = {
+  INTERNAL_ERROR: "common.internal_error",
+  SERVER_ERROR: "common.server_error",
+  SUCCESS: "common.success",
+  FAILED: "common.failed",
+  DIFFERENT_USER: "common.different_user",
+  NOT_FOUND: "common.not_found",
+  ALREADY_REMOVED: "common.already_removed",
+  VALIDATION: {
+    REQUIRED_FIELD: (field: string) => `validation.required:${field}`,
+    NOT_EMPTY_FIELD: (field: string) => `validation.not_empty:${field}`,
+    NOT_EMPTY_ARRAY_FIELD: (field: string) =>
+      `validation.not_empty_array:${field}`,
+    INVALID_FIELD: (field: string) => `validation.invalid:${field}`,
+    FIELD_TOO_LONG: (field: string) => `validation.too_long:${field}`,
+    FIELD_TOO_SHORT: (field: string) => `validation.too_short:${field}`,
+    FIELD_EXISTS: (field: string) => `validation.exists:${field}`,
+    NOT_FOUND_FIELD: (field: string) => `validation.not_found:${field}`,
+    DUPLICATE_VALUE: (field: string) => `validation.duplicate_value:${field}`,
+    INVALID_SKIP_CURSOR: "validation.invalid_skip_cursor",
+    // Thêm các lỗi trùng lặp mới
+    EXISTS_NAME_EMAIL_PHONE_COMPANYNAME:
+      "validation.exists:name-email-phone-companyName",
+    EXISTS_NAME_EMAIL_PHONE: "validation.exists:name-email-phone",
+    EXISTS_NAME_EMAIL_COMPANYNAME: "validation.exists:name-email-companyName",
+    EXISTS_NAME_PHONE_COMPANYNAME: "validation.exists:name-phone-companyName",
+    EXISTS_EMAIL_PHONE_COMPANYNAME: "validation.exists:email-phone-companyName",
+    EXISTS_NAME_EMAIL: "validation.exists:name-email",
+    EXISTS_NAME_PHONE: "validation.exists:name-phone",
+    EXISTS_NAME_COMPANYNAME: "validation.exists:name-companyName",
+    EXISTS_EMAIL_PHONE: "validation.exists:email-phone",
+    EXISTS_EMAIL_COMPANYNAME: "validation.exists:email-companyName",
+    EXISTS_PHONE_COMPANYNAME: "validation.exists:phone-companyName",
+    EXISTS_NAME: "validation.exists:name",
+    EXISTS_EMAIL: "validation.exists:email",
+    EXISTS_PHONE: "validation.exists:phone",
+    EXISTS_COMPANYNAME: "validation.exists:companyName",
+    REQUIRED: "validation.required_field",
+    EMAIL_EXISTS: "validation.email_exists",
+  },
+  COMMON: {
+    GET_LIST: {
+      INVALID_TAKE: "common.get_list.invalid_take",
+      INVALID_SKIP: "common.get_list.invalid_skip",
+      MAX_TAKE_EXCEEDED: "common.get_list.max_take_exceeded",
+    },
+    REMOVE: {
+      INVALID_REMOVE_PAYLOAD: "common.remove.invalid_remove_payload",
+    },
+  },
+  USER: {
+    LOGIN: {
+      INACTIVE: "user.login.inactive",
+    },
+  },
+  UPLOAD: {
+    INVALID_IMAGE_TYPE: "upload.invalid_image_type",
+    EXIF_EXTRACTION_FAILED: "upload.exif_extraction_failed",
+    MISSING_IMAGE_FILE: "upload.missing_image_file",
+    UPLOAD_ERROR: "upload.upload_error",
+    FILE_SIZE_EXCEEDED: "upload.file_size_exceeded",
+    SUCCESS_BUT_NO_EXIF_DATA: "upload.success_but_no_exif_data",
+  },
+  INCIDENT: {
+    ALREADY_HANDLED: "incident.already_handled",
+    ALREADY_RESOLVED: "incident.already_resolved",
+    HANDLED_BY_OTHER_USER: "incident.handled_by_other_user",
+    TASK_ITEM_HAS_TASK_SUB_ITEMS:
+      "incident.task_item_has_task_sub_items_cannot_have_description_weight_unit_price_total",
+    TASK_ITEM_MISSING_TASK_SUB_ITEMS:
+      "incident.task_item_missing_task_sub_items_must_have_description_weight_unit_price_total",
+  },
+  NETWORK: {
+    ERROR: "network.error",
+  },
+};
+
+```
+
+### postcss.config.js
+```js
+export const plugins = {
+  tailwindcss: {},
+  autoprefixer: {},
+};
+
+```
+
+### tailwind.config.js
+```js
+module.exports = {
+  content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
+  theme: {
+    extend: {
+      colors: {
+        momo: "#A50064",
+        zalopay: "#008FE5",
+
+        primary: {
+          50: "#eff6ff",
+          100: "#dbeafe",
+          200: "#bfdbfe",
+          300: "#93c5fd",
+          400: "#60a5fa",
+          500: "#3b82f6",
+          600: "#2563eb",
+          700: "#1d4ed8",
+          800: "#1e40af",
+          900: "#1e3a8a",
+        },
+        gray: {
+          50: "#f9fafb",
+          100: "#f3f4f6",
+          200: "#e5e7eb",
+          300: "#d1d5db",
+          400: "#9ca3af",
+          500: "#6b7280",
+          600: "#4b5563",
+          700: "#374151",
+          800: "#1f2937",
+          900: "#111827",
+        },
+        blue: { 100: "#E7F3F5" },
+
+        success: {
+          50: "#ecfdf5",
+          500: "#10b981",
+          600: "#059669",
+        },
+        error: {
+          50: "#fef2f2",
+          500: "#ef4444",
+          600: "#dc2626",
+        },
+        warning: {
+          50: "#fffbeb",
+          500: "#f59e0b",
+          600: "#d97706",
+        },
+      },
+      fontFamily: {
+        sans: ["Inter", "system-ui", "sans-serif"],
+      },
+      boxShadow: {
+        soft: "0 2px 15px -3px rgba(0, 0, 0, 0.07), 0 10px 20px -2px rgba(0, 0, 0, 0.04)",
+        medium:
+          "0 4px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
+        large:
+          "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
+      },
+      animation: {
+        "fade-in": "fadeIn 0.5s ease-in-out",
+        "slide-up": "slideUp 0.3s ease-out",
+        "bounce-gentle": "bounceGentle 2s infinite",
+      },
+    },
+  },
+  plugins: [],
+  darkMode: "class",
+};
+
+```
+
+### vite.config.ts
+```ts
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+import svgr from "vite-plugin-svgr";
+import tsconfigPaths from "vite-tsconfig-paths";
+import { visualizer } from "rollup-plugin-visualizer";
+import tailwindcss from "@tailwindcss/vite";
+
+export default defineConfig({
+  plugins: [
+    visualizer({ open: true }),
+    react(),
+    tsconfigPaths(),
+    svgr({
+      svgrOptions: {
+        icon: true,
+        exportType: "named",
+        namedExport: "ReactComponent",
+      },
+    }),
+    tailwindcss(),
+  ],
+});
+
+```
+
+### src\App.tsx
 ```tsx
 // src/App.tsx
 import { useEffect } from "react";
@@ -288,7 +546,7 @@ export default App;
 
 ```
 
-### main.tsx
+### src\main.tsx
 ```tsx
 // src/main.tsx
 import React from "react";
@@ -338,7 +596,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
 
 ```
 
-### svg.d.ts
+### src\svg.d.ts
 ```ts
 declare module "*.svg?react" {
   import React = require("react");
@@ -349,13 +607,13 @@ declare module "*.svg?react" {
 
 ```
 
-### vite-env.d.ts
+### src\vite-env.d.ts
 ```ts
 /// <reference types="vite/client" />
 
 ```
 
-### components\PageMeta.tsx
+### src\components\PageMeta.tsx
 ```tsx
 import { HelmetProvider, Helmet } from "react-helmet-async";
 
@@ -380,7 +638,7 @@ export default PageMeta;
 
 ```
 
-### components\common\ChartTab.tsx
+### src\components\common\ChartTab.tsx
 ```tsx
 import { useState } from "react";
 
@@ -430,7 +688,7 @@ export default ChartTab;
 
 ```
 
-### components\common\ComponentCard.tsx
+### src\components\common\ComponentCard.tsx
 ```tsx
 interface ComponentCardProps {
   title: string;
@@ -473,7 +731,7 @@ export default ComponentCard;
 
 ```
 
-### components\common\FilterBar.tsx
+### src\components\common\FilterBar.tsx
 ```tsx
 // components/common/FilterBar.tsx
 import React, { useState, useRef, useEffect } from "react";
@@ -693,7 +951,7 @@ export default FilterBar;
 
 ```
 
-### components\common\GridShape.tsx
+### src\components\common\GridShape.tsx
 ```tsx
 export default function GridShape() {
   return (
@@ -710,7 +968,7 @@ export default function GridShape() {
 
 ```
 
-### components\common\PageBreadCrumb.tsx
+### src\components\common\PageBreadCrumb.tsx
 ```tsx
 import { Link } from "react-router-dom";
 
@@ -766,7 +1024,7 @@ export default PageBreadcrumb;
 
 ```
 
-### components\common\ScrollToTop.tsx
+### src\components\common\ScrollToTop.tsx
 ```tsx
 import { useEffect } from "react";
 import { useLocation } from "react-router";
@@ -787,7 +1045,7 @@ export function ScrollToTop() {
 
 ```
 
-### components\common\SearchBar.tsx
+### src\components\common\SearchBar.tsx
 ```tsx
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
@@ -1001,7 +1259,7 @@ export default SearchBar;
 
 ```
 
-### components\form\date-picker.tsx
+### src\components\form\date-picker.tsx
 ```tsx
 // import { useEffect } from "react";
 // import flatpickr from "flatpickr";
@@ -1066,7 +1324,7 @@ export default SearchBar;
 
 ```
 
-### components\form\Form.tsx
+### src\components\form\Form.tsx
 ```tsx
 import type { FC, FormEvent, ReactNode } from "react";
 
@@ -1094,7 +1352,7 @@ export default Form;
 
 ```
 
-### components\form\Label.tsx
+### src\components\form\Label.tsx
 ```tsx
 import { type FC, type ReactNode } from "react";
 import { twMerge } from "tailwind-merge";
@@ -1123,7 +1381,7 @@ export default Label;
 
 ```
 
-### components\form\MultiSelect.tsx
+### src\components\form\MultiSelect.tsx
 ```tsx
 import type React from "react";
 import { useState } from "react";
@@ -1293,7 +1551,7 @@ export default MultiSelect;
 
 ```
 
-### components\form\Select.tsx
+### src\components\form\Select.tsx
 ```tsx
 import { useState } from "react";
 
@@ -1362,7 +1620,7 @@ export default Select;
 
 ```
 
-### components\form\form-elements\CheckboxComponents.tsx
+### src\components\form\form-elements\CheckboxComponents.tsx
 ```tsx
 import { useState } from "react";
 import ComponentCard from "@/components/ui/Card";
@@ -1403,7 +1661,7 @@ export default function CheckboxComponents() {
 
 ```
 
-### components\form\form-elements\DefaultInputs.tsx
+### src\components\form\form-elements\DefaultInputs.tsx
 ```tsx
 import React from "react";
 import ComponentCard from "@/components/ui/Card";
@@ -1449,7 +1707,7 @@ export default DefaultInputs;
 
 ```
 
-### components\form\form-elements\DropZone.tsx
+### src\components\form\form-elements\DropZone.tsx
 ```tsx
 import React, { useState } from "react";
 import ComponentCard from "@/components/ui/Card";
@@ -1521,7 +1779,7 @@ export default DropZone;
 
 ```
 
-### components\form\form-elements\FileInputExample.tsx
+### src\components\form\form-elements\FileInputExample.tsx
 ```tsx
 import ComponentCard from "@/components/ui/Card";
 import FileInput from "../input/FileInput";
@@ -1547,7 +1805,7 @@ export default function FileInputExample() {
 
 ```
 
-### components\form\form-elements\InputGroup.tsx
+### src\components\form\form-elements\InputGroup.tsx
 ```tsx
 import ComponentCard from "@/components/ui/Card";
 import Label from "../Label";
@@ -1606,7 +1864,7 @@ export default function InputGroup() {
 
 ```
 
-### components\form\form-elements\InputStates.tsx
+### src\components\form\form-elements\InputStates.tsx
 ```tsx
 import { useState } from "react";
 import ComponentCard from "@/components/ui/Card";
@@ -1684,7 +1942,7 @@ export default function InputStates() {
 
 ```
 
-### components\form\form-elements\RadioButtons.tsx
+### src\components\form\form-elements\RadioButtons.tsx
 ```tsx
 import { useState } from "react";
 import ComponentCard from "@/components/ui/Card";
@@ -1731,7 +1989,7 @@ export default function RadioButtons() {
 
 ```
 
-### components\form\form-elements\SelectInputs.tsx
+### src\components\form\form-elements\SelectInputs.tsx
 ```tsx
 import { useState } from "react";
 import ComponentCard from "@/components/ui/Card";
@@ -1787,7 +2045,7 @@ export default function SelectInputs() {
 
 ```
 
-### components\form\form-elements\TextAreaInput.tsx
+### src\components\form\form-elements\TextAreaInput.tsx
 ```tsx
 import { useState } from "react";
 import ComponentCard from "@/components/ui/Card";
@@ -1834,7 +2092,7 @@ export default function TextAreaInput() {
 
 ```
 
-### components\form\form-elements\ToggleSwitch.tsx
+### src\components\form\form-elements\ToggleSwitch.tsx
 ```tsx
 import ComponentCard from "@/components/ui/Card";
 import Switch from "../switch/Switch";
@@ -1879,7 +2137,7 @@ export default function ToggleSwitch() {
 
 ```
 
-### components\form\group-input\PhoneInput.tsx
+### src\components\form\group-input\PhoneInput.tsx
 ```tsx
 import { useState } from "react";
 
@@ -2024,7 +2282,7 @@ export default PhoneInput;
 
 ```
 
-### components\form\input\Checkbox.tsx
+### src\components\form\input\Checkbox.tsx
 ```tsx
 import type React from "react";
 
@@ -2111,7 +2369,7 @@ export default Checkbox;
 
 ```
 
-### components\form\input\FileInput.tsx
+### src\components\form\input\FileInput.tsx
 ```tsx
 import type { FC } from "react";
 
@@ -2134,7 +2392,7 @@ export default FileInput;
 
 ```
 
-### components\form\input\InputField.tsx
+### src\components\form\input\InputField.tsx
 ```tsx
 import type React from "react";
 import type { FC } from "react";
@@ -2221,7 +2479,7 @@ export default Input;
 
 ```
 
-### components\form\input\Radio.tsx
+### src\components\form\input\Radio.tsx
 ```tsx
 interface RadioProps {
   id: string; // Unique ID for the radio button
@@ -2289,7 +2547,7 @@ export default Radio;
 
 ```
 
-### components\form\input\RadioSm.tsx
+### src\components\form\input\RadioSm.tsx
 ```tsx
 interface RadioProps {
   id: string; // Unique ID for the radio button
@@ -2351,7 +2609,7 @@ export default RadioSm;
 
 ```
 
-### components\form\input\TextArea.tsx
+### src\components\form\input\TextArea.tsx
 ```tsx
 import React from "react";
 
@@ -2419,7 +2677,7 @@ export default TextArea;
 
 ```
 
-### components\form\switch\Switch.tsx
+### src\components\form\switch\Switch.tsx
 ```tsx
 import { useState } from "react";
 
@@ -2496,7 +2754,7 @@ export default Switch;
 
 ```
 
-### components\header\Header.tsx
+### src\components\header\Header.tsx
 ```tsx
 import { useState } from "react";
 import NotificationDropdown from "./NotificationDropdown";
@@ -2666,7 +2924,7 @@ export default Header;
 
 ```
 
-### components\header\NotificationDropdown.tsx
+### src\components\header\NotificationDropdown.tsx
 ```tsx
 import { useState } from "react";
 import { Dropdown } from "../ui/Dropdown";
@@ -3051,15 +3309,19 @@ export default function NotificationDropdown() {
 
 ```
 
-### components\header\UserDropdown.tsx
+### src\components\header\UserDropdown.tsx
 ```tsx
 import { useState } from "react";
 import { DropdownItem } from "@/components/ui/DropdownItem";
 import { Dropdown } from "@/components/ui/Dropdown";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { logout } from "@/store/slices/authSlice";
 
 export default function UserDropdown() {
   const [isOpen, setIsOpen] = useState(false);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   function toggleDropdown() {
     setIsOpen(!isOpen);
@@ -3068,6 +3330,12 @@ export default function UserDropdown() {
   function closeDropdown() {
     setIsOpen(false);
   }
+
+  const handleLogout = () => {
+    dispatch(logout());
+    navigate("/login");
+    closeDropdown();
+  };
   return (
     <div className="relative">
       <button
@@ -3195,6 +3463,7 @@ export default function UserDropdown() {
         </ul>
         <Link
           to="/signin"
+          onClick={handleLogout}
           className="flex items-center gap-3 px-3 py-2 mt-3 font-medium text-gray-700 rounded-lg group text-theme-sm hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
         >
           <svg
@@ -3221,7 +3490,7 @@ export default function UserDropdown() {
 
 ```
 
-### components\icons\index.ts
+### src\components\icons\index.ts
 ```ts
 import { ReactComponent as PlusIcon } from "./plus.svg?react";
 import { ReactComponent as CloseIcon } from "./close.svg?react";
@@ -3337,7 +3606,7 @@ export {
 
 ```
 
-### components\layout\BannerPage.tsx
+### src\components\layout\BannerPage.tsx
 ```tsx
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay } from "swiper/modules";
@@ -3412,7 +3681,7 @@ export default function BannerPage() {
 
 ```
 
-### components\layout\Footer.tsx
+### src\components\layout\Footer.tsx
 ```tsx
 import React from "react";
 
@@ -3516,7 +3785,7 @@ export default Footer;
 
 ```
 
-### components\layout\Navbar.tsx
+### src\components\layout\Navbar.tsx
 ```tsx
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
@@ -3582,7 +3851,7 @@ export default Navbar;
 
 ```
 
-### components\layout\NavHome.tsx
+### src\components\layout\NavHome.tsx
 ```tsx
 import React, { useState } from 'react';
 import '../../index.css';
@@ -3775,7 +4044,7 @@ export default NavHome;
 
 ```
 
-### components\ui\Alert.tsx
+### src\components\ui\Alert.tsx
 ```tsx
 import { Link } from "react-router-dom";
 
@@ -3924,7 +4193,7 @@ export default Alert;
 
 ```
 
-### components\ui\Avatar.tsx
+### src\components\ui\Avatar.tsx
 ```tsx
 interface AvatarProps {
   src: string; // URL of the avatar image
@@ -3984,7 +4253,7 @@ export default Avatar;
 
 ```
 
-### components\ui\Badge.tsx
+### src\components\ui\Badge.tsx
 ```tsx
 type BadgeVariant = "light" | "solid";
 type BadgeSize = "sm" | "md";
@@ -4066,7 +4335,7 @@ export default Badge;
 
 ```
 
-### components\ui\Button.tsx
+### src\components\ui\Button.tsx
 ```tsx
 import type { ReactNode } from "react";
 
@@ -4126,7 +4395,7 @@ export default Button;
 
 ```
 
-### components\ui\Card.tsx
+### src\components\ui\Card.tsx
 ```tsx
 import { type ReactNode } from "react";
 
@@ -4160,7 +4429,7 @@ export default ComponentCard;
 
 ```
 
-### components\ui\Dropdown.tsx
+### src\components\ui\Dropdown.tsx
 ```tsx
 import type React from "react";
 import { useEffect, useRef } from "react";
@@ -4211,7 +4480,7 @@ export const Dropdown: React.FC<DropdownProps> = ({
 
 ```
 
-### components\ui\DropdownItem.tsx
+### src\components\ui\DropdownItem.tsx
 ```tsx
 import type React from "react";
 import { Link } from "react-router-dom";
@@ -4262,7 +4531,7 @@ export const DropdownItem: React.FC<DropdownItemProps> = ({
 
 ```
 
-### components\ui\Icons.tsx
+### src\components\ui\Icons.tsx
 ```tsx
 import React from "react";
 
@@ -4328,7 +4597,7 @@ export const TaskIcon: React.FC<IconProps> = ({ className = "w-6 h-6" }) => (
 
 ```
 
-### components\ui\Input.tsx
+### src\components\ui\Input.tsx
 ```tsx
 import { type InputHTMLAttributes, forwardRef } from "react";
 import classNames from "classnames";
@@ -4369,17 +4638,17 @@ Input.displayName = "Input";
 
 ```
 
-### components\ui\Modal.tsx
+### src\components\ui\Modal.tsx
 ```tsx
 
 ```
 
-### components\ui\Pagination.tsx
+### src\components\ui\Pagination.tsx
 ```tsx
 
 ```
 
-### components\ui\Spinner.tsx
+### src\components\ui\Spinner.tsx
 ```tsx
 import React from "react";
 import classNames from "classnames";
@@ -4407,18 +4676,17 @@ export const Spinner: React.FC<SpinnerProps> = ({ size = "md", className }) => {
 
 ```
 
-### components\ui\Tabs.tsx
+### src\components\ui\Tabs.tsx
 ```tsx
 
 ```
 
-### config\axios.ts
+### src\config\axios.ts
 ```ts
 // src/config/axios.ts
 import axios, { AxiosError } from "axios";
 import type { InternalAxiosRequestConfig } from "axios";
 import { toast } from "react-toastify";
-import baseURL from "../../api.json";
 
 let stateToken: string | null = null;
 let logoutCallback: (() => void) | null = null;
@@ -4434,7 +4702,12 @@ export const updateStateToken = (token: string | null) => {
 };
 
 const api = axios.create({
-  baseURL: baseURL.BaseURL,
+  baseURL: "https://carenest-api.lighttail.com/api/",
+  timeout: 10000,
+  headers: {
+    "Content-Type": "application/json",
+    Accept: "application/json",
+  },
 });
 
 const handleBefore = (config: InternalAxiosRequestConfig) => {
@@ -4481,74 +4754,7 @@ export default api;
 
 ```
 
-### configs\axios.ts
-```ts
-// src/config/axios.ts
-import axios, { AxiosError } from "axios";
-import type { InternalAxiosRequestConfig } from "axios";
-import { toast } from "react-toastify";
-import baseURL from "../../api.json";
-
-let stateToken: string | null = null;
-let logoutCallback: (() => void) | null = null;
-
-export const setLogoutCallback = (callback: () => void) => {
-  logoutCallback = callback;
-};
-
-export const updateStateToken = (token: string | null) => {
-  stateToken = token;
-};
-
-const api = axios.create({
-  baseURL: baseURL.BaseURL,
-});
-
-const handleBefore = (config: InternalAxiosRequestConfig) => {
-  const token = localStorage.getItem("authToken") || stateToken;
-
-  if (token) {
-    config.headers["Authorization"] = `Bearer ${token}`;
-  }
-  return config;
-};
-
-const handleRequestError = (error: AxiosError) => {
-  console.error("Request error:", error);
-  return Promise.reject(error);
-};
-
-const logoutUser = () => {
-  localStorage.removeItem("authToken");
-  updateStateToken(null);
-
-  if (logoutCallback) {
-    logoutCallback();
-  }
-};
-
-const handleResponseError = (error: AxiosError) => {
-  if (error.response?.status === 401) {
-    logoutUser();
-    toast.error(
-      "Phiên đăng nhập không hợp lệ hoặc đã hết hạn. Vui lòng đăng nhập lại."
-    );
-    window.location.href = "/login";
-  }
-
-  console.error("Response error:", error);
-  return Promise.reject(error);
-};
-
-api.interceptors.request.use(handleBefore, handleRequestError);
-api.interceptors.response.use((response) => response, handleResponseError);
-
-export { logoutUser };
-export default api;
-
-```
-
-### context\SidebarContext.tsx
+### src\context\SidebarContext.tsx
 ```tsx
 import { createContext, useContext, useState, useEffect } from "react";
 
@@ -4636,7 +4842,7 @@ export const SidebarProvider: React.FC<{ children: React.ReactNode }> = ({
 
 ```
 
-### context\ThemeContext.tsx
+### src\context\ThemeContext.tsx
 ```tsx
 "use client";
 
@@ -4699,12 +4905,12 @@ export const useTheme = () => {
 
 ```
 
-### hooks\useAuth.ts
+### src\hooks\useAuth.ts
 ```ts
 
 ```
 
-### layout\AppHeader.tsx
+### src\layout\AppHeader.tsx
 ```tsx
 // layout/AppHeader.tsx
 import { useState } from "react";
@@ -4807,7 +5013,7 @@ export default AppHeader;
 
 ```
 
-### layout\AppHeaderForAdmin.tsx
+### src\layout\AppHeaderForAdmin.tsx
 ```tsx
 import SearchBar, { type SearchField } from "../components/common/SearchBar";
 
@@ -4872,7 +5078,7 @@ export default AppHeaderForAdmin;
 
 ```
 
-### layout\AppHeaderForUser.tsx
+### src\layout\AppHeaderForUser.tsx
 ```tsx
 // layout/AppHeaderForUser.tsx
 import { useState } from "react";
@@ -5119,7 +5325,7 @@ export default AppHeaderForUser;
 
 ```
 
-### layout\AppLayout.tsx
+### src\layout\AppLayout.tsx
 ```tsx
 import { SidebarProvider, useSidebar } from "../context/SidebarContext";
 import AppHeader from "./AppHeader";
@@ -5165,7 +5371,7 @@ export default AppLayout;
 
 ```
 
-### layout\AppLayoutForShopAdmin.tsx
+### src\layout\AppLayoutForShopAdmin.tsx
 ```tsx
 import { SidebarProvider, useSidebar } from "../context/SidebarContext";
 import AppHeader from "./AppHeader";
@@ -5211,7 +5417,7 @@ export default AppLayoutForShopAdmin;
 
 ```
 
-### layout\AppLayoutForUser.tsx
+### src\layout\AppLayoutForUser.tsx
 ```tsx
 // layout/AppLayoutForUser.tsx
 import type { ReactNode } from "react";
@@ -5241,7 +5447,7 @@ export default AppLayoutForUser;
 
 ```
 
-### layout\AppSidebar.tsx
+### src\layout\AppSidebar.tsx
 ```tsx
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
@@ -5496,7 +5702,7 @@ export default AppSidebar;
 
 ```
 
-### layout\AppSidebarForShopAdmin.tsx
+### src\layout\AppSidebarForShopAdmin.tsx
 ```tsx
 // layout/AppSidebarForShopAdmin.tsx
 import { Link } from "react-router-dom";
@@ -5548,7 +5754,7 @@ export default AppSidebarForShopAdmin;
 
 ```
 
-### layout\Backdrop.tsx
+### src\layout\Backdrop.tsx
 ```tsx
 import { useSidebar } from "../context/SidebarContext";
 
@@ -5569,7 +5775,7 @@ export default Backdrop;
 
 ```
 
-### layout\SidebarWidget.tsx
+### src\layout\SidebarWidget.tsx
 ```tsx
 export default function SidebarWidget() {
   return (
@@ -5582,12 +5788,12 @@ export default function SidebarWidget() {
 
 ```
 
-### pages\Checkout\index.tsx
+### src\pages\Checkout\index.tsx
 ```tsx
 
 ```
 
-### pages\Dashboard\DashboardPage.tsx
+### src\pages\Dashboard\DashboardPage.tsx
 ```tsx
 import React from "react";
 // import AppLayout from "@/layout/AppLayout";
@@ -5610,7 +5816,7 @@ export default DashboardPage;
 
 ```
 
-### pages\Dashboard\employeeManagement.tsx
+### src\pages\Dashboard\employeeManagement.tsx
 ```tsx
 import { useState, useEffect } from 'react';
 
@@ -6223,7 +6429,7 @@ export default function EmployeeManagement() {
 }
 ```
 
-### pages\Dashboard\index.tsx
+### src\pages\Dashboard\index.tsx
 ```tsx
 import React from "react";
 import { useDispatch } from "react-redux";
@@ -6268,7 +6474,7 @@ export default Dashboard;
 
 ```
 
-### pages\Dashboard\ServicePackage.tsx
+### src\pages\Dashboard\ServicePackage.tsx
 ```tsx
 import React, { useState } from "react";
 // Import icon Star từ thư viện lucide-react để dùng làm biểu tượng
@@ -6461,7 +6667,7 @@ export default ServicePackage;
 
 ```
 
-### pages\Dashboard\TaskManager.tsx
+### src\pages\Dashboard\TaskManager.tsx
 ```tsx
 import { useState } from "react";
 
@@ -6663,7 +6869,7 @@ export default function TaskManager() {
 }   
 ```
 
-### pages\Dashboard\taskReport.tsx
+### src\pages\Dashboard\taskReport.tsx
 ```tsx
 import { useState } from "react";
 
@@ -6873,7 +7079,7 @@ export default function TaskReport() {
 }
 ```
 
-### pages\Dashboard\TimeManagement.tsx
+### src\pages\Dashboard\TimeManagement.tsx
 ```tsx
 import React, { useState } from "react";
 import PomodoroForm, { type PomodoroConfig } from "./component/PomodoroForm";
@@ -6900,7 +7106,7 @@ export default TimeManagement;
 
 ```
 
-### pages\Dashboard\Wallet.tsx
+### src\pages\Dashboard\Wallet.tsx
 ```tsx
 import { useState } from 'react';
 import WalletModal from './component/Wallet/walletModal';
@@ -6964,7 +7170,7 @@ export default WalletPage;
 
 ```
 
-### pages\Dashboard\component\DaskboardContent.tsx
+### src\pages\Dashboard\component\DaskboardContent.tsx
 ```tsx
 // import React from 'react';
 import tasksData from '../../../data/tasks.json'; // Import dữ liệu từ file JSON
@@ -7018,7 +7224,7 @@ export default DashboardContent;
 
 ```
 
-### pages\Dashboard\component\MainDashboard.tsx
+### src\pages\Dashboard\component\MainDashboard.tsx
 ```tsx
 import React from "react";
 
@@ -7065,7 +7271,7 @@ export default MainDashboard;
 
 ```
 
-### pages\Dashboard\component\PomodoroForm.tsx
+### src\pages\Dashboard\component\PomodoroForm.tsx
 ```tsx
 import React, { useState } from "react";
 
@@ -7184,7 +7390,7 @@ export default PomodoroForm;
 
 ```
 
-### pages\Dashboard\component\PomodoroTimer.tsx
+### src\pages\Dashboard\component\PomodoroTimer.tsx
 ```tsx
 import React, { useEffect, useState } from "react";
 import type { PomodoroConfig } from "./PomodoroForm";
@@ -7258,7 +7464,7 @@ export default PomodoroTimer;
 
 ```
 
-### pages\Dashboard\component\Wallet\walletHistory.tsx
+### src\pages\Dashboard\component\Wallet\walletHistory.tsx
 ```tsx
 import React from 'react';
 
@@ -7338,7 +7544,7 @@ export default WalletHistoryModal;
 
 ```
 
-### pages\Dashboard\component\Wallet\walletModal.tsx
+### src\pages\Dashboard\component\Wallet\walletModal.tsx
 ```tsx
 import React, { useState } from 'react';
 // import MomoIcon from'@/assets/iconMomo.svg'
@@ -7479,7 +7685,7 @@ export default WalletModal;
 
 ```
 
-### pages\Forms\FormElements.tsx
+### src\pages\Forms\FormElements.tsx
 ```tsx
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import DefaultInputs from "../../components/form/form-elements/DefaultInputs";
@@ -7519,7 +7725,7 @@ export default function FormElements() {
 
 ```
 
-### pages\Home\HomePage.tsx
+### src\pages\Home\HomePage.tsx
 ```tsx
 import BannerPage from '@/components/layout/BannerPage';
 import Footer from '@/components/layout/Footer';
@@ -7542,7 +7748,7 @@ const HomePage: React.FC = () => {
 export default HomePage;
 ```
 
-### pages\Home\index.tsx
+### src\pages\Home\index.tsx
 ```tsx
 // pages/Home/HomePage.tsx
 import React from "react";
@@ -7575,7 +7781,7 @@ export default HomePage;
 
 ```
 
-### pages\Home\components\HeroBanner.tsx
+### src\pages\Home\components\HeroBanner.tsx
 ```tsx
 // pages/Home/components/HeroBanner.tsx
 import React from "react";
@@ -7603,7 +7809,7 @@ export default HeroBanner;
 
 ```
 
-### pages\Home\components\HighestRating.tsx
+### src\pages\Home\components\HighestRating.tsx
 ```tsx
 // pages/Home/components/LatestServices.tsx
 import React from "react";
@@ -7767,7 +7973,7 @@ export default HighestRating;
 
 ```
 
-### pages\Home\components\LatestServices.tsx
+### src\pages\Home\components\LatestServices.tsx
 ```tsx
 // pages/Home/components/LatestServices.tsx
 import React from "react";
@@ -7930,7 +8136,7 @@ export default LatestServices;
 
 ```
 
-### pages\Home\components\MostBuy.tsx
+### src\pages\Home\components\MostBuy.tsx
 ```tsx
 // pages/Home/components/LatestServices.tsx
 import React from "react";
@@ -8094,7 +8300,7 @@ export default MostBuy;
 
 ```
 
-### pages\Home\components\ServiceCard.tsx
+### src\pages\Home\components\ServiceCard.tsx
 ```tsx
 // pages/Home/components/ServiceCard.tsx
 import React from "react";
@@ -8203,7 +8409,7 @@ export default ServiceCard;
 
 ```
 
-### pages\Home\components\ServiceCategories.tsx
+### src\pages\Home\components\ServiceCategories.tsx
 ```tsx
 // pages/Home/components/ServiceCategories.tsx
 import React from "react";
@@ -8260,7 +8466,7 @@ export default ServiceCategories;
 
 ```
 
-### pages\Login\index.tsx
+### src\pages\Login\index.tsx
 ```tsx
 // src/pages/Login/index.tsx
 import { useState, useEffect } from "react";
@@ -8460,7 +8666,7 @@ export default function LoginPage() {
 
 ```
 
-### pages\Login\components\AuthWrapper.tsx
+### src\pages\Login\components\AuthWrapper.tsx
 ```tsx
 // src/components/AuthWrapper.tsx
 import { useEffect } from "react";
@@ -8484,7 +8690,7 @@ export const AuthWrapper: React.FC<AuthWrapperProps> = ({ children }) => {
 
 ```
 
-### pages\Login\components\EnterOTPCode.tsx
+### src\pages\Login\components\EnterOTPCode.tsx
 ```tsx
 import React, { useEffect, useRef, useState } from "react";
 
@@ -8639,7 +8845,7 @@ export default EnterOTPCode;
 
 ```
 
-### pages\Login\components\ForgotPassword.tsx
+### src\pages\Login\components\ForgotPassword.tsx
 ```tsx
 import React, { useState } from "react";
 import EnterOTPCode from "./EnterOTPCode";
@@ -8732,17 +8938,17 @@ export default ForgotPassword;
 
 ```
 
-### pages\Login\components\LoginForm.tsx
+### src\pages\Login\components\LoginForm.tsx
 ```tsx
 
 ```
 
-### pages\Login\components\SocialLogin.tsx
+### src\pages\Login\components\SocialLogin.tsx
 ```tsx
 
 ```
 
-### pages\Login\hooks\useLoginForm.ts
+### src\pages\Login\hooks\useLoginForm.ts
 ```ts
 // src/pages/Login/hooks/useLoginForm.ts
 import { useState } from "react";
@@ -8850,7 +9056,7 @@ export const useLoginForm = () => {
 
 ```
 
-### pages\Login\utils\loginValidation.ts
+### src\pages\Login\utils\loginValidation.ts
 ```ts
 // utils/loginValidation.ts
 interface LoginFormData {
@@ -8885,7 +9091,7 @@ export const validateLogin = (data: LoginFormData): LoginFormErrors => {
 
 ```
 
-### pages\NotFound\index.tsx
+### src\pages\NotFound\index.tsx
 ```tsx
 import React from "react";
 import { Link } from "react-router-dom";
@@ -8916,12 +9122,12 @@ export default NotFound;
 
 ```
 
-### pages\Profile\index.tsx
+### src\pages\Profile\index.tsx
 ```tsx
 
 ```
 
-### pages\Register\index.tsx
+### src\pages\Register\index.tsx
 ```tsx
 // File: src/pages/RegisterPage.tsx
 import { useState } from "react";
@@ -9199,7 +9405,7 @@ export default function RegisterPage() {
 
 ```
 
-### pages\RegisterShop\index.tsx
+### src\pages\RegisterShop\index.tsx
 ```tsx
 // File: src/pages/RegisterPage.tsx (thêm vào form đăng ký)
 import { useState } from "react";
@@ -9704,7 +9910,7 @@ export default function RegisterPage() {
 
 ```
 
-### pages\RegisterType\index.tsx
+### src\pages\RegisterType\index.tsx
 ```tsx
 // File: src/pages/RegisterPage.tsx
 import { User, Home, Store } from "lucide-react";
@@ -9790,7 +9996,7 @@ export default function RegisterType() {
 
 ```
 
-### pages\ServiceDetail\ServiceDetail.tsx
+### src\pages\ServiceDetail\ServiceDetail.tsx
 ```tsx
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
@@ -9937,7 +10143,7 @@ export default ServiceDetail;
 
 ```
 
-### pages\ServiceDetail\components\ServiceActions.tsx
+### src\pages\ServiceDetail\components\ServiceActions.tsx
 ```tsx
 import React from "react";
 import Button from "../../../components/ui/Button";
@@ -9989,7 +10195,7 @@ export default ServiceActions;
 
 ```
 
-### pages\ServiceDetail\components\ServiceImages.tsx
+### src\pages\ServiceDetail\components\ServiceImages.tsx
 ```tsx
 import React, { useState } from "react";
 
@@ -10041,7 +10247,7 @@ export default ServiceImages;
 
 ```
 
-### pages\ServiceDetail\components\ServiceInfo.tsx
+### src\pages\ServiceDetail\components\ServiceInfo.tsx
 ```tsx
 import React from "react";
 import Badge from "../../../components/ui/Badge";
@@ -10143,7 +10349,7 @@ export default ServiceInfo;
 
 ```
 
-### pages\Services\Service.tsx
+### src\pages\Services\Service.tsx
 ```tsx
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -10204,12 +10410,12 @@ export default ServicesPage;
 
 ```
 
-### pages\Settings\index.tsx
+### src\pages\Settings\index.tsx
 ```tsx
 
 ```
 
-### pages\SignUp\SignUp.tsx
+### src\pages\SignUp\SignUp.tsx
 ```tsx
 import { useState } from "react";
 import { Link } from "react-router-dom";
@@ -10367,7 +10573,7 @@ export default function SignUpForm() {
 
 ```
 
-### pages\Tables\BasicTables.tsx
+### src\pages\Tables\BasicTables.tsx
 ```tsx
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import ComponentCard from "../../components/common/ComponentCard";
@@ -10388,7 +10594,7 @@ export default function BasicTables() {
 
 ```
 
-### pages\UiElements\Alerts.tsx
+### src\pages\UiElements\Alerts.tsx
 ```tsx
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import ComponentCard from "../../components/common/ComponentCard";
@@ -10470,7 +10676,7 @@ export default function Alerts() {
 
 ```
 
-### pages\UiElements\Avatars.tsx
+### src\pages\UiElements\Avatars.tsx
 ```tsx
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import ComponentCard from "../../components/common/ComponentCard";
@@ -10593,7 +10799,7 @@ export default function Avatars() {
 
 ```
 
-### pages\UiElements\Badges.tsx
+### src\pages\UiElements\Badges.tsx
 ```tsx
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import Badge from "../../components/ui/Badge";
@@ -10764,7 +10970,7 @@ export default function Badges() {
 
 ```
 
-### pages\UiElements\Buttons.tsx
+### src\pages\UiElements\Buttons.tsx
 ```tsx
 import ComponentCard from "../../components/common/ComponentCard";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
@@ -10882,28 +11088,31 @@ export default function Buttons() {
 
 ```
 
-### routes\index.tsx
+### src\routes\index.tsx
 ```tsx
-// src/routes/index.tsx
 import { Routes, Route, Navigate } from "react-router-dom";
 import { ProtectedRoute } from "../services/ProtectedRoute";
 import LoginPage from "../pages/Login";
 import HomePage from "../pages/Home";
-import DashboardPage from "../pages/Dashboard";
+import AppLayoutForUser from "../layout/AppLayoutForUser";
 
 const AppRoutes = () => {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
-      <Route path="/home" element={<HomePage />} />
+
+      {/* Wrap HomePage with layout components */}
       <Route
-        path="/dashboard"
+        path="/home"
         element={
           <ProtectedRoute>
-            <HomePage />
+            <AppLayoutForUser>
+              <HomePage />
+            </AppLayoutForUser>
           </ProtectedRoute>
         }
       />
+
       <Route path="/" element={<Navigate to="/home" />} />
     </Routes>
   );
@@ -10913,17 +11122,17 @@ export default AppRoutes;
 
 ```
 
-### routes\privateRoutes.ts
+### src\routes\privateRoutes.ts
 ```ts
 
 ```
 
-### routes\publicRoutes.ts
+### src\routes\publicRoutes.ts
 ```ts
 
 ```
 
-### services\authService.ts
+### src\services\authService.ts
 ```ts
 import apiClient from "../config/axios";
 
@@ -10964,7 +11173,7 @@ export default authService;
 
 ```
 
-### services\ProtectedRoute.tsx
+### src\services\ProtectedRoute.tsx
 ```tsx
 // src/services/ProtectedRoute.tsx
 import { useSelector } from "react-redux";
@@ -10994,7 +11203,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
 
 ```
 
-### store\store.ts
+### src\store\store.ts
 ```ts
 // src/store/store.ts
 import { configureStore } from "@reduxjs/toolkit";
@@ -11017,7 +11226,7 @@ export type AppDispatch = typeof store.dispatch;
 
 ```
 
-### store\slices\authSlice.ts
+### src\store\slices\authSlice.ts
 ```ts
 // src/store/slices/authSlice.ts
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
@@ -11116,14 +11325,33 @@ const createUserFromToken = (token: string): User => {
   }
 };
 
-// Async thunks
+// ✅ ASYNC THUNKS với GET request và query parameters
+// ✅ ASYNC THUNKS với GET request và query parameters
 export const Login = createAsyncThunk<
   AuthResponse,
   LoginRequest,
   { rejectValue: ErrorResponse }
 >("auth/login", async (credentials, { rejectWithValue }) => {
   try {
-    const res = await api.post("account/login", credentials);
+    console.log("🚀 Login request payload:", credentials); // Debug log
+
+    const res = await api.post(
+      "account/login",
+      // Request body directly
+      {
+        username: credentials.username,
+        password: credentials.password,
+      },
+      // Request config as third parameter
+      {
+        headers: {
+          "Content-Type": "application/json",
+          accept: "*/*",
+        },
+      }
+    );
+
+    console.log("✅ Response:", res.data); // Debug log
 
     if (!res.data || !res.data.data) {
       return rejectWithValue({
@@ -11137,11 +11365,12 @@ export const Login = createAsyncThunk<
 
     return { user, token };
   } catch (err: any) {
-    console.error("Login error:", err);
+    console.error("❌ Error status:", err.response?.status);
+    console.error("❌ Error data:", err.response?.data);
 
     if (err.response && err.response.data) {
       return rejectWithValue({
-        error: err.response.status || 1,
+        error: 1,
         message: err.response.data.message || "Đăng nhập thất bại",
       });
     }
@@ -11159,7 +11388,25 @@ export const LoginNoRemember = createAsyncThunk<
   { rejectValue: ErrorResponse }
 >("authNoRemember/login", async (credentials, { rejectWithValue }) => {
   try {
-    const res = await api.post("account/login", credentials);
+    console.log("🚀 Login request payload:", credentials); // Debug log
+
+    const res = await api.post(
+      "account/login",
+      // Request body directly
+      {
+        username: credentials.username,
+        password: credentials.password,
+      },
+      // Request config as third parameter
+      {
+        headers: {
+          "Content-Type": "application/json",
+          accept: "*/*",
+        },
+      }
+    );
+
+    console.log("✅ Response:", res.data); // Debug log
 
     if (!res.data || !res.data.data) {
       return rejectWithValue({
@@ -11173,11 +11420,12 @@ export const LoginNoRemember = createAsyncThunk<
 
     return { user, token };
   } catch (err: any) {
-    console.error("LoginNoRemember error:", err);
+    console.error("❌ Error status:", err.response?.status);
+    console.error("❌ Error data:", err.response?.data);
 
     if (err.response && err.response.data) {
       return rejectWithValue({
-        error: err.response.status || 1,
+        error: 1,
         message: err.response.data.message || "Đăng nhập thất bại",
       });
     }
@@ -11189,7 +11437,7 @@ export const LoginNoRemember = createAsyncThunk<
   }
 });
 
-// Slice
+// Slice (giữ nguyên)
 const userSlice = createSlice({
   name: "auth",
   initialState,
@@ -11284,12 +11532,12 @@ export default userSlice.reducer;
 
 ```
 
-### types\auth.ts
+### src\types\auth.ts
 ```ts
 
 ```
 
-### types\services.ts
+### src\types\services.ts
 ```ts
 export interface Service {
   id: string;
@@ -11309,7 +11557,7 @@ export interface Service {
 
 ```
 
-### types\user.ts
+### src\types\user.ts
 ```ts
 
 ```
