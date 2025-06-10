@@ -35,7 +35,7 @@ const Navbar: React.FC = () => {
             {isAuthenticated ? (
               <>
                 <span className="text-gray-700">Xin chào, {user?.email}</span>
-                <Link to="/dashboard">
+                <Link to="/">
                   <Button variant="outline" size="sm">
                     Dashboard
                   </Button>

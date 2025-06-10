@@ -1,15 +1,12 @@
 // File: src/pages/RegisterPage.tsx
-import { useState } from "react";
-import {
-  Eye,
-  EyeOff,
-  User,
-  Mail,
-  Home,
-  Calendar,
-  ChevronDown,
-} from "lucide-react";
+import { useEffect, useState } from "react";
+import { Eye, EyeOff, User, Mail, Home } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import type { AppDispatch, RootState } from "@/store/store";
+import { register, resetRegisterState } from "@/store/slices/registerSlice";
+import { toast } from "react-toastify";
+import { useSelector } from "react-redux";
 
 export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -19,20 +16,44 @@ export default function RegisterPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [fullName, setFullName] = useState("");
-  const [birthDate, setBirthDate] = useState("");
-  const [gender, setGender] = useState("");
   const [errors, setErrors] = useState({
     username: "",
     email: "",
     password: "",
     confirmPassword: "",
-    fullName: "",
-    birthDate: "",
-    gender: "",
   });
 
   const navigate = useNavigate();
+  const dispatch = useDispatch<AppDispatch>();
+
+  // Lấy state từ Redux store
+  const { loading, success, error } = useSelector(
+    (state: RootState) => state.register
+  );
+
+  // Cleanup khi component unmount
+  useEffect(() => {
+    return () => {
+      dispatch(resetRegisterState());
+    };
+  }, [dispatch]);
+
+  // Xử lý khi đăng ký thành công
+  useEffect(() => {
+    if (success) {
+      toast.success("Đăng ký thành công! Bạn có thể đăng nhập ngay bây giờ.");
+      setTimeout(() => {
+        navigate("/login");
+      }, 2000);
+    }
+  }, [success, navigate]);
+
+  // Xử lý khi có lỗi từ server
+  useEffect(() => {
+    if (error) {
+      toast.error(error.message);
+    }
+  }, [error]);
 
   const validateEmail = (email: string) => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -42,41 +63,83 @@ export default function RegisterPage() {
     return /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,}$/.test(password);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const validateForm = () => {
     const newErrors = {
       username: "",
       email: "",
       password: "",
       confirmPassword: "",
-      fullName: "",
-      birthDate: "",
-      gender: "",
     };
-    let valid = true;
-
+    let isValid = true;
+    // Validate username
     if (!username.trim()) {
       newErrors.username = "Tên người dùng không được để trống";
-      valid = false;
+      isValid = false;
+    } else if (username.trim().length < 3) {
+      newErrors.username = "Tên người dùng phải có ít nhất 3 ký tự";
+      isValid = false;
     }
-    if (!validateEmail(email)) {
+    // Validate email
+    if (!email.trim()) {
+      newErrors.email = "Email không được để trống";
+      isValid = false;
+    } else if (!validateEmail(email)) {
       newErrors.email = "Email không hợp lệ";
-      valid = false;
+      isValid = false;
     }
-    if (!validatePassword(password)) {
+
+    // Validate password
+    if (!password) {
+      newErrors.password = "Mật khẩu không được để trống";
+      isValid = false;
+    } else if (!validatePassword(password)) {
       newErrors.password = "Mật khẩu phải từ 6 ký tự, gồm chữ và số";
-      valid = false;
+      isValid = false;
     }
-    if (password !== confirmPassword) {
+
+    // Validate confirm password
+    if (!confirmPassword) {
+      newErrors.confirmPassword = "Vui lòng nhập lại mật khẩu";
+      isValid = false;
+    } else if (password !== confirmPassword) {
       newErrors.confirmPassword = "Mật khẩu xác nhận không khớp";
-      valid = false;
+      isValid = false;
     }
 
     setErrors(newErrors);
+    return isValid;
+  };
 
-    if (valid) {
-      alert("Đăng ký thành công!");
-      // TODO: gửi dữ liệu tới server tại đây
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    // Validate form trước khi submit
+    if (!validateForm()) {
+      return;
+    }
+
+    // Gửi request đăng ký
+    const registerData = {
+      username: username.trim(),
+      email: email.trim(),
+      password: password,
+      confirmPassword: confirmPassword,
+      role: "user", // Mặc định là user
+    };
+
+    try {
+      const result = await dispatch(register(registerData));
+
+      if (register.fulfilled.match(result)) {
+        // Đăng ký thành công - useEffect sẽ xử lý navigation
+        console.log("✅ Đăng ký thành công:", result.payload);
+      } else if (register.rejected.match(result)) {
+        // Lỗi từ server - useEffect sẽ hiển thị toast
+        console.error("❌ Đăng ký thất bại:", result.payload);
+      }
+    } catch (error) {
+      console.error("❌ Unexpected error:", error);
+      toast.error("Có lỗi không mong muốn xảy ra");
     }
   };
 
@@ -85,7 +148,7 @@ export default function RegisterPage() {
       {/* Icon quay về trang homepage */}
       <button
         onClick={() => navigate("/")}
-        className="absolute top-4 right-4 text-[#2A9D8F] hover:text-[#2A9D8F]"
+        className="absolute top-4 right-4 text-[#2A9D8F] hover:text-[#228B7E] transition-colors duration-200 z-10"
         title="Quay lại trang chính"
       >
         <Home className="w-6 h-6" />
@@ -100,54 +163,6 @@ export default function RegisterPage() {
           </p>
 
           <form className="space-y-4" onSubmit={handleSubmit}>
-            {/* Ô nhập tên người dùng */}
-            <div className="relative">
-              <input
-                type="text"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                placeholder="Họ và tên"
-                className="w-full px-4 py-2 border rounded pr-10 focus:outline-none focus:ring-2 focus:ring-blue-400"
-              />
-              <User className="absolute top-2.5 right-3 w-5 h-5 text-gray-400" />
-              {errors.fullName && (
-                <p className="text-red-500 text-sm mt-1">{errors.fullName}</p>
-              )}
-            </div>
-
-            {/* Ô nhập ngày sinh */}
-            <div className="relative">
-              <input
-                type="date"
-                value={birthDate}
-                onChange={(e) => setBirthDate(e.target.value)}
-                placeholder="Ngày sinh"
-                className="w-full px-4 py-2 border rounded pr-10 focus:outline-none focus:ring-2 focus:ring-blue-400"
-              />
-              <Calendar className="absolute top-2.5 right-3 w-5 h-5 text-gray-400" />
-              {errors.birthDate && (
-                <p className="text-red-500 text-sm mt-1">{errors.birthDate}</p>
-              )}
-            </div>
-
-            {/* Ô nhập giới tính */}
-            <div className="relative">
-              <select
-                value={gender}
-                onChange={(e) => setGender(e.target.value)}
-                className="w-full px-4 py-2 border rounded pr-10 focus:outline-none focus:ring-2 focus:ring-blue-400 appearance-none bg-white"
-              >
-                <option value="">Chọn giới tính</option>
-                <option value="male">Nam</option>
-                <option value="female">Nữ</option>
-                <option value="other">Khác</option>
-              </select>
-              <ChevronDown className="absolute top-2.5 right-3 w-5 h-5 text-gray-400 pointer-events-none" />
-              {errors.gender && (
-                <p className="text-red-500 text-sm mt-1">{errors.gender}</p>
-              )}
-            </div>
-
             {/* Ô nhập username */}
             <div className="relative">
               <input
@@ -155,11 +170,16 @@ export default function RegisterPage() {
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 placeholder="Tên người dùng"
-                className="w-full px-4 py-2 border rounded pr-10 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                className={`w-full px-4 py-3 border rounded-lg pr-10 focus:outline-none focus:ring-2 transition-all duration-200 ${
+                  errors.username
+                    ? "border-red-500 focus:ring-red-500/20"
+                    : "border-gray-300 focus:ring-[#2A9D8F]/20 focus:border-[#2A9D8F]"
+                }`}
+                disabled={loading}
               />
-              <User className="absolute top-2.5 right-3 w-5 h-5 text-gray-400" />
+              <User className="absolute top-3.5 right-3 w-5 h-5 text-gray-400" />
               {errors.username && (
-                <p className="text-red-500 text-sm mt-1">{errors.username}</p>
+                <p className="text-red-500 text-xs mt-1">{errors.username}</p>
               )}
             </div>
 
@@ -170,11 +190,16 @@ export default function RegisterPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Email"
-                className="w-full px-4 py-2 border rounded pr-10 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                className={`w-full px-4 py-3 border rounded-lg pr-10 focus:outline-none focus:ring-2 transition-all duration-200 ${
+                  errors.email
+                    ? "border-red-500 focus:ring-red-500/20"
+                    : "border-gray-300 focus:ring-[#2A9D8F]/20 focus:border-[#2A9D8F]"
+                }`}
+                disabled={loading}
               />
-              <Mail className="absolute top-2.5 right-3 w-5 h-5 text-gray-400" />
+              <Mail className="absolute top-3.5 right-3 w-5 h-5 text-gray-400" />
               {errors.email && (
-                <p className="text-red-500 text-sm mt-1">{errors.email}</p>
+                <p className="text-red-500 text-xs mt-1">{errors.email}</p>
               )}
             </div>
 
@@ -185,11 +210,16 @@ export default function RegisterPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Mật khẩu"
-                className="w-full px-4 py-2 border rounded pr-10 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                className={`w-full px-4 py-3 border rounded-lg pr-10 focus:outline-none focus:ring-2 transition-all duration-200 ${
+                  errors.password
+                    ? "border-red-500 focus:ring-red-500/20"
+                    : "border-gray-300 focus:ring-[#2A9D8F]/20 focus:border-[#2A9D8F]"
+                }`}
+                disabled={loading}
               />
               <div
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute top-2.5 right-3 cursor-pointer text-gray-500"
+                className="absolute top-3.5 right-3 cursor-pointer text-gray-500 hover:text-gray-700 transition-colors"
               >
                 {showPassword ? (
                   <EyeOff className="w-5 h-5" />
@@ -198,7 +228,7 @@ export default function RegisterPage() {
                 )}
               </div>
               {errors.password && (
-                <p className="text-red-500 text-sm mt-1">{errors.password}</p>
+                <p className="text-red-500 text-xs mt-1">{errors.password}</p>
               )}
             </div>
 
@@ -209,11 +239,16 @@ export default function RegisterPage() {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="Nhập lại mật khẩu"
-                className="w-full px-4 py-2 border rounded pr-10 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                className={`w-full px-4 py-3 border rounded-lg pr-10 focus:outline-none focus:ring-2 transition-all duration-200 ${
+                  errors.confirmPassword
+                    ? "border-red-500 focus:ring-red-500/20"
+                    : "border-gray-300 focus:ring-[#2A9D8F]/20 focus:border-[#2A9D8F]"
+                }`}
+                disabled={loading}
               />
               <div
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="absolute top-2.5 right-3 cursor-pointer text-gray-500"
+                className="absolute top-3.5 right-3 cursor-pointer text-gray-500 hover:text-gray-700 transition-colors"
               >
                 {showConfirmPassword ? (
                   <EyeOff className="w-5 h-5" />
@@ -222,7 +257,7 @@ export default function RegisterPage() {
                 )}
               </div>
               {errors.confirmPassword && (
-                <p className="text-red-500 text-sm mt-1">
+                <p className="text-red-500 text-xs mt-1">
                   {errors.confirmPassword}
                 </p>
               )}
@@ -231,40 +266,62 @@ export default function RegisterPage() {
             {/* Nút đăng ký */}
             <button
               type="submit"
-              className="w-full bg-[#2A9D8F] text-white py-2 rounded hover:bg-[#228B7E] transition"
+              disabled={loading}
+              className={`w-full py-3 rounded-lg font-medium transition-all duration-200 flex items-center justify-center space-x-2 ${
+                loading
+                  ? "bg-gray-400 cursor-not-allowed"
+                  : "bg-[#2A9D8F] hover:bg-[#228B7E] text-white shadow-md hover:shadow-lg"
+              }`}
             >
-              Đăng ký
+              {loading ? (
+                <>
+                  <svg
+                    className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
+                  <span>Đang đăng ký...</span>
+                </>
+              ) : (
+                <span>Đăng ký tài khoản</span>
+              )}
             </button>
           </form>
 
-          <p className="text-sm text-center mt-4">
+          <p className="text-sm text-center mt-6">
             Đã có tài khoản?{" "}
-            <a
-              href="/login"
-              className="text-[#2A9D8F] font-semibold hover:underline"
+            <button
+              onClick={() => navigate("/login")}
+              className="text-[#2A9D8F] font-semibold hover:underline transition-all duration-200"
             >
               Đăng nhập ngay!
-            </a>
+            </button>
           </p>
         </div>
       </div>
 
       {/* Bên trái: Logo + mô tả */}
       <div className="w-1/2 bg-[#E7F3F5] flex flex-col justify-center items-center">
-        <div className="w-full max-w-4xl mx-auto p-4 md:p-6 lg:p-8 rounded-lg fixed-size">
+        <div className="w-full max-w-4xl mx-auto p-4 md:p-6 lg:p-8 rounded-lg">
           <img
-            src="/public/image/ranbowlogo.png"
+            src="/public/image/Xanh_dương_pastel_Cầu_vồng_Chương_trình_Đọc_viết_Logo-removebg-preview 1.png"
             alt="Logo"
             className="w-full h-auto object-contain max-w-full"
-            style={{
-              maxWidth: "100%",
-              width: "auto",
-              height: "auto",
-              objectFit: "contain",
-              userSelect: "none", // Không cho phép chọn
-              transform: "scale(1)",
-              transformOrigin: "center center",
-            }}
           />
         </div>
       </div>

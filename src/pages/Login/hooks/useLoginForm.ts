@@ -81,7 +81,7 @@ export const useLoginForm = () => {
         })
       ).unwrap();
 
-      const from = (location.state as any)?.from?.pathname || "/dashboard";
+      const from = (location.state as any)?.from?.pathname || "/";
       navigate(from, { replace: true });
     } catch (error: any) {
       console.error("Login failed:", error);

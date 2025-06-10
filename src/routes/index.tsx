@@ -3,25 +3,34 @@ import { ProtectedRoute } from "../services/ProtectedRoute";
 import LoginPage from "../pages/Login";
 import HomePage from "../pages/Home";
 import AppLayoutForUser from "../layout/AppLayoutForUser";
+import RegisterType from "@/pages/RegisterType";
+import RegisterPage from "@/pages/Register";
 
 const AppRoutes = () => {
   return (
     <Routes>
+      {/* Public Routes */}
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/registertype" element={<RegisterType />} />
+      <Route path="/register" element={<RegisterPage />} />
 
-      {/* Wrap HomePage with layout components */}
+      {/* Protected Routes with Layout */}
       <Route
-        path="/home"
+        path="/app/*"
         element={
           <ProtectedRoute>
-            <AppLayoutForUser>
-              <HomePage />
-            </AppLayoutForUser>
+            <AppLayoutForUser />
           </ProtectedRoute>
         }
-      />
+      >
+        <Route path="home" element={<HomePage />} />
+        {/* <Route path="profile" element={<ProfilePage />} /> */}
+        {/* <Route path="settings" element={<SettingsPage />} /> */}
+        <Route index element={<Navigate to="home" replace />} />
+      </Route>
 
-      <Route path="/" element={<Navigate to="/home" />} />
+      {/* Default redirect */}
+      <Route path="/" element={<Navigate to="/app" replace />} />
     </Routes>
   );
 };

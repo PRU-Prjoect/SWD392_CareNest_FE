@@ -1,22 +1,15 @@
 // layout/AppLayoutForUser.tsx
-import type { ReactNode } from "react";
+import { Outlet } from "react-router-dom";
 import AppHeaderForUser from "./AppHeaderForUser";
 import Footer from "../components/layout/Footer";
 
-interface AppLayoutForUserProps {
-  children: ReactNode;
-}
-
-const AppLayoutForUser: React.FC<AppLayoutForUserProps> = ({ children }) => {
+const AppLayoutForUser: React.FC = () => {
   return (
     <div className="min-h-screen">
-      {/* Header cho user - không có sidebar */}
       <AppHeaderForUser />
-
-      {/* Main content - full width */}
-      <main className="w-full p-4 md:p-6">{children}</main>
-
-      {/* Footer */}
+      <main className="w-full p-4 md:p-6">
+        <Outlet /> {/* Thay thế children bằng Outlet */}
+      </main>
       <Footer />
     </div>
   );
