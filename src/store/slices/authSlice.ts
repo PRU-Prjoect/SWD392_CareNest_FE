@@ -103,27 +103,26 @@ export const Login = createAsyncThunk<
   { rejectValue: ErrorResponse }
 >("auth/login", async (credentials, { rejectWithValue }) => {
   try {
-    console.log("🚀 Sending login request:", credentials);
+    console.log("🚀 Login request payload:", credentials); // Debug log
 
-    // ✅ Tạo URLSearchParams theo spec backend
-    const formData = new URLSearchParams();
-    formData.append("username", credentials.username); // snake_case
-    formData.append("password", credentials.password);
-
-    console.log("📦 Form data:", formData.toString());
-    console.log("🌐 API URL:", api.defaults.baseURL + "account/login");
-
-    // In the Login thunk
-    const res = await api.get(`account/login?${formData.toString()}`, {
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
+    const res = await api.post(
+      "account/login",
+      // Request body directly
+      {
+        username: credentials.username,
+        password: credentials.password,
       },
-    });
+      // Request config as third parameter
+      {
+        headers: {
+          "Content-Type": "application/json",
+          accept: "*/*",
+        },
+      }
+    );
 
-    console.log("✅ Login response:", res.data);
-    console.log("🌐 Request URL:", res.config.url); // Để xem URL được tạo
+    console.log("✅ Response:", res.data); // Debug log
 
-    // ✅ Kiểm tra response theo structure mới
     if (!res.data || !res.data.data) {
       return rejectWithValue({
         error: 1,
@@ -136,8 +135,8 @@ export const Login = createAsyncThunk<
 
     return { user, token };
   } catch (err: any) {
-    console.error("Login error:", err);
-    console.error("Error response:", err.response?.data);
+    console.error("❌ Error status:", err.response?.status);
+    console.error("❌ Error data:", err.response?.data);
 
     if (err.response && err.response.data) {
       return rejectWithValue({
@@ -159,18 +158,25 @@ export const LoginNoRemember = createAsyncThunk<
   { rejectValue: ErrorResponse }
 >("authNoRemember/login", async (credentials, { rejectWithValue }) => {
   try {
-    // ✅ Tương tự cho LoginNoRemember
-    const formData = new URLSearchParams();
-    formData.append("username", credentials.username);
-    formData.append("password", credentials.password);
+    console.log("🚀 Login request payload:", credentials); // Debug log
 
-    const res = await api.get(`account/login?${formData.toString()}`, {
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
+    const res = await api.post(
+      "account/login",
+      // Request body directly
+      {
+        username: credentials.username,
+        password: credentials.password,
       },
-    });
+      // Request config as third parameter
+      {
+        headers: {
+          "Content-Type": "application/json",
+          accept: "*/*",
+        },
+      }
+    );
 
-    console.log("✅ Response status:", res.status);
+    console.log("✅ Response:", res.data); // Debug log
 
     if (!res.data || !res.data.data) {
       return rejectWithValue({
