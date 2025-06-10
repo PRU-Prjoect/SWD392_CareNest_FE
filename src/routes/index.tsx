@@ -1,23 +1,26 @@
-// src/routes/index.tsx
 import { Routes, Route, Navigate } from "react-router-dom";
 import { ProtectedRoute } from "../services/ProtectedRoute";
 import LoginPage from "../pages/Login";
 import HomePage from "../pages/Home";
-import DashboardPage from "../pages/Dashboard";
+import AppLayoutForUser from "../layout/AppLayoutForUser";
 
 const AppRoutes = () => {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
-      <Route path="/home" element={<HomePage />} />
+
+      {/* Wrap HomePage with layout components */}
       <Route
-        path="/dashboard"
+        path="/home"
         element={
           <ProtectedRoute>
-            <HomePage />
+            <AppLayoutForUser>
+              <HomePage />
+            </AppLayoutForUser>
           </ProtectedRoute>
         }
       />
+
       <Route path="/" element={<Navigate to="/home" />} />
     </Routes>
   );
