@@ -5,7 +5,18 @@ module.exports = {
       colors: {
         momo: "#A50064",
         zalopay: "#008FE5",
-
+        teal: {
+          50: '#f0fdfa',
+          100: '#ccfbf1',
+          200: '#99f6e4',
+          300: '#5eead4',
+          400: '#2dd4bf',
+          500: '#14b8a6',
+          600: '#0d9488', // Màu chính cho sidebar
+          700: '#0f766e',
+          800: '#115e59',
+          900: '#134e4a',
+        },
         primary: {
           50: "#eff6ff",
           100: "#dbeafe",

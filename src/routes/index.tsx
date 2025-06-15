@@ -7,6 +7,8 @@ import AppLayoutForUser from "../layout/AppLayoutForUser";
 import AppLayoutForGuest from "../layout/AppLayoutForGuest";
 import RegisterType from "@/pages/RegisterType";
 import RegisterPage from "@/pages/Register";
+import ShopDashboard from "../pages/Dashboard/ShopDashboard";
+import AppLayoutForShop from "../layout/AppLayoutForShop";
 import SmartRedirect from "@/components/common/SmartRedirect";
 
 const AppRoutes = () => {
@@ -16,6 +18,8 @@ const AppRoutes = () => {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/registertype" element={<RegisterType />} />
       <Route path="/register" element={<RegisterPage />} />
+      
+      {/* Protected Routes with Layout for User */}
 
       {/* Guest Layout - cho user chưa đăng nhập */}
       <Route path="/guest/*" element={<AppLayoutForGuest />}>
@@ -34,6 +38,19 @@ const AppRoutes = () => {
       >
         <Route path="home" element={<HomePage />} />
         <Route index element={<Navigate to="home" replace />} />
+      </Route>
+
+      {/* Protected Routes with Layout for Admin/Shop */}
+      <Route
+        path="/admin/*"
+        element={
+          <ProtectedRoute>
+            <AppLayoutForShop />
+          </ProtectedRoute>
+        }
+      >
+        <Route path="dashboard" element={<ShopDashboard />} />
+        <Route index element={<Navigate to="dashboard" replace />} />
       </Route>
 
       {/* Smart redirect based on auth status */}
