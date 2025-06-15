@@ -10,6 +10,7 @@ import RegisterPage from "@/pages/Register";
 import ShopDashboard from "../pages/Dashboard/ShopDashboard";
 import AppLayoutForShop from "../layout/AppLayoutForShop";
 import SmartRedirect from "@/components/common/SmartRedirect";
+import RegisterShop from "@/pages/RegisterShop";
 
 const AppRoutes = () => {
   return (
@@ -18,7 +19,8 @@ const AppRoutes = () => {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/registertype" element={<RegisterType />} />
       <Route path="/register" element={<RegisterPage />} />
-      
+      <Route path="/registershop" element={<RegisterShop />} />
+
       {/* Protected Routes with Layout for User */}
 
       {/* Guest Layout - cho user chưa đăng nhập */}
@@ -45,7 +47,7 @@ const AppRoutes = () => {
         path="/admin/*"
         element={
           // <ProtectedRoute>
-            <AppLayoutForShop />
+          <AppLayoutForShop />
           // </ProtectedRoute>
         }
       >
