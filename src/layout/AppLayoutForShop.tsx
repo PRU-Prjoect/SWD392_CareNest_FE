@@ -1,14 +1,12 @@
 import React from 'react';
 import { Outlet } from 'react-router-dom';
 import AppSidebarForShop from './AppSideBarForShop';
-import AppHeaderForShop from './AppHeaderForAdmin';
 
 const AppLayoutForShop = () => {
   return (
     <div className="flex h-screen bg-gray-100">
       <AppSidebarForShop />
       <div className="flex-1 flex flex-col overflow-hidden">
-        <AppHeaderForShop />
         <main className="flex-1 overflow-x-hidden overflow-y-auto">
           <Outlet />
         </main>

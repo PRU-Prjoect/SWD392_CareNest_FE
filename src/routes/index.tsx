@@ -44,9 +44,9 @@ const AppRoutes = () => {
       <Route
         path="/admin/*"
         element={
-          <ProtectedRoute>
+          // <ProtectedRoute>
             <AppLayoutForShop />
-          </ProtectedRoute>
+          // </ProtectedRoute>
         }
       >
         <Route path="dashboard" element={<ShopDashboard />} />
