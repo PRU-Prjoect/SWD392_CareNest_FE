@@ -1,4 +1,4 @@
-// File: src/pages/RegisterPage.tsx
+// pages/Register/index.tsx
 import { useEffect, useState } from "react";
 import { Eye, EyeOff, User, Mail, Home } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -27,7 +27,8 @@ export default function RegisterPage() {
   const dispatch = useDispatch<AppDispatch>();
 
   // Lấy state từ Redux store
-  const { loading, success, error } = useSelector(
+  const { loading, success, error, accountData } = useSelector(
+    // ✅ Thêm accountData
     (state: RootState) => state.register
   );
 
@@ -38,15 +39,24 @@ export default function RegisterPage() {
     };
   }, [dispatch]);
 
-  // Xử lý khi đăng ký thành công
+  // ✅ Cập nhật xử lý khi đăng ký thành công
   useEffect(() => {
-    if (success) {
-      toast.success("Đăng ký thành công! Bạn có thể đăng nhập ngay bây giờ.");
+    if (success && accountData) {
+      toast.success(
+        "Đăng ký tài khoản thành công! Tiếp tục tạo hồ sơ cá nhân."
+      );
+
+      // Truyền account data qua state navigation
       setTimeout(() => {
-        navigate("/login");
-      }, 2000);
+        navigate("/register-customer", {
+          state: {
+            accountData: accountData,
+            fromRegister: true,
+          },
+        });
+      }, 1500);
     }
-  }, [success, navigate]);
+  }, [success, accountData, navigate]);
 
   // Xử lý khi có lỗi từ server
   useEffect(() => {
@@ -71,6 +81,7 @@ export default function RegisterPage() {
       confirmPassword: "",
     };
     let isValid = true;
+
     // Validate username
     if (!username.trim()) {
       newErrors.username = "Tên người dùng không được để trống";
@@ -79,6 +90,7 @@ export default function RegisterPage() {
       newErrors.username = "Tên người dùng phải có ít nhất 3 ký tự";
       isValid = false;
     }
+
     // Validate email
     if (!email.trim()) {
       newErrors.email = "Email không được để trống";
@@ -118,7 +130,7 @@ export default function RegisterPage() {
       return;
     }
 
-    // Gửi request đăng ký
+    // Gửi request đăng ký account
     const registerData = {
       username: username.trim(),
       email: email.trim(),
@@ -295,10 +307,10 @@ export default function RegisterPage() {
                       d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                     ></path>
                   </svg>
-                  <span>Đang đăng ký...</span>
+                  <span>Đang tạo tài khoản...</span>
                 </>
               ) : (
-                <span>Đăng ký tài khoản</span>
+                <span>Tạo tài khoản</span>
               )}
             </button>
           </form>

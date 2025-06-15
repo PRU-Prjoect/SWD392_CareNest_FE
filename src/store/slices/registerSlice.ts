@@ -1,18 +1,9 @@
-// src/store/slices/registerSlice.ts
+// store/slices/registerSlice.ts
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
 import api from "@/config/axios";
-import { jwtDecode } from "jwt-decode";
 
-// Interfaces (sử dụng chung với authSlice)
-export interface User {
-  id: string;
-  email: string;
-  name?: string;
-  role?: string;
-  username?: string;
-}
-
+// Interfaces
 interface RegisterState {
   loading: boolean;
   success: boolean;
@@ -20,18 +11,7 @@ interface RegisterState {
     code: number;
     message: string;
   } | null;
-  // Thêm user và token nếu API trả về (cho trường hợp auto login)
-  user: User | null;
-  token: string | null;
-}
-
-interface DecodedToken {
-  "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress": string;
-  "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name": string;
-  "http://schemas.microsoft.com/ws/2008/06/identity/claims/role": string;
-  exp: number;
-  iss: string;
-  aud: string;
+  accountData: any | null; // ✅ Thêm để lưu thông tin account
 }
 
 interface RegisterRequest {
@@ -62,14 +42,7 @@ const initialState: RegisterState = {
   loading: false,
   success: false,
   error: null,
-  user: null,
-  token: null,
-};
-
-// Helper functions (giống authSlice)
-const saveAuthData = (token: string, user: User) => {
-  localStorage.setItem("authToken", token);
-  localStorage.setItem("user", JSON.stringify(user));
+  accountData: null, // ✅ Thêm vào initial state
 };
 
 // Async thunk for registration
@@ -85,7 +58,7 @@ export const register = createAsyncThunk<
     formData.append("username", data.username);
     formData.append("email", data.email);
     formData.append("password", data.password);
-    formData.append("img", "undefined"); // Added as per swagger spec
+    formData.append("img", "undefined");
     if (data.role) {
       formData.append("role", data.role);
     }
@@ -151,6 +124,7 @@ const registerSlice = createSlice({
           state.loading = false;
           state.success = true;
           state.error = null;
+          state.accountData = action.payload.data; // ✅ Lưu account data
 
           console.log("✅ Registration successful:", action.payload.message);
           // Không auto login, chỉ hiển thị thông báo thành công
@@ -159,6 +133,7 @@ const registerSlice = createSlice({
       .addCase(register.rejected, (state, action) => {
         state.loading = false;
         state.success = false;
+        state.accountData = null; // ✅ Reset khi lỗi
         if (action.payload) {
           state.error = {
             code: action.payload.error,
