@@ -5,8 +5,6 @@ import HomePage from "../pages/Home";
 import AppLayoutForUser from "../layout/AppLayoutForUser";
 import RegisterType from "@/pages/RegisterType";
 import RegisterPage from "@/pages/Register";
-import ServicesPage from "@/pages/Services/Service";
-import HomeGuest from "@/pages/HomeGuest";
 
 const AppRoutes = () => {
   return (
@@ -15,16 +13,14 @@ const AppRoutes = () => {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/registertype" element={<RegisterType />} />
       <Route path="/register" element={<RegisterPage />} />
-      <Route path="/services" element={<ServicesPage />} />
-      <Route path="/guesthome" element={<HomeGuest />} />
 
       {/* Protected Routes with Layout */}
       <Route
-        path="/carenest/*"
+        path="/app/*"
         element={
-          // <ProtectedRoute>
-          <AppLayoutForUser />
-          // </ProtectedRoute>
+          <ProtectedRoute>
+            <AppLayoutForUser />
+          </ProtectedRoute>
         }
       >
         <Route path="home" element={<HomePage />} />
@@ -34,7 +30,7 @@ const AppRoutes = () => {
       </Route>
 
       {/* Default redirect */}
-      <Route path="/" element={<Navigate to="/carenest" replace />} />
+      <Route path="/" element={<Navigate to="/app" replace />} />
     </Routes>
   );
 };

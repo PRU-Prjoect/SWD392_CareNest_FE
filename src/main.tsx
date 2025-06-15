@@ -1,36 +1,45 @@
+// src/main.tsx
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { Provider } from "react-redux";
 import { BrowserRouter } from "react-router-dom";
-import { PersistGate } from "redux-persist/integration/react";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-
-import { store, persistor } from "./store/store";
-import { setLogoutCallback, updateStateToken } from "./config/axios";
+import { store } from "./store/store";
+import { setLogoutCallback, updateStateToken } from "./config/axios"; // ✅ Đường dẫn đúng
 import { logout } from "./store/slices/authSlice";
 import App from "./App";
 import "./index.css";
 
-/* Giữ nguyên interceptor */
+// ✅ Thiết lập callback cho axios interceptor
 store.subscribe(() => {
-  updateStateToken(store.getState().auth.token);
+  const state = store.getState();
+  updateStateToken(state.auth.token);
 });
-setLogoutCallback(() => store.dispatch(logout()));     // khi token 401
+
+setLogoutCallback(() => {
+  store.dispatch(logout());
+});
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <Provider store={store}>
-      <PersistGate loading={null} persistor={persistor}>
-        <BrowserRouter>
-          <App />
-          <ToastContainer
-            position="top-right"
-            autoClose={3000}
-            toastStyle={{ zIndex: 99999 }}
-          />
-        </BrowserRouter>
-      </PersistGate>
+      <BrowserRouter>
+        <App />
+        <ToastContainer
+          position="top-right"
+          autoClose={3000}
+          hideProgressBar={false}
+          newestOnTop={false}
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+          style={{ zIndex: 99999 }}
+          toastStyle={{ zIndex: 99999 }}
+        />
+      </BrowserRouter>
     </Provider>
   </React.StrictMode>
 );

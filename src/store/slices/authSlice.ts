@@ -3,8 +3,6 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
 import api from "@/config/axios";
 import { jwtDecode } from "jwt-decode";
-import { persistor } from "../store";      // đường dẫn đúng
-
 
 // Interfaces
 export interface User {
@@ -13,8 +11,6 @@ export interface User {
   name?: string;
   role?: string;
   username?: string;
-  imgUrl?: string;
-  imgId?: string;
 }
 
 interface UserState {
@@ -26,8 +22,6 @@ interface UserState {
     code: number;
     message: string;
   } | null;
-  imgUrl?: string;
-  imgId?: string;
 }
 
 interface DecodedToken {
@@ -219,10 +213,8 @@ const userSlice = createSlice({
   initialState,
   reducers: {
     logout(state) {
-      state.isAuthenticated = false;
-      state.user  = null;
-      state.token = null;
-      persistor.purge();   // xoá localStorage
+      Object.assign(state, initialState);
+      clearAuthData();
     },
     restoreAuth(state) {
       const token = localStorage.getItem("authToken");
