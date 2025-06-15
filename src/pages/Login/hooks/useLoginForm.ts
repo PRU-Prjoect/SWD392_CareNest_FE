@@ -81,8 +81,8 @@ export const useLoginForm = () => {
         })
       ).unwrap();
 
-      const from = (location.state as any)?.from?.pathname || "/";
-      navigate(from, { replace: true });
+      const from = (location.state as any)?.from?.pathname || "/app/home"; // mặc định vào /app/home
+      navigate(from, { replace: true }); // [1]
     } catch (error: any) {
       console.error("Login failed:", error);
     }
