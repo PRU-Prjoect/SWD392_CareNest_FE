@@ -7,9 +7,12 @@ import AppLayoutForUser from "../layout/AppLayoutForUser";
 import AppLayoutForGuest from "../layout/AppLayoutForGuest";
 import RegisterType from "@/pages/RegisterType";
 import RegisterPage from "@/pages/Register";
-import ShopDashboard from "../pages/Dashboard/ShopDashboard";
+import ShopDashboard from "../pages/Shop/ShopDashboard";
 import AppLayoutForShop from "../layout/AppLayoutForShop";
 import SmartRedirect from "@/components/common/SmartRedirect";
+import OrderManagement from "@/pages/Shop/OrderManagement";
+import ServiceManagement from "@/pages/Shop/ServiceManagement";
+import HotelRoomManagement from "@/pages/Shop/HotelRoomManagement";
 
 const AppRoutes = () => {
   return (
@@ -50,6 +53,9 @@ const AppRoutes = () => {
         }
       >
         <Route path="dashboard" element={<ShopDashboard />} />
+        <Route path="orders" element={<OrderManagement />} />
+        <Route path="services" element={<ServiceManagement />} />
+        <Route path="hotels" element={<HotelRoomManagement/>} />
         <Route index element={<Navigate to="dashboard" replace />} />
       </Route>
 
