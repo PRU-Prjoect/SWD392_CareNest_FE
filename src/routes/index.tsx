@@ -11,14 +11,15 @@ import AppLayoutForGuest from "../layout/AppLayoutForGuest"; // Layout cho user 
 import RegisterType from "@/pages/RegisterType";
 import RegisterPage from "@/pages/Register";
 import ShopDashboard from "../pages/Shop/ShopDashboard";
-import OrderManagement from "@/pages/Shop/OrderManagement";
+import OrderManagement from "@/pages/Shop/Order/OrderManagement";
 import ServiceManagement from "@/pages/Shop/ServiceManagement";
-import HotelRoomManagement from "@/pages/Shop/HotelRoomManagement";
+import HotelRoomManagement from "@/pages/Shop/Order/HotelRoomManagement";
 
 import RegisterCustomer from "@/pages/RegisterCustomer"; // Trang đăng ký cho khách hàng
 import AppLayoutForShop from "../layout/AppLayoutForShop"; // Layout cho Shop/Admin
 import SmartRedirect from "@/components/common/SmartRedirect"; // Component điều hướng thông minh dựa trên trạng thái đăng nhập
 import RegisterShop from "@/pages/RegisterShop"; // Trang đăng ký cho Shop
+import StoreProfile from "@/pages/Shop/ShopProfile/StoreProfilePage";
 
 // Component chứa toàn bộ định nghĩa các route
 const AppRoutes = () => {
@@ -61,7 +62,7 @@ const AppRoutes = () => {
 
       {/* --------- Route dành cho Shop/Admin (Admin Layout) --------- */}
       <Route
-        path="/admin/*"
+        path="/shop/*"
         element={
           // TODO: Đang bỏ qua việc bảo vệ route, nên thêm lại ProtectedRoute nếu cần
           // <ProtectedRoute>
@@ -74,6 +75,7 @@ const AppRoutes = () => {
         <Route path="orders" element={<OrderManagement />} />
         <Route path="services" element={<ServiceManagement />} />
         <Route path="hotels" element={<HotelRoomManagement/>} />
+        <Route path="shop-profile" element={<StoreProfile/>} />
         <Route index element={<Navigate to="dashboard" replace />} />
       </Route>
 

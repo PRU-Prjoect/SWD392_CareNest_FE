@@ -9,7 +9,7 @@ const AppSidebarForShop = () => {
     {
       icon: '📊',
       label: 'Dashboard',
-      path: '/admin/dashboard',
+      path: '/shop/dashboard',
     },
     {
       icon: '📋',
@@ -18,28 +18,33 @@ const AppSidebarForShop = () => {
       submenu: [
         {
           label: 'Dịch vụ',
-          path: '/admin/orders',
+          path: '/shop/orders',
         },
         {
           label: 'Khách sạn',
-          path: '/admin/hotels',
+          path: '/shop/hotels',
         },
       ],
     },
     {
       icon: '🛍️',
       label: 'Dịch vụ của tôi',
-      path: '/admin/services',
+      path: '/shop/services',
+    },
+    {
+      icon: '🛍️',
+      label: 'Khách sạn của tôi',
+      path: '/shop/hotels',
     },
     {
       icon: '🏪',
       label: 'Thông tin cửa hàng',
-      path: '/admin/shop-info',
+      path: '/shop/shop-profile',
     },
     {
       icon: '👥',
       label: 'Quản lý nhân viên',
-      path: '/admin/employees',
+      path: '/shop/employees',
     },
     {
       icon: '📤',

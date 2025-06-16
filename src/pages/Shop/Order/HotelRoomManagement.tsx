@@ -332,5 +332,333 @@ const HotelManagement: React.FC = () => {
     </div>
   );
 };
+interface RoomModalProps {
+  room: Room | null;
+  hotel: HotelWithRooms | null;
+  isOpen: boolean;
+  onClose: () => void;
+  onSave: (room: Omit<Room, 'id' | 'hotel_id'>) => void;
+}
+
+const RoomModal: React.FC<RoomModalProps> = ({ room, hotel, isOpen, onClose, onSave }) => {
+  const [formData, setFormData] = useState({
+    room_number: '',
+    room_type: 'Standard' as Room['room_type'],
+    max_capability: 1,
+    daily_price: 0,
+    is_available: true,
+    amenities: ''
+    // Bỏ field star
+  });
+
+  useEffect(() => {
+    if (room) {
+      setFormData({
+        room_number: room.room_number,
+        room_type: room.room_type,
+        max_capability: room.max_capability,
+        daily_price: room.daily_price,
+        is_available: room.is_available,
+        amenities: room.amenities
+        // Bỏ star: room.star
+      });
+    } else {
+      setFormData({
+        room_number: '',
+        room_type: 'Standard',
+        max_capability: 1,
+        daily_price: 0,
+        is_available: true,
+        amenities: ''
+        // Bỏ star: 3
+      });
+    }
+  }, [room, isOpen]);
+
+
+  useEffect(() => {
+    if (room) {
+      setFormData({
+        room_number: room.room_number,
+        room_type: room.room_type,
+        max_capability: room.max_capability,
+        daily_price: room.daily_price,
+        is_available: room.is_available,
+        amenities: room.amenities,
+      });
+    } else {
+      setFormData({
+        room_number: '',
+        room_type: 'Standard',
+        max_capability: 1,
+        daily_price: 0,
+        is_available: true,
+        amenities: '',
+      });
+    }
+  }, [room, isOpen]);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSave(formData);
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 backdrop-blur-sm">
+      <div className="bg-white rounded-xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl">
+        <h2 className="text-xl font-semibold mb-4 text-gray-800">
+          {room ? 'Chỉnh sửa phòng' : `Thêm phòng mới - ${hotel?.name}`}
+        </h2>
+        
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Số phòng *
+              </label>
+              <input
+                type="text"
+                value={formData.room_number}
+                onChange={(e) => setFormData({...formData, room_number: e.target.value})}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="VD: A01"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Loại phòng
+              </label>
+              <select
+                value={formData.room_type}
+                onChange={(e) => setFormData({...formData, room_type: e.target.value as Room['room_type']})}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="Economy">Economy</option>
+                <option value="Standard">Standard</option>
+                <option value="Suite">Suite</option>
+                <option value="VIP">VIP</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Sức chứa *
+              </label>
+              <input
+                type="number"
+                value={formData.max_capability}
+                onChange={(e) => setFormData({...formData, max_capability: parseInt(e.target.value) || 1})}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                min="1"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Giá/ngày (VNĐ) *
+              </label>
+              <input
+                type="number"
+                value={formData.daily_price}
+                onChange={(e) => setFormData({...formData, daily_price: parseInt(e.target.value) || 0})}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                min="0"
+                required
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Tiện nghi
+            </label>
+            <textarea
+              value={formData.amenities}
+              onChange={(e) => setFormData({...formData, amenities: e.target.value})}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 h-20 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="VD: Điều hòa, Camera, Đồ chơi..."
+              rows={3}
+            />
+          </div>
+
+          <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-6 py-2.5 text-gray-600 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 focus:ring-2 focus:ring-gray-300 transition-all duration-200 font-medium"
+            >
+              Hủy bỏ
+            </button>
+            <button
+              type="submit"
+              className="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-300 transition-all duration-200 font-medium shadow-sm"
+            >
+              {room ? 'Cập nhật' : 'Thêm mới'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+// Thêm HotelModal component vào đây
+interface HotelModalProps {
+  hotel: Hotel | null;
+  isOpen: boolean;
+  onClose: () => void;
+  onSave: (hotel: Omit<Hotel, 'id'>) => void;
+}
+
+const HotelModal: React.FC<HotelModalProps> = ({ hotel, isOpen, onClose, onSave }) => {
+  const [formData, setFormData] = useState({
+    name: '',
+    description: '',
+    total_room: 0,
+    available_room: 0,
+    shop_id: 1, // Current shop ID
+    sub_address_id: 1,
+    is_active: true,
+  });
+
+  
+  useEffect(() => {
+    if (hotel) {
+      setFormData({
+        name: hotel.name,
+        description: hotel.description,
+        total_room: hotel.total_room,
+        available_room: hotel.available_room,
+        shop_id: hotel.shop_id,
+        sub_address_id: hotel.sub_address_id,
+        is_active: hotel.is_active,
+      });
+    } else {
+      // Reset form khi thêm mới
+      setFormData({
+        name: '',
+        description: '',
+        total_room: 0,
+        available_room: 0,
+        shop_id: 1,
+        sub_address_id: 1,
+        is_active: true,
+      });
+    }
+  }, [hotel, isOpen]);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSave(formData);
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
+        <h2 className="text-xl font-semibold mb-4">
+          {hotel ? 'Chỉnh sửa khách sạn' : 'Thêm khách sạn mới'}
+        </h2>
+        
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Tên khách sạn *
+            </label>
+            <input
+              type="text"
+              value={formData.name}
+              onChange={(e) => setFormData({...formData, name: e.target.value})}
+              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+              placeholder="VD: Pet Paradise Hotel"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Mô tả
+            </label>
+            <textarea
+              value={formData.description}
+              onChange={(e) => setFormData({...formData, description: e.target.value})}
+              className="w-full border border-gray-300 rounded-md px-3 py-2 h-20 focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+              placeholder="Mô tả về khách sạn thú cưng..."
+              rows={3}
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Tổng số phòng *
+              </label>
+              <input
+                type="number"
+                value={formData.total_room}
+                onChange={(e) => {
+                  const totalRooms = parseInt(e.target.value) || 0;
+                  setFormData({
+                    ...formData, 
+                    total_room: totalRooms,
+                    available_room: Math.min(formData.available_room, totalRooms)
+                  });
+                }}
+                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                min="1"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Phòng trống
+              </label>
+              <input
+                type="number"
+                value={formData.available_room}
+                onChange={(e) => setFormData({...formData, available_room: parseInt(e.target.value) || 0})}
+                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                min="0"
+                max={formData.total_room}
+              />
+            </div>
+          </div>
+          <div>
+            <label className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                checked={formData.is_active}
+                onChange={(e) => setFormData({...formData, is_active: e.target.checked})}
+                className="w-4 h-4 text-teal-600 focus:ring-teal-500 border-gray-300 rounded"
+              />
+              <span className="text-sm font-medium text-gray-700">Khách sạn đang hoạt động</span>
+            </label>
+          </div>
+
+          <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+            >
+              Hủy bỏ
+            </button>
+            <button
+              type="submit"
+              className="px-4 py-2 bg-teal-600 text-white rounded-md hover:bg-teal-700 transition-colors"
+            >
+              {hotel ? 'Cập nhật' : 'Thêm mới'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
 
 export default HotelManagement;
