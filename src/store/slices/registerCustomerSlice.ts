@@ -3,7 +3,7 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
 import api from "@/config/axios";
 
-// Interfaces
+// Interfaces - giữ nguyên
 interface RegisterCustomerState {
   loading: boolean;
   success: boolean;
@@ -11,6 +11,7 @@ interface RegisterCustomerState {
     code: number;
     message: string;
   } | null;
+  customerData: any | null; // ✅ Thêm để lưu customer data
 }
 
 interface RegisterCustomerRequest {
@@ -40,17 +41,22 @@ const initialState: RegisterCustomerState = {
   loading: false,
   success: false,
   error: null,
+  customerData: null, // ✅ Thêm vào initial state
 };
 
-// Async thunk for creating customer profile
+// ✅ Async thunk được sửa lại
 export const registerCustomer = createAsyncThunk<
   RegisterCustomerResponse,
   RegisterCustomerRequest,
   { rejectValue: ErrorResponse }
->("registerCustomer/create", async (data, { rejectWithValue }) => {
+>("registerCustomer/create", async (data, { rejectWithValue, getState }) => {
   try {
+    // ✅ Lấy token từ Redux store nếu có
+    const state = getState() as any;
+    const token = state.auth?.token || localStorage.getItem("token");
+
     const response = await api.post(
-      `Customer/${data.account_id}`,
+      `Customer/${data.account_id}`, // ✅ Endpoint giống curl
       {
         account_id: data.account_id,
         full_name: data.full_name,
@@ -61,6 +67,8 @@ export const registerCustomer = createAsyncThunk<
         headers: {
           "Content-Type": "application/json",
           accept: "*/*",
+          // ✅ Thêm Authorization header
+          ...(token && { Authorization: `Bearer ${token}` }),
         },
       }
     );
@@ -76,13 +84,41 @@ export const registerCustomer = createAsyncThunk<
 
     return response.data;
   } catch (err: any) {
-    console.error("❌ Create Customer Error:", err.response?.data);
+    console.error("❌ Create Customer Error status:", err.response?.status);
+    console.error("❌ Create Customer Error data:", err.response?.data);
 
-    if (err.response && err.response.data) {
-      return rejectWithValue({
-        error: 1,
-        message: err.response.data.message || "Tạo hồ sơ khách hàng thất bại",
-      });
+    // ✅ Xử lý lỗi chi tiết hơn
+    if (err.response) {
+      const status = err.response.status;
+      const errorData = err.response.data;
+
+      switch (status) {
+        case 401:
+          return rejectWithValue({
+            error: 401,
+            message: "Không có quyền truy cập. Vui lòng đăng nhập lại.",
+          });
+        case 400:
+          return rejectWithValue({
+            error: 400,
+            message: errorData?.message || "Dữ liệu không hợp lệ",
+          });
+        case 404:
+          return rejectWithValue({
+            error: 404,
+            message: "Không tìm thấy endpoint",
+          });
+        case 500:
+          return rejectWithValue({
+            error: 500,
+            message: "Lỗi server nội bộ",
+          });
+        default:
+          return rejectWithValue({
+            error: status,
+            message: errorData?.message || "Tạo hồ sơ khách hàng thất bại",
+          });
+      }
     }
 
     return rejectWithValue({
@@ -92,7 +128,7 @@ export const registerCustomer = createAsyncThunk<
   }
 });
 
-// Register customer slice
+// ✅ Register customer slice với customerData
 const registerCustomerSlice = createSlice({
   name: "registerCustomer",
   initialState,
@@ -117,6 +153,7 @@ const registerCustomerSlice = createSlice({
           state.loading = false;
           state.success = true;
           state.error = null;
+          state.customerData = action.payload.data; // ✅ Lưu customer data
           console.log(
             "✅ Customer profile created successfully:",
             action.payload.message
@@ -126,6 +163,7 @@ const registerCustomerSlice = createSlice({
       .addCase(registerCustomer.rejected, (state, action) => {
         state.loading = false;
         state.success = false;
+        state.customerData = null; // ✅ Reset khi lỗi
         if (action.payload) {
           state.error = {
             code: action.payload.error,
