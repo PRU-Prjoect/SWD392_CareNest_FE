@@ -15,17 +15,10 @@ export default function LoginPage() {
     showPassword,
     loading,
     error,
-    isAuthenticated,
     handleInputChange,
     handleSubmit,
     setShowPassword,
   } = useLoginForm();
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      navigate("/", { replace: true });
-    }
-  }, [isAuthenticated, navigate]);
 
   return (
     <>

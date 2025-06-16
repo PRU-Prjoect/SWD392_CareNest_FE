@@ -1,5 +1,5 @@
-// src/store/slices/authSlice.ts
-import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+// store/slices/authSlice.ts
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
 import api from "@/config/axios";
 import { jwtDecode } from "jwt-decode";
@@ -15,7 +15,7 @@ export interface User {
 
 interface UserState {
   isAuthenticated: boolean;
-  user: User | null;
+  user: any | null;
   token: string | null;
   loading: boolean;
   error: {
@@ -96,7 +96,6 @@ const createUserFromToken = (token: string): User => {
 };
 
 // ✅ ASYNC THUNKS với GET request và query parameters
-// ✅ ASYNC THUNKS với GET request và query parameters
 export const Login = createAsyncThunk<
   AuthResponse,
   LoginRequest,
@@ -152,6 +151,7 @@ export const Login = createAsyncThunk<
   }
 });
 
+// ✅ Define LoginNoRemember async thunk (same as Login but without saving to localStorage)
 export const LoginNoRemember = createAsyncThunk<
   AuthResponse,
   LoginRequest,
@@ -226,6 +226,10 @@ const userSlice = createSlice({
           state.isAuthenticated = true;
           state.token = token;
           state.user = user;
+          console.log("✅ Auth restored:", {
+            username: user.username,
+            role: user.role,
+          });
         } catch (error) {
           console.error("Error restoring auth:", error);
           clearAuthData();
@@ -235,6 +239,7 @@ const userSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      // ✅ Login cases
       .addCase(Login.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -246,13 +251,21 @@ const userSlice = createSlice({
           state.isAuthenticated = true;
           state.user = action.payload.user;
           state.token = action.payload.token;
-          saveAuthData(action.payload);
+          saveAuthData(action.payload); // ✅ Lưu vào localStorage
           state.error = null;
+
+          console.log("✅ Login successful with user:", {
+            username: action.payload.user.username,
+            role: action.payload.user.role,
+            id: action.payload.user.id,
+          });
         }
       )
       .addCase(Login.rejected, (state, action) => {
         state.loading = false;
         state.isAuthenticated = false;
+        state.user = null;
+        state.token = null;
         if (action.payload) {
           state.error = {
             code: action.payload.error,
@@ -265,6 +278,7 @@ const userSlice = createSlice({
           };
         }
       })
+      // ✅ LoginNoRemember cases
       .addCase(LoginNoRemember.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -277,11 +291,20 @@ const userSlice = createSlice({
           state.token = action.payload.token;
           state.user = action.payload.user;
           state.error = null;
+          // ✅ LoginNoRemember không lưu vào localStorage
+
+          console.log("✅ LoginNoRemember successful with user:", {
+            username: action.payload.user.username,
+            role: action.payload.user.role,
+            id: action.payload.user.id,
+          });
         }
       )
       .addCase(LoginNoRemember.rejected, (state, action) => {
         state.loading = false;
         state.isAuthenticated = false;
+        state.user = null;
+        state.token = null;
         if (action.payload) {
           state.error = {
             code: action.payload.error,

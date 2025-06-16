@@ -1,90 +1,107 @@
 // src/pages/Login/hooks/useLoginForm.ts
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate, useLocation } from "react-router-dom";
-import { Login, LoginNoRemember } from "../../../store/slices/authSlice";
-import type { RootState, AppDispatch } from "../../../store/store";
+import { useNavigate } from "react-router-dom";
+import type { AppDispatch, RootState } from "@/store/store";
+import { Login, LoginNoRemember } from "@/store/slices/authSlice";
+import { toast } from "react-toastify";
 
-interface LoginFormData {
+interface FormData {
   username: string;
   password: string;
   rememberMe: boolean;
 }
 
-interface FormErrors {
-  username?: string;
-  password?: string;
-}
-
 export const useLoginForm = () => {
+  const [formData, setFormData] = useState<FormData>({
+    username: "",
+    password: "",
+    rememberMe: false,
+  });
+
+  const [formErrors, setFormErrors] = useState({
+    username: "",
+    password: "",
+  });
+
+  const [showPassword, setShowPassword] = useState(false);
+
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
-  const location = useLocation();
 
   const { loading, error, isAuthenticated, user } = useSelector(
     (state: RootState) => state.auth
   );
 
-  const [formData, setFormData] = useState<LoginFormData>({
-    username: "",
-    password: "",
-    rememberMe: false,
-  });
-  const [formErrors, setFormErrors] = useState<FormErrors>({});
-  const [showPassword, setShowPassword] = useState(false);
+  // ✅ Sửa useEffect để redirect dựa trên role
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      toast.success("Đăng nhập thành công!");
+
+      // ✅ Kiểm tra role để điều hướng
+      setTimeout(() => {
+        if (user.role === "Shop") {
+          navigate("/shop/dashboard", { replace: true });
+        } else {
+          navigate("/app/home", { replace: true });
+        }
+      }, 1000);
+    }
+  }, [isAuthenticated, user, navigate]);
 
   const handleInputChange = (
-    field: keyof LoginFormData,
+    field: keyof FormData,
     value: string | boolean
   ) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
 
-    if (field in formErrors && formErrors[field as keyof FormErrors]) {
-      setFormErrors((prev: FormErrors) => ({ ...prev, [field]: undefined }));
+    // Clear error khi user typing
+    if (field === "username" || field === "password") {
+      setFormErrors((prev) => ({ ...prev, [field]: "" }));
     }
   };
 
-  const validateForm = () => {
-    const errors: FormErrors = {};
+  const validateForm = (): boolean => {
+    const errors = { username: "", password: "" };
+    let isValid = true;
 
-    if (!formData.username) {
+    if (!formData.username.trim()) {
       errors.username = "Tên đăng nhập không được để trống";
-    } else if (formData.username.length < 3) {
-      errors.username = "Tên đăng nhập phải có ít nhất 3 ký tự";
+      isValid = false;
     }
 
-    if (!formData.password) {
+    if (!formData.password.trim()) {
       errors.password = "Mật khẩu không được để trống";
-    } else if (formData.password.length < 6) {
-      errors.password = "Mật khẩu phải có ít nhất 6 ký tự";
+      isValid = false;
     }
 
-    return errors;
+    setFormErrors(errors);
+    return isValid;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const errors = validateForm();
-    if (Object.keys(errors).length > 0) {
-      setFormErrors(errors);
+    if (!validateForm()) {
       return;
     }
 
     try {
+      // ✅ Use the correct async thunk based on rememberMe
       const loginAction = formData.rememberMe ? Login : LoginNoRemember;
 
-      await dispatch(
+      const result = await dispatch(
         loginAction({
           username: formData.username,
           password: formData.password,
         })
-      ).unwrap();
+      );
 
-      const from = (location.state as any)?.from?.pathname || "/";
-      navigate(from, { replace: true });
-    } catch (error: any) {
-      console.error("Login failed:", error);
+      if (loginAction.fulfilled.match(result)) {
+        console.log("✅ Login successful:", result.payload);
+      }
+    } catch (error) {
+      console.error("❌ Login error:", error);
     }
   };
 
@@ -95,7 +112,6 @@ export const useLoginForm = () => {
     loading,
     error,
     isAuthenticated,
-    user,
     handleInputChange,
     handleSubmit,
     setShowPassword,

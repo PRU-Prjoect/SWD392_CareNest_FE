@@ -1,27 +1,38 @@
-// components/common/SmartRedirect.tsx
-import type { RootState } from "@/store/store";
+// src/components/common/SmartRedirect.tsx
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
-import { Navigate } from "react-router-dom";
+import type { RootState } from "@/store/store";
 
 const SmartRedirect = () => {
-  const { isAuthenticated, loading } = useSelector(
+  const navigate = useNavigate();
+  const { isAuthenticated, user } = useSelector(
     (state: RootState) => state.auth
   );
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-[#2A9D8F]"></div>
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      // ✅ Điều hướng dựa trên role
+      if (user.role === "Shop") {
+        navigate("/shop/dashboard", { replace: true });
+      } else {
+        navigate("/app/home", { replace: true });
+      }
+    } else {
+      // Chưa đăng nhập → redirect về guest
+      navigate("/guest/home", { replace: true });
+    }
+  }, [isAuthenticated, user, navigate]);
+
+  // Hiển thị loading khi đang redirect
+  return (
+    <div className="flex items-center justify-center min-h-screen">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#2A9D8F] mx-auto"></div>
+        <p className="mt-2 text-gray-600">Đang điều hướng...</p>
       </div>
-    );
-  }
-
-  // Redirect based on auth status
-  if (isAuthenticated) {
-    return <Navigate to="/app/home" replace />;
-  }
-
-  return <Navigate to="/guest/home" replace />;
+    </div>
+  );
 };
 
 export default SmartRedirect;
