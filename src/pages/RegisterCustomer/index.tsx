@@ -1,15 +1,16 @@
 // pages/RegisterCustomer/index.tsx
 import { useEffect, useState } from "react";
-import { User, Calendar, Users, Home } from "lucide-react";
+import { User, Users, Home } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import type { AppDispatch, RootState } from "@/store/store";
 import {
   registerCustomer,
   resetRegisterCustomerState,
-} from "@/store/slices/registerCustomerSlice"; // ✅ Sử dụng registerCustomerSlice
+} from "@/store/slices/registerCustomerSlice";
 import { toast } from "react-toastify";
 import { useSelector } from "react-redux";
+import DatePicker from "@/components/form/date-picker"; // Adjust path based on your structure
 
 export default function RegisterCustomerPage() {
   const [fullName, setFullName] = useState("");
@@ -30,7 +31,7 @@ export default function RegisterCustomerPage() {
 
   // Lấy state từ Redux store
   const { loading, success, error } = useSelector(
-    (state: RootState) => state.registerCustomer // ✅ Sử dụng registerCustomer state
+    (state: RootState) => state.registerCustomer
   );
 
   // ✅ Kiểm tra nếu không có account data thì redirect về register
@@ -222,19 +223,26 @@ export default function RegisterCustomerPage() {
 
             {/* Ô chọn ngày sinh */}
             <div className="relative">
-              <input
-                type="date"
-                value={birthday}
-                onChange={(e) => setBirthday(e.target.value)}
-                max={getCurrentDate()}
-                className={`w-full px-4 py-3 border rounded-lg pr-10 focus:outline-none focus:ring-2 transition-all duration-200 ${
-                  errors.birthday
-                    ? "border-red-500 focus:ring-red-500/20"
-                    : "border-gray-300 focus:ring-[#2A9D8F]/20 focus:border-[#2A9D8F]"
-                }`}
-                disabled={loading}
-              />
-              <Calendar className="absolute top-3.5 right-3 w-5 h-5 text-gray-400 pointer-events-none" />
+              <div className={`${errors.birthday ? "datepicker-error" : ""}`}>
+                <DatePicker
+                  id="birthday-picker"
+                  mode="single"
+                  label=""
+                  placeholder="Chọn ngày sinh"
+                  defaultDate={birthday || undefined}
+                  onChange={(selectedDates, dateStr) => {
+                    if (selectedDates && selectedDates.length > 0) {
+                      setBirthday(dateStr);
+                      // Clear error when valid date is selected
+                      if (errors.birthday) {
+                        setErrors((prev) => ({ ...prev, birthday: "" }));
+                      }
+                    } else {
+                      setBirthday("");
+                    }
+                  }}
+                />
+              </div>
               {errors.birthday && (
                 <p className="text-red-500 text-xs mt-1">{errors.birthday}</p>
               )}
