@@ -9,8 +9,7 @@ import {
   ResponsiveContainer,
   PieChart,
   Pie,
-  Cell,
-  Legend
+  Cell
 } from 'recharts';
 
 const AdminDashboard = () => {
@@ -45,13 +44,7 @@ const AdminDashboard = () => {
     { name: 'T7', value: 220 },
   ];
 
-  // Dữ liệu cho biểu đồ tròn sản phẩm
-  const productPieData = [
-    { name: 'Thành công', value: 65, color: '#4ECDC4' },
-    { name: 'Đang xử lý', value: 20, color: '#45B7D1' },
-    { name: 'Đơn hủy', value: 10, color: '#2E3A59' },
-    { name: 'Chưa xử lý', value: 5, color: '#96CEB4' },
-  ];
+
 
   // Dữ liệu cho biểu đồ tròn dịch vụ
   const servicePieData = [

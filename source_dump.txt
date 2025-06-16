@@ -1,7 +1,7 @@
 # TỔNG HỢP MÃ NGUỒN DỰ ÁN
 # ==================================================
-# Đường dẫn: D:\KÌ 7\SWD392_CareNest_FE
-# Công nghệ phát hiện: javascript, python, react, typescript
+# Đường dẫn: D:\Semester 7\SWD\FE\SWD392_CareNest_FE
+# Công nghệ phát hiện: javascript, php, python, react, typescript
 # ==================================================
 
 ## CẤU TRÚC THƯ MỤC
@@ -37,10 +37,12 @@ SWD392_CareNest_FE/
 │   │   │   ├── ChartTab.tsx
 │   │   │   ├── ComponentCard.tsx
 │   │   │   ├── FilterBar.tsx
+│   │   │   ├── FilterDropdown.tsx
 │   │   │   ├── GridShape.tsx
 │   │   │   ├── PageBreadCrumb.tsx
 │   │   │   ├── ScrollToTop.tsx
-│   │   │   └── SearchBar.tsx
+│   │   │   ├── SearchBar.tsx
+│   │   │   └── SmartRedirect.tsx
 │   │   ├── form/
 │   │   │   ├── form-elements/
 │   │   │   │   ├── CheckboxComponents.tsx
@@ -168,8 +170,11 @@ SWD392_CareNest_FE/
 │   │   ├── AppHeaderForAdmin.tsx
 │   │   ├── AppHeaderForUser.tsx
 │   │   ├── AppLayout.tsx
+│   │   ├── AppLayoutForGuest.tsx
+│   │   ├── AppLayoutForShop.tsx
 │   │   ├── AppLayoutForShopAdmin.tsx
 │   │   ├── AppLayoutForUser.tsx
+│   │   ├── AppSideBarForShop.tsx
 │   │   ├── AppSidebar.tsx
 │   │   ├── AppSidebarForShopAdmin.tsx
 │   │   ├── Backdrop.tsx
@@ -211,7 +216,6 @@ SWD392_CareNest_FE/
 │   │   │   │   ├── AuthWrapper.tsx
 │   │   │   │   ├── EnterOTPCode.tsx
 │   │   │   │   ├── ForgotPassword.tsx
-│   │   │   │   ├── LoginForm.tsx
 │   │   │   │   └── SocialLogin.tsx
 │   │   │   ├── hooks/
 │   │   │   │   └── useLoginForm.ts
@@ -223,6 +227,8 @@ SWD392_CareNest_FE/
 │   │   ├── Profile/
 │   │   │   └── index.tsx
 │   │   ├── Register/
+│   │   │   └── index.tsx
+│   │   ├── RegisterCustomer/
 │   │   │   └── index.tsx
 │   │   ├── RegisterShop/
 │   │   │   └── index.tsx
@@ -238,10 +244,12 @@ SWD392_CareNest_FE/
 │   │   │   └── Service.tsx
 │   │   ├── Settings/
 │   │   │   └── index.tsx
+│   │   ├── Shop/
+│   │   │   ├── HotelRoomManagement.tsx
+│   │   │   ├── OrderManagement.tsx
+│   │   │   ├── ServiceManagement.tsx
+│   │   │   └── ShopDashboard.tsx
 │   │   ├── SignUp/
-│   │   │   ├── components/
-│   │   │   ├── hooks/
-│   │   │   ├── utils/
 │   │   │   └── SignUp.tsx
 │   │   ├── Tables/
 │   │   │   └── BasicTables.tsx
@@ -259,17 +267,20 @@ SWD392_CareNest_FE/
 │   │   └── authService.ts
 │   ├── store/
 │   │   ├── slices/
-│   │   │   └── authSlice.ts
+│   │   │   ├── authSlice.ts
+│   │   │   ├── registerCustomerSlice.ts
+│   │   │   └── registerSlice.ts
 │   │   └── store.ts
 │   ├── types/
 │   │   ├── auth.ts
+│   │   ├── room.ts
 │   │   ├── services.ts
 │   │   └── user.ts
-│   ├── utils/
 │   ├── App.css
 │   ├── App.tsx
 │   ├── index.css
 │   ├── main.tsx
+│   ├── source_dump.txt
 │   ├── svg.d.ts
 │   └── vite-env.d.ts
 ├── .env
@@ -282,6 +293,7 @@ SWD392_CareNest_FE/
 ├── package-lock.json
 ├── package.json
 ├── postcss.config.js
+├── source_dump.txt
 ├── tailwind.config.js
 ├── tsconfig.app.json
 ├── tsconfig.json
@@ -425,7 +437,18 @@ module.exports = {
       colors: {
         momo: "#A50064",
         zalopay: "#008FE5",
-
+        teal: {
+          50: '#f0fdfa',
+          100: '#ccfbf1',
+          200: '#99f6e4',
+          300: '#5eead4',
+          400: '#2dd4bf',
+          500: '#14b8a6',
+          600: '#0d9488', // Màu chính cho sidebar
+          700: '#0f766e',
+          800: '#115e59',
+          900: '#134e4a',
+        },
         primary: {
           50: "#eff6ff",
           100: "#dbeafe",
@@ -951,6 +974,51 @@ export default FilterBar;
 
 ```
 
+### src\components\common\FilterDropdown.tsx
+```tsx
+import React, { useState } from 'react';
+
+interface FilterDropdownProps {
+  label: string;
+  options: { value: string; label: string }[];
+  defaultValue?: string;
+  onChange?: (value: string) => void;
+}
+
+const FilterDropdown: React.FC<FilterDropdownProps> = ({
+  label,
+  options,
+  defaultValue = '',
+  onChange
+}) => {
+  const [selectedValue, setSelectedValue] = useState(defaultValue);
+
+  const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = e.target.value;
+    setSelectedValue(value);
+    onChange?.(value);
+  };
+
+  return (
+    <select 
+      value={selectedValue}
+      onChange={handleChange}
+      className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white"
+    >
+      <option value="">{label}</option>
+      {options.map((option) => (
+        <option key={option.value} value={option.value}>
+          {option.label}
+        </option>
+      ))}
+    </select>
+  );
+};
+
+export default FilterDropdown;
+
+```
+
 ### src\components\common\GridShape.tsx
 ```tsx
 export default function GridShape() {
@@ -1256,6 +1324,38 @@ const SearchBar: React.FC<SearchBarProps> = ({
 };
 
 export default SearchBar;
+
+```
+
+### src\components\common\SmartRedirect.tsx
+```tsx
+// components/common/SmartRedirect.tsx
+import type { RootState } from "@/store/store";
+import { useSelector } from "react-redux";
+import { Navigate } from "react-router-dom";
+
+const SmartRedirect = () => {
+  const { isAuthenticated, loading } = useSelector(
+    (state: RootState) => state.auth
+  );
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-[#2A9D8F]"></div>
+      </div>
+    );
+  }
+
+  // Redirect based on auth status
+  if (isAuthenticated) {
+    return <Navigate to="/app/home" replace />;
+  }
+
+  return <Navigate to="/guest/home" replace />;
+};
+
+export default SmartRedirect;
 
 ```
 
@@ -3311,182 +3411,98 @@ export default function NotificationDropdown() {
 
 ### src\components\header\UserDropdown.tsx
 ```tsx
-import { useState } from "react";
-import { DropdownItem } from "@/components/ui/DropdownItem";
-import { Dropdown } from "@/components/ui/Dropdown";
-import { Link, useNavigate } from "react-router-dom";
-import { useDispatch } from "react-redux";
+// components/header/UserDropdown.tsx
+import { useSelector, useDispatch } from "react-redux";
 import { logout } from "@/store/slices/authSlice";
+import { Link, useNavigate } from "react-router-dom";
+import type { RootState } from "@/store/store";
 
-export default function UserDropdown() {
-  const [isOpen, setIsOpen] = useState(false);
+const UserDropdown: React.FC = () => {
+  const { isAuthenticated, user } = useSelector(
+    (state: RootState) => state.auth
+  );
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  function toggleDropdown() {
-    setIsOpen(!isOpen);
+  // Nếu chưa đăng nhập, hiển thị nút Login/Register
+  if (!isAuthenticated || !user) {
+    return (
+      <div className="flex items-center gap-3">
+        <Link
+          to="/login"
+          className="px-4 py-2 text-white border border-white/50 rounded-md hover:bg-white/10 transition-colors duration-200 text-sm font-medium"
+        >
+          Đăng nhập
+        </Link>
+        <Link
+          to="/register"
+          className="px-4 py-2 bg-white text-[#2A9D8F] rounded-md hover:bg-gray-100 transition-colors duration-200 text-sm font-medium"
+        >
+          Đăng ký
+        </Link>
+      </div>
+    );
   }
 
-  function closeDropdown() {
-    setIsOpen(false);
-  }
-
+  // Nếu đã đăng nhập, hiển thị thông tin user
   const handleLogout = () => {
     dispatch(logout());
     navigate("/login");
-    closeDropdown();
   };
-  return (
-    <div className="relative">
-      <button
-        onClick={toggleDropdown}
-        className="flex items-center text-gray-700 dropdown-toggle dark:text-gray-400"
-      >
-        <span className="mr-3 overflow-hidden rounded-full h-11 w-11">
-          <img
-            src="https://i.pinimg.com/736x/74/8d/12/748d12be165d3a74b07cb0870e34550d.jpg"
-            alt="User"
-          />
-        </span>
 
-        <span className="block mr-1 font-medium text-theme-sm">Musharof</span>
+  return (
+    <div className="relative group">
+      <button className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/10 transition-colors duration-200">
+        <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+          <span className="text-white font-medium text-sm">
+            {user.name?.charAt(0) || user.username?.charAt(0) || "U"}
+          </span>
+        </div>
+        <div className="text-left hidden lg:block">
+          <span className="block font-medium text-white text-sm">
+            {user.name || user.username}
+          </span>
+          <span className="block text-white/70 text-xs">{user.email}</span>
+        </div>
         <svg
-          className={`stroke-gray-500 dark:stroke-gray-400 transition-transform duration-200 ${
-            isOpen ? "rotate-180" : ""
-          }`}
-          width="18"
-          height="20"
-          viewBox="0 0 18 20"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
+          className="w-4 h-4 text-white"
+          fill="currentColor"
+          viewBox="0 0 20 20"
         >
           <path
-            d="M4.3125 8.65625L9 13.3437L13.6875 8.65625"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
+            fillRule="evenodd"
+            d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+            clipRule="evenodd"
           />
         </svg>
       </button>
 
-      <Dropdown
-        isOpen={isOpen}
-        onClose={closeDropdown}
-        className="absolute right-0 mt-[17px] flex w-[260px] flex-col rounded-2xl border border-gray-200 bg-white p-3 shadow-theme-lg dark:border-gray-800 dark:bg-gray-dark"
-      >
-        <div>
-          <span className="block font-medium text-gray-700 text-theme-sm dark:text-gray-400">
-            Musharof Chowdhury
-          </span>
-          <span className="mt-0.5 block text-theme-xs text-gray-500 dark:text-gray-400">
-            randomuser@pimjo.com
-          </span>
-        </div>
-
-        <ul className="flex flex-col gap-1 pt-4 pb-3 border-b border-gray-200 dark:border-gray-800">
-          <li>
-            <DropdownItem
-              onItemClick={closeDropdown}
-              tag="a"
-              to="/profile"
-              className="flex items-center gap-3 px-3 py-2 font-medium text-gray-700 rounded-lg group text-theme-sm hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
-            >
-              <svg
-                className="fill-gray-500 group-hover:fill-gray-700 dark:fill-gray-400 dark:group-hover:fill-gray-300"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  fillRule="evenodd"
-                  clipRule="evenodd"
-                  d="M12 3.5C7.30558 3.5 3.5 7.30558 3.5 12C3.5 14.1526 4.3002 16.1184 5.61936 17.616C6.17279 15.3096 8.24852 13.5955 10.7246 13.5955H13.2746C15.7509 13.5955 17.8268 15.31 18.38 17.6167C19.6996 16.119 20.5 14.153 20.5 12C20.5 7.30558 16.6944 3.5 12 3.5ZM17.0246 18.8566V18.8455C17.0246 16.7744 15.3457 15.0955 13.2746 15.0955H10.7246C8.65354 15.0955 6.97461 16.7744 6.97461 18.8455V18.856C8.38223 19.8895 10.1198 20.5 12 20.5C13.8798 20.5 15.6171 19.8898 17.0246 18.8566ZM2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12ZM11.9991 7.25C10.8847 7.25 9.98126 8.15342 9.98126 9.26784C9.98126 10.3823 10.8847 11.2857 11.9991 11.2857C13.1135 11.2857 14.0169 10.3823 14.0169 9.26784C14.0169 8.15342 13.1135 7.25 11.9991 7.25ZM8.48126 9.26784C8.48126 7.32499 10.0563 5.75 11.9991 5.75C13.9419 5.75 15.5169 7.32499 15.5169 9.26784C15.5169 11.2107 13.9419 12.7857 11.9991 12.7857C10.0563 12.7857 8.48126 11.2107 8.48126 9.26784Z"
-                  fill=""
-                />
-              </svg>
-              Edit profile
-            </DropdownItem>
-          </li>
-          <li>
-            <DropdownItem
-              onItemClick={closeDropdown}
-              tag="a"
-              to="/profile"
-              className="flex items-center gap-3 px-3 py-2 font-medium text-gray-700 rounded-lg group text-theme-sm hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
-            >
-              <svg
-                className="fill-gray-500 group-hover:fill-gray-700 dark:fill-gray-400 dark:group-hover:fill-gray-300"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  fillRule="evenodd"
-                  clipRule="evenodd"
-                  d="M10.4858 3.5L13.5182 3.5C13.9233 3.5 14.2518 3.82851 14.2518 4.23377C14.2518 5.9529 16.1129 7.02795 17.602 6.1682C17.9528 5.96567 18.4014 6.08586 18.6039 6.43667L20.1203 9.0631C20.3229 9.41407 20.2027 9.86286 19.8517 10.0655C18.3625 10.9253 18.3625 13.0747 19.8517 13.9345C20.2026 14.1372 20.3229 14.5859 20.1203 14.9369L18.6039 17.5634C18.4013 17.9142 17.9528 18.0344 17.602 17.8318C16.1129 16.9721 14.2518 18.0471 14.2518 19.7663C14.2518 20.1715 13.9233 20.5 13.5182 20.5H10.4858C10.0804 20.5 9.75182 20.1714 9.75182 19.766C9.75182 18.0461 7.88983 16.9717 6.40067 17.8314C6.04945 18.0342 5.60037 17.9139 5.39767 17.5628L3.88167 14.937C3.67903 14.586 3.79928 14.1372 4.15026 13.9346C5.63949 13.0748 5.63946 10.9253 4.15025 10.0655C3.79926 9.86282 3.67901 9.41401 3.88165 9.06303L5.39764 6.43725C5.60034 6.08617 6.04943 5.96581 6.40065 6.16858C7.88982 7.02836 9.75182 5.9539 9.75182 4.23399C9.75182 3.82862 10.0804 3.5 10.4858 3.5ZM13.5182 2L10.4858 2C9.25201 2 8.25182 3.00019 8.25182 4.23399C8.25182 4.79884 7.64013 5.15215 7.15065 4.86955C6.08213 4.25263 4.71559 4.61859 4.0986 5.68725L2.58261 8.31303C1.96575 9.38146 2.33183 10.7477 3.40025 11.3645C3.88948 11.647 3.88947 12.3531 3.40026 12.6355C2.33184 13.2524 1.96578 14.6186 2.58263 15.687L4.09863 18.3128C4.71562 19.3814 6.08215 19.7474 7.15067 19.1305C7.64015 18.8479 8.25182 19.2012 8.25182 19.766C8.25182 20.9998 9.25201 22 10.4858 22H13.5182C14.7519 22 15.7518 20.9998 15.7518 19.7663C15.7518 19.2015 16.3632 18.8487 16.852 19.1309C17.9202 19.7476 19.2862 19.3816 19.9029 18.3134L21.4193 15.6869C22.0361 14.6185 21.6701 13.2523 20.6017 12.6355C20.1125 12.3531 20.1125 11.647 20.6017 11.3645C21.6701 10.7477 22.0362 9.38152 21.4193 8.3131L19.903 5.68667C19.2862 4.61842 17.9202 4.25241 16.852 4.86917C16.3632 5.15138 15.7518 4.79856 15.7518 4.23377C15.7518 3.00024 14.7519 2 13.5182 2ZM9.6659 11.9999C9.6659 10.7103 10.7113 9.66493 12.0009 9.66493C13.2905 9.66493 14.3359 10.7103 14.3359 11.9999C14.3359 13.2895 13.2905 14.3349 12.0009 14.3349C10.7113 14.3349 9.6659 13.2895 9.6659 11.9999ZM12.0009 8.16493C9.88289 8.16493 8.1659 9.88191 8.1659 11.9999C8.1659 14.1179 9.88289 15.8349 12.0009 15.8349C14.1189 15.8349 15.8359 14.1179 15.8359 11.9999C15.8359 9.88191 14.1189 8.16493 12.0009 8.16493Z"
-                  fill=""
-                />
-              </svg>
-              Account settings
-            </DropdownItem>
-          </li>
-          <li>
-            <DropdownItem
-              onItemClick={closeDropdown}
-              tag="a"
-              to="/profile"
-              className="flex items-center gap-3 px-3 py-2 font-medium text-gray-700 rounded-lg group text-theme-sm hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
-            >
-              <svg
-                className="fill-gray-500 group-hover:fill-gray-700 dark:fill-gray-400 dark:group-hover:fill-gray-300"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  fillRule="evenodd"
-                  clipRule="evenodd"
-                  d="M3.5 12C3.5 7.30558 7.30558 3.5 12 3.5C16.6944 3.5 20.5 7.30558 20.5 12C20.5 16.6944 16.6944 20.5 12 20.5C7.30558 20.5 3.5 16.6944 3.5 12ZM12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2ZM11.0991 7.52507C11.0991 8.02213 11.5021 8.42507 11.9991 8.42507H12.0001C12.4972 8.42507 12.9001 8.02213 12.9001 7.52507C12.9001 7.02802 12.4972 6.62507 12.0001 6.62507H11.9991C11.5021 6.62507 11.0991 7.02802 11.0991 7.52507ZM12.0001 17.3714C11.5859 17.3714 11.2501 17.0356 11.2501 16.6214V10.9449C11.2501 10.5307 11.5859 10.1949 12.0001 10.1949C12.4143 10.1949 12.7501 10.5307 12.7501 10.9449V16.6214C12.7501 17.0356 12.4143 17.3714 12.0001 17.3714Z"
-                  fill=""
-                />
-              </svg>
-              Support
-            </DropdownItem>
-          </li>
-        </ul>
+      {/* Dropdown Menu */}
+      <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
         <Link
-          to="/signin"
-          onClick={handleLogout}
-          className="flex items-center gap-3 px-3 py-2 mt-3 font-medium text-gray-700 rounded-lg group text-theme-sm hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
+          to="/app/profile"
+          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
         >
-          <svg
-            className="fill-gray-500 group-hover:fill-gray-700 dark:group-hover:fill-gray-300"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              fillRule="evenodd"
-              clipRule="evenodd"
-              d="M15.1007 19.247C14.6865 19.247 14.3507 18.9112 14.3507 18.497L14.3507 14.245H12.8507V18.497C12.8507 19.7396 13.8581 20.747 15.1007 20.747H18.5007C19.7434 20.747 20.7507 19.7396 20.7507 18.497L20.7507 5.49609C20.7507 4.25345 19.7433 3.24609 18.5007 3.24609H15.1007C13.8581 3.24609 12.8507 4.25345 12.8507 5.49609V9.74501L14.3507 9.74501V5.49609C14.3507 5.08188 14.6865 4.74609 15.1007 4.74609L18.5007 4.74609C18.9149 4.74609 19.2507 5.08188 19.2507 5.49609L19.2507 18.497C19.2507 18.9112 18.9149 19.247 18.5007 19.247H15.1007ZM3.25073 11.9984C3.25073 12.2144 3.34204 12.4091 3.48817 12.546L8.09483 17.1556C8.38763 17.4485 8.86251 17.4487 9.15549 17.1559C9.44848 16.8631 9.44863 16.3882 9.15583 16.0952L5.81116 12.7484L16.0007 12.7484C16.4149 12.7484 16.7507 12.4127 16.7507 11.9984C16.7507 11.5842 16.4149 11.2484 16.0007 11.2484L5.81528 11.2484L9.15585 7.90554C9.44864 7.61255 9.44847 7.13767 9.15547 6.84488C8.86248 6.55209 8.3876 6.55226 8.09481 6.84525L3.52309 11.4202C3.35673 11.5577 3.25073 11.7657 3.25073 11.9984Z"
-              fill=""
-            />
-          </svg>
-          Sign out
+          Thông tin cá nhân
         </Link>
-      </Dropdown>
+        <Link
+          to="/app/settings"
+          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+        >
+          Cài đặt
+        </Link>
+        <button
+          onClick={handleLogout}
+          className="w-full text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+        >
+          Đăng xuất
+        </button>
+      </div>
     </div>
   );
-}
+};
+
+export default UserDropdown;
 
 ```
 
@@ -3824,7 +3840,7 @@ const Navbar: React.FC = () => {
             {isAuthenticated ? (
               <>
                 <span className="text-gray-700">Xin chào, {user?.email}</span>
-                <Link to="/dashboard">
+                <Link to="/">
                   <Button variant="outline" size="sm">
                     Dashboard
                   </Button>
@@ -5371,6 +5387,51 @@ export default AppLayout;
 
 ```
 
+### src\layout\AppLayoutForGuest.tsx
+```tsx
+// layout/AppLayoutForGuest.tsx
+import { Outlet } from "react-router-dom";
+import AppHeaderForUser from "./AppHeaderForUser"; // Sử dụng chung header
+import Footer from "../components/layout/Footer";
+
+const AppLayoutForGuest: React.FC = () => {
+  return (
+    <div className="min-h-screen">
+      <AppHeaderForUser />
+      <main className="w-full p-4 md:p-6">
+        <Outlet />
+      </main>
+      <Footer />
+    </div>
+  );
+};
+
+export default AppLayoutForGuest;
+
+```
+
+### src\layout\AppLayoutForShop.tsx
+```tsx
+import { Outlet } from 'react-router-dom';
+import AppSidebarForShop from './AppSideBarForShop';
+
+const AppLayoutForShop = () => {
+  return (
+    <div className="flex h-screen bg-gray-100">
+      <AppSidebarForShop />
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <main className="flex-1 overflow-x-hidden overflow-y-auto">
+          <Outlet />
+        </main>
+      </div>
+    </div>
+  );
+};
+
+export default AppLayoutForShop;
+
+```
+
 ### src\layout\AppLayoutForShopAdmin.tsx
 ```tsx
 import { SidebarProvider, useSidebar } from "../context/SidebarContext";
@@ -5420,24 +5481,17 @@ export default AppLayoutForShopAdmin;
 ### src\layout\AppLayoutForUser.tsx
 ```tsx
 // layout/AppLayoutForUser.tsx
-import type { ReactNode } from "react";
+import { Outlet } from "react-router-dom";
 import AppHeaderForUser from "./AppHeaderForUser";
 import Footer from "../components/layout/Footer";
 
-interface AppLayoutForUserProps {
-  children: ReactNode;
-}
-
-const AppLayoutForUser: React.FC<AppLayoutForUserProps> = ({ children }) => {
+const AppLayoutForUser: React.FC = () => {
   return (
     <div className="min-h-screen">
-      {/* Header cho user - không có sidebar */}
       <AppHeaderForUser />
-
-      {/* Main content - full width */}
-      <main className="w-full p-4 md:p-6">{children}</main>
-
-      {/* Footer */}
+      <main className="w-full p-4 md:p-6">
+        <Outlet /> {/* Thay thế children bằng Outlet */}
+      </main>
       <Footer />
     </div>
   );
@@ -5699,6 +5753,143 @@ const AppSidebar: React.FC = () => {
 };
 
 export default AppSidebar;
+
+```
+
+### src\layout\AppSideBarForShop.tsx
+```tsx
+import { Link, useLocation } from 'react-router-dom';
+import { useState } from 'react';
+
+const AppSidebarForShop = () => {
+  const location = useLocation();
+  const [isOrdersExpanded, setIsOrdersExpanded] = useState(false);
+
+  const menuItems = [
+    {
+      icon: '📊',
+      label: 'Dashboard',
+      path: '/admin/dashboard',
+    },
+    {
+      icon: '📋',
+      label: 'Đơn hàng',
+      hasSubmenu: true,
+      submenu: [
+        {
+          label: 'Dịch vụ',
+          path: '/admin/orders',
+        },
+        {
+          label: 'Khách sạn',
+          path: '/admin/hotels',
+        },
+      ],
+    },
+    {
+      icon: '🛍️',
+      label: 'Dịch vụ của tôi',
+      path: '/admin/services',
+    },
+    {
+      icon: '🏪',
+      label: 'Thông tin cửa hàng',
+      path: '/admin/shop-info',
+    },
+    {
+      icon: '👥',
+      label: 'Quản lý nhân viên',
+      path: '/admin/employees',
+    },
+    {
+      icon: '📤',
+      label: 'Đăng xuất',
+      path: '/login',
+    },
+  ];
+
+  const handleOrdersClick = () => {
+    setIsOrdersExpanded(!isOrdersExpanded);
+  };
+
+  const isOrdersActive = location.pathname.startsWith('/admin/orders');
+
+  return (
+    <aside className="w-64 bg-teal-600 text-white min-h-screen">
+      {/* Logo */}
+      <div className="p-6">
+        <div className="flex items-center space-x-2">
+          <img 
+            src="/public/image/ranbowlogo.png" 
+            alt="CareNest Logo" 
+            className="h-8 w-auto"
+          />
+          <span className="text-xl font-bold">CareNest</span>
+        </div>
+      </div>
+
+      {/* Menu Items */}
+      <nav className="mt-8">
+        {menuItems.map((item, index) => (
+          <div key={index}>
+            {item.hasSubmenu ? (
+              <>
+                {/* Main menu item with submenu */}
+                <div
+                  onClick={handleOrdersClick}
+                  className={`flex items-center justify-between px-6 py-3 hover:bg-teal-700 transition-colors cursor-pointer ${
+                    isOrdersActive ? 'bg-teal-700 border-r-4 border-white' : ''
+                  }`}
+                >
+                  <div className="flex items-center space-x-3">
+                    <span className="text-xl">{item.icon}</span>
+                    <span>{item.label}</span>
+                  </div>
+                  <span className={`transform transition-transform ${isOrdersExpanded ? 'rotate-90' : ''}`}>
+                    ▶
+                  </span>
+                </div>
+                
+                {/* Submenu */}
+                {isOrdersExpanded && (
+                  <div className="bg-teal-700">
+                    {item.submenu.map((subItem, subIndex) => (
+                      <Link
+                        key={subIndex}
+                        to={subItem.path}
+                        className={`flex items-center space-x-3 px-12 py-2 hover:bg-teal-800 transition-colors text-sm ${
+                          location.pathname === subItem.path ? 'bg-teal-800 border-r-4 border-white' : ''
+                        }`}
+                      >
+                        <span>{subItem.label}</span>
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </>
+            ) : (
+              /* Regular menu items */
+              <Link
+                to={item.path}
+                className={`flex items-center space-x-3 px-6 py-3 hover:bg-teal-700 transition-colors ${
+                  location.pathname === item.path || 
+                  (item.path === '/admin/dashboard' && location.pathname === '/admin') 
+                    ? 'bg-teal-700 border-r-4 border-white' 
+                    : ''
+                }`}
+              >
+                <span className="text-xl">{item.icon}</span>
+                <span>{item.label}</span>
+              </Link>
+            )}
+          </div>
+        ))}
+      </nav>
+    </aside>
+  );
+};
+
+export default AppSidebarForShop;
 
 ```
 
@@ -8638,18 +8829,9 @@ export default function LoginPage() {
         <div className="w-1/2 bg-[#E7F3F5] flex flex-col justify-center items-center">
           <div className="w-full max-w-4xl mx-auto p-4 md:p-6 lg:p-8 rounded-lg fixed-size">
             <img
-              src="/public/image/ranbowlogo.png"
+              src="/public/image/Xanh_dương_pastel_Cầu_vồng_Chương_trình_Đọc_viết_Logo-removebg-preview 1.png"
               alt="Logo"
               className="w-full h-auto object-contain max-w-full"
-              style={{
-                maxWidth: "100%",
-                width: "auto",
-                height: "auto",
-                objectFit: "contain",
-                userSelect: "none",
-                transform: "scale(1)",
-                transformOrigin: "center center",
-              }}
             />
           </div>
         </div>
@@ -8938,11 +9120,6 @@ export default ForgotPassword;
 
 ```
 
-### src\pages\Login\components\LoginForm.tsx
-```tsx
-
-```
-
 ### src\pages\Login\components\SocialLogin.tsx
 ```tsx
 
@@ -9033,7 +9210,7 @@ export const useLoginForm = () => {
         })
       ).unwrap();
 
-      const from = (location.state as any)?.from?.pathname || "/dashboard";
+      const from = (location.state as any)?.from?.pathname || "/";
       navigate(from, { replace: true });
     } catch (error: any) {
       console.error("Login failed:", error);
@@ -9129,18 +9306,15 @@ export default NotFound;
 
 ### src\pages\Register\index.tsx
 ```tsx
-// File: src/pages/RegisterPage.tsx
-import { useState } from "react";
-import {
-  Eye,
-  EyeOff,
-  User,
-  Mail,
-  Home,
-  Calendar,
-  ChevronDown,
-} from "lucide-react";
+// pages/Register/index.tsx
+import { useEffect, useState } from "react";
+import { Eye, EyeOff, User, Mail, Home } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import type { AppDispatch, RootState } from "@/store/store";
+import { register, resetRegisterState } from "@/store/slices/registerSlice";
+import { toast } from "react-toastify";
+import { useSelector } from "react-redux";
 
 export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -9150,20 +9324,54 @@ export default function RegisterPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [fullName, setFullName] = useState("");
-  const [birthDate, setBirthDate] = useState("");
-  const [gender, setGender] = useState("");
   const [errors, setErrors] = useState({
     username: "",
     email: "",
     password: "",
     confirmPassword: "",
-    fullName: "",
-    birthDate: "",
-    gender: "",
   });
 
   const navigate = useNavigate();
+  const dispatch = useDispatch<AppDispatch>();
+
+  // Lấy state từ Redux store
+  const { loading, success, error, accountData } = useSelector(
+    // ✅ Thêm accountData
+    (state: RootState) => state.register
+  );
+
+  // Cleanup khi component unmount
+  useEffect(() => {
+    return () => {
+      dispatch(resetRegisterState());
+    };
+  }, [dispatch]);
+
+  // ✅ Cập nhật xử lý khi đăng ký thành công
+  useEffect(() => {
+    if (success && accountData) {
+      toast.success(
+        "Đăng ký tài khoản thành công! Tiếp tục tạo hồ sơ cá nhân."
+      );
+
+      // Truyền account data qua state navigation
+      setTimeout(() => {
+        navigate("/register-customer", {
+          state: {
+            accountData: accountData,
+            fromRegister: true,
+          },
+        });
+      }, 1500);
+    }
+  }, [success, accountData, navigate]);
+
+  // Xử lý khi có lỗi từ server
+  useEffect(() => {
+    if (error) {
+      toast.error(error.message);
+    }
+  }, [error]);
 
   const validateEmail = (email: string) => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -9173,41 +9381,85 @@ export default function RegisterPage() {
     return /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,}$/.test(password);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const validateForm = () => {
     const newErrors = {
       username: "",
       email: "",
       password: "",
       confirmPassword: "",
-      fullName: "",
-      birthDate: "",
-      gender: "",
     };
-    let valid = true;
+    let isValid = true;
 
+    // Validate username
     if (!username.trim()) {
       newErrors.username = "Tên người dùng không được để trống";
-      valid = false;
+      isValid = false;
+    } else if (username.trim().length < 3) {
+      newErrors.username = "Tên người dùng phải có ít nhất 3 ký tự";
+      isValid = false;
     }
-    if (!validateEmail(email)) {
+
+    // Validate email
+    if (!email.trim()) {
+      newErrors.email = "Email không được để trống";
+      isValid = false;
+    } else if (!validateEmail(email)) {
       newErrors.email = "Email không hợp lệ";
-      valid = false;
+      isValid = false;
     }
-    if (!validatePassword(password)) {
+
+    // Validate password
+    if (!password) {
+      newErrors.password = "Mật khẩu không được để trống";
+      isValid = false;
+    } else if (!validatePassword(password)) {
       newErrors.password = "Mật khẩu phải từ 6 ký tự, gồm chữ và số";
-      valid = false;
+      isValid = false;
     }
-    if (password !== confirmPassword) {
+
+    // Validate confirm password
+    if (!confirmPassword) {
+      newErrors.confirmPassword = "Vui lòng nhập lại mật khẩu";
+      isValid = false;
+    } else if (password !== confirmPassword) {
       newErrors.confirmPassword = "Mật khẩu xác nhận không khớp";
-      valid = false;
+      isValid = false;
     }
 
     setErrors(newErrors);
+    return isValid;
+  };
 
-    if (valid) {
-      alert("Đăng ký thành công!");
-      // TODO: gửi dữ liệu tới server tại đây
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    // Validate form trước khi submit
+    if (!validateForm()) {
+      return;
+    }
+
+    // Gửi request đăng ký account
+    const registerData = {
+      username: username.trim(),
+      email: email.trim(),
+      password: password,
+      confirmPassword: confirmPassword,
+      role: "user", // Mặc định là user
+    };
+
+    try {
+      const result = await dispatch(register(registerData));
+
+      if (register.fulfilled.match(result)) {
+        // Đăng ký thành công - useEffect sẽ xử lý navigation
+        console.log("✅ Đăng ký thành công:", result.payload);
+      } else if (register.rejected.match(result)) {
+        // Lỗi từ server - useEffect sẽ hiển thị toast
+        console.error("❌ Đăng ký thất bại:", result.payload);
+      }
+    } catch (error) {
+      console.error("❌ Unexpected error:", error);
+      toast.error("Có lỗi không mong muốn xảy ra");
     }
   };
 
@@ -9216,7 +9468,7 @@ export default function RegisterPage() {
       {/* Icon quay về trang homepage */}
       <button
         onClick={() => navigate("/")}
-        className="absolute top-4 right-4 text-[#2A9D8F] hover:text-[#2A9D8F]"
+        className="absolute top-4 right-4 text-[#2A9D8F] hover:text-[#228B7E] transition-colors duration-200 z-10"
         title="Quay lại trang chính"
       >
         <Home className="w-6 h-6" />
@@ -9231,54 +9483,6 @@ export default function RegisterPage() {
           </p>
 
           <form className="space-y-4" onSubmit={handleSubmit}>
-            {/* Ô nhập tên người dùng */}
-            <div className="relative">
-              <input
-                type="text"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                placeholder="Họ và tên"
-                className="w-full px-4 py-2 border rounded pr-10 focus:outline-none focus:ring-2 focus:ring-blue-400"
-              />
-              <User className="absolute top-2.5 right-3 w-5 h-5 text-gray-400" />
-              {errors.fullName && (
-                <p className="text-red-500 text-sm mt-1">{errors.fullName}</p>
-              )}
-            </div>
-
-            {/* Ô nhập ngày sinh */}
-            <div className="relative">
-              <input
-                type="date"
-                value={birthDate}
-                onChange={(e) => setBirthDate(e.target.value)}
-                placeholder="Ngày sinh"
-                className="w-full px-4 py-2 border rounded pr-10 focus:outline-none focus:ring-2 focus:ring-blue-400"
-              />
-              <Calendar className="absolute top-2.5 right-3 w-5 h-5 text-gray-400" />
-              {errors.birthDate && (
-                <p className="text-red-500 text-sm mt-1">{errors.birthDate}</p>
-              )}
-            </div>
-
-            {/* Ô nhập giới tính */}
-            <div className="relative">
-              <select
-                value={gender}
-                onChange={(e) => setGender(e.target.value)}
-                className="w-full px-4 py-2 border rounded pr-10 focus:outline-none focus:ring-2 focus:ring-blue-400 appearance-none bg-white"
-              >
-                <option value="">Chọn giới tính</option>
-                <option value="male">Nam</option>
-                <option value="female">Nữ</option>
-                <option value="other">Khác</option>
-              </select>
-              <ChevronDown className="absolute top-2.5 right-3 w-5 h-5 text-gray-400 pointer-events-none" />
-              {errors.gender && (
-                <p className="text-red-500 text-sm mt-1">{errors.gender}</p>
-              )}
-            </div>
-
             {/* Ô nhập username */}
             <div className="relative">
               <input
@@ -9286,11 +9490,16 @@ export default function RegisterPage() {
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 placeholder="Tên người dùng"
-                className="w-full px-4 py-2 border rounded pr-10 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                className={`w-full px-4 py-3 border rounded-lg pr-10 focus:outline-none focus:ring-2 transition-all duration-200 ${
+                  errors.username
+                    ? "border-red-500 focus:ring-red-500/20"
+                    : "border-gray-300 focus:ring-[#2A9D8F]/20 focus:border-[#2A9D8F]"
+                }`}
+                disabled={loading}
               />
-              <User className="absolute top-2.5 right-3 w-5 h-5 text-gray-400" />
+              <User className="absolute top-3.5 right-3 w-5 h-5 text-gray-400" />
               {errors.username && (
-                <p className="text-red-500 text-sm mt-1">{errors.username}</p>
+                <p className="text-red-500 text-xs mt-1">{errors.username}</p>
               )}
             </div>
 
@@ -9301,11 +9510,16 @@ export default function RegisterPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Email"
-                className="w-full px-4 py-2 border rounded pr-10 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                className={`w-full px-4 py-3 border rounded-lg pr-10 focus:outline-none focus:ring-2 transition-all duration-200 ${
+                  errors.email
+                    ? "border-red-500 focus:ring-red-500/20"
+                    : "border-gray-300 focus:ring-[#2A9D8F]/20 focus:border-[#2A9D8F]"
+                }`}
+                disabled={loading}
               />
-              <Mail className="absolute top-2.5 right-3 w-5 h-5 text-gray-400" />
+              <Mail className="absolute top-3.5 right-3 w-5 h-5 text-gray-400" />
               {errors.email && (
-                <p className="text-red-500 text-sm mt-1">{errors.email}</p>
+                <p className="text-red-500 text-xs mt-1">{errors.email}</p>
               )}
             </div>
 
@@ -9316,11 +9530,16 @@ export default function RegisterPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Mật khẩu"
-                className="w-full px-4 py-2 border rounded pr-10 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                className={`w-full px-4 py-3 border rounded-lg pr-10 focus:outline-none focus:ring-2 transition-all duration-200 ${
+                  errors.password
+                    ? "border-red-500 focus:ring-red-500/20"
+                    : "border-gray-300 focus:ring-[#2A9D8F]/20 focus:border-[#2A9D8F]"
+                }`}
+                disabled={loading}
               />
               <div
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute top-2.5 right-3 cursor-pointer text-gray-500"
+                className="absolute top-3.5 right-3 cursor-pointer text-gray-500 hover:text-gray-700 transition-colors"
               >
                 {showPassword ? (
                   <EyeOff className="w-5 h-5" />
@@ -9329,7 +9548,7 @@ export default function RegisterPage() {
                 )}
               </div>
               {errors.password && (
-                <p className="text-red-500 text-sm mt-1">{errors.password}</p>
+                <p className="text-red-500 text-xs mt-1">{errors.password}</p>
               )}
             </div>
 
@@ -9340,11 +9559,16 @@ export default function RegisterPage() {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="Nhập lại mật khẩu"
-                className="w-full px-4 py-2 border rounded pr-10 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                className={`w-full px-4 py-3 border rounded-lg pr-10 focus:outline-none focus:ring-2 transition-all duration-200 ${
+                  errors.confirmPassword
+                    ? "border-red-500 focus:ring-red-500/20"
+                    : "border-gray-300 focus:ring-[#2A9D8F]/20 focus:border-[#2A9D8F]"
+                }`}
+                disabled={loading}
               />
               <div
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="absolute top-2.5 right-3 cursor-pointer text-gray-500"
+                className="absolute top-3.5 right-3 cursor-pointer text-gray-500 hover:text-gray-700 transition-colors"
               >
                 {showConfirmPassword ? (
                   <EyeOff className="w-5 h-5" />
@@ -9353,7 +9577,7 @@ export default function RegisterPage() {
                 )}
               </div>
               {errors.confirmPassword && (
-                <p className="text-red-500 text-sm mt-1">
+                <p className="text-red-500 text-xs mt-1">
                   {errors.confirmPassword}
                 </p>
               )}
@@ -9362,40 +9586,374 @@ export default function RegisterPage() {
             {/* Nút đăng ký */}
             <button
               type="submit"
-              className="w-full bg-[#2A9D8F] text-white py-2 rounded hover:bg-[#228B7E] transition"
+              disabled={loading}
+              className={`w-full py-3 rounded-lg font-medium transition-all duration-200 flex items-center justify-center space-x-2 ${
+                loading
+                  ? "bg-gray-400 cursor-not-allowed"
+                  : "bg-[#2A9D8F] hover:bg-[#228B7E] text-white shadow-md hover:shadow-lg"
+              }`}
             >
-              Đăng ký
+              {loading ? (
+                <>
+                  <svg
+                    className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
+                  <span>Đang tạo tài khoản...</span>
+                </>
+              ) : (
+                <span>Tạo tài khoản</span>
+              )}
             </button>
           </form>
 
-          <p className="text-sm text-center mt-4">
+          <p className="text-sm text-center mt-6">
             Đã có tài khoản?{" "}
-            <a
-              href="/login"
-              className="text-[#2A9D8F] font-semibold hover:underline"
+            <button
+              onClick={() => navigate("/login")}
+              className="text-[#2A9D8F] font-semibold hover:underline transition-all duration-200"
             >
               Đăng nhập ngay!
-            </a>
+            </button>
           </p>
         </div>
       </div>
 
       {/* Bên trái: Logo + mô tả */}
       <div className="w-1/2 bg-[#E7F3F5] flex flex-col justify-center items-center">
-        <div className="w-full max-w-4xl mx-auto p-4 md:p-6 lg:p-8 rounded-lg fixed-size">
+        <div className="w-full max-w-4xl mx-auto p-4 md:p-6 lg:p-8 rounded-lg">
           <img
-            src="/public/image/ranbowlogo.png"
+            src="/public/image/Xanh_dương_pastel_Cầu_vồng_Chương_trình_Đọc_viết_Logo-removebg-preview 1.png"
             alt="Logo"
             className="w-full h-auto object-contain max-w-full"
-            style={{
-              maxWidth: "100%",
-              width: "auto",
-              height: "auto",
-              objectFit: "contain",
-              userSelect: "none", // Không cho phép chọn
-              transform: "scale(1)",
-              transformOrigin: "center center",
-            }}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+```
+
+### src\pages\RegisterCustomer\index.tsx
+```tsx
+// pages/RegisterCustomer/index.tsx
+import { useEffect, useState } from "react";
+import { User, Calendar, Users, Home } from "lucide-react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import type { AppDispatch, RootState } from "@/store/store";
+import {
+  registerCustomer,
+  resetRegisterCustomerState,
+} from "@/store/slices/registerCustomerSlice"; // ✅ Sử dụng registerCustomerSlice
+import { toast } from "react-toastify";
+import { useSelector } from "react-redux";
+
+export default function RegisterCustomerPage() {
+  const [fullName, setFullName] = useState("");
+  const [sex, setSex] = useState("");
+  const [birthday, setBirthday] = useState("");
+  const [errors, setErrors] = useState({
+    fullName: "",
+    sex: "",
+    birthday: "",
+  });
+
+  const navigate = useNavigate();
+  const location = useLocation();
+  const dispatch = useDispatch<AppDispatch>();
+
+  // ✅ Lấy account data từ navigation state
+  const accountData = location.state?.accountData;
+
+  // Lấy state từ Redux store
+  const { loading, success, error } = useSelector(
+    (state: RootState) => state.registerCustomer // ✅ Sử dụng registerCustomer state
+  );
+
+  // ✅ Kiểm tra nếu không có account data thì redirect về register
+  useEffect(() => {
+    if (!accountData || !location.state?.fromRegister) {
+      toast.error("Vui lòng đăng ký tài khoản trước");
+      navigate("/register");
+      return;
+    }
+  }, [accountData, location.state, navigate]);
+
+  // Cleanup khi component unmount
+  useEffect(() => {
+    return () => {
+      dispatch(resetRegisterCustomerState());
+    };
+  }, [dispatch]);
+
+  // Xử lý khi tạo customer profile thành công
+  useEffect(() => {
+    if (success) {
+      toast.success("Tạo hồ sơ thành công! Bạn có thể đăng nhập ngay bây giờ.");
+      setTimeout(() => {
+        navigate("/login");
+      }, 2000);
+    }
+  }, [success, navigate]);
+
+  // Xử lý khi có lỗi từ server
+  useEffect(() => {
+    if (error) {
+      toast.error(error.message);
+    }
+  }, [error]);
+
+  const validateForm = () => {
+    const newErrors = {
+      fullName: "",
+      sex: "",
+      birthday: "",
+    };
+    let isValid = true;
+
+    // Validate full name
+    if (!fullName.trim()) {
+      newErrors.fullName = "Họ và tên không được để trống";
+      isValid = false;
+    } else if (fullName.trim().length < 2) {
+      newErrors.fullName = "Họ và tên phải có ít nhất 2 ký tự";
+      isValid = false;
+    }
+
+    // Validate sex
+    if (!sex) {
+      newErrors.sex = "Vui lòng chọn giới tính";
+      isValid = false;
+    }
+
+    // Validate birthday
+    if (!birthday) {
+      newErrors.birthday = "Vui lòng chọn ngày sinh";
+      isValid = false;
+    } else {
+      const selectedDate = new Date(birthday);
+      const today = new Date();
+      if (selectedDate >= today) {
+        newErrors.birthday = "Ngày sinh phải trước ngày hôm nay";
+        isValid = false;
+      }
+    }
+
+    setErrors(newErrors);
+    return isValid;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    // Validate form trước khi submit
+    if (!validateForm()) {
+      return;
+    }
+
+    // ✅ Sử dụng account_id từ accountData
+    const account_id = accountData.id; // hoặc accountData.account_id tùy thuộc vào response structure
+
+    // Format birthday to ISO string
+    const birthdayISO = new Date(birthday).toISOString();
+
+    // Gửi request tạo customer profile
+    const customerData = {
+      account_id: account_id,
+      full_name: fullName.trim(),
+      gender: sex,
+      birthday: birthdayISO,
+    };
+
+    try {
+      const result = await dispatch(registerCustomer(customerData));
+
+      if (registerCustomer.fulfilled.match(result)) {
+        console.log("✅ Tạo customer profile thành công:", result.payload);
+      } else if (registerCustomer.rejected.match(result)) {
+        console.error("❌ Tạo customer profile thất bại:", result.payload);
+      }
+    } catch (error) {
+      console.error("❌ Unexpected error:", error);
+      toast.error("Có lỗi không mong muốn xảy ra");
+    }
+  };
+
+  // Lấy ngày hiện tại để làm max date cho birthday
+  const getCurrentDate = () => {
+    return new Date().toISOString().split("T")[0];
+  };
+
+  // ✅ Không render nếu không có account data
+  if (!accountData) {
+    return null;
+  }
+
+  return (
+    <div className="min-h-screen flex bg-white relative">
+      {/* Icon quay về trang homepage */}
+      <button
+        onClick={() => navigate("/")}
+        className="absolute top-4 right-4 text-[#2A9D8F] hover:text-[#228B7E] transition-colors duration-200 z-10"
+        title="Quay lại trang chính"
+      >
+        <Home className="w-6 h-6" />
+      </button>
+
+      {/* Bên phải: Form đăng ký */}
+      <div className="w-full md:w-1/2 flex items-center justify-center p-8">
+        <div className="w-full max-w-sm bg-white p-8 rounded-xl shadow-lg border">
+          <h2 className="text-2xl font-bold mb-2 text-center">
+            Hoàn tất đăng ký
+          </h2>
+          <p className="text-sm text-gray-600 mb-6 text-center">
+            Bước 2: Tạo hồ sơ cá nhân cho{" "}
+            <strong>{accountData.username}</strong>
+          </p>
+
+          <form className="space-y-4" onSubmit={handleSubmit}>
+            {/* Ô nhập họ và tên */}
+            <div className="relative">
+              <input
+                type="text"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                placeholder="Họ và tên"
+                className={`w-full px-4 py-3 border rounded-lg pr-10 focus:outline-none focus:ring-2 transition-all duration-200 ${
+                  errors.fullName
+                    ? "border-red-500 focus:ring-red-500/20"
+                    : "border-gray-300 focus:ring-[#2A9D8F]/20 focus:border-[#2A9D8F]"
+                }`}
+                disabled={loading}
+              />
+              <User className="absolute top-3.5 right-3 w-5 h-5 text-gray-400" />
+              {errors.fullName && (
+                <p className="text-red-500 text-xs mt-1">{errors.fullName}</p>
+              )}
+            </div>
+
+            {/* Ô chọn giới tính */}
+            <div className="relative">
+              <select
+                value={sex}
+                onChange={(e) => setSex(e.target.value)}
+                className={`w-full px-4 py-3 border rounded-lg pr-10 focus:outline-none focus:ring-2 transition-all duration-200 appearance-none ${
+                  errors.sex
+                    ? "border-red-500 focus:ring-red-500/20"
+                    : "border-gray-300 focus:ring-[#2A9D8F]/20 focus:border-[#2A9D8F]"
+                }`}
+                disabled={loading}
+              >
+                <option value="" disabled>
+                  Chọn giới tính
+                </option>
+                <option value="male">Nam</option>
+                <option value="female">Nữ</option>
+                <option value="other">Khác</option>
+              </select>
+              <Users className="absolute top-3.5 right-3 w-5 h-5 text-gray-400 pointer-events-none" />
+              {errors.sex && (
+                <p className="text-red-500 text-xs mt-1">{errors.sex}</p>
+              )}
+            </div>
+
+            {/* Ô chọn ngày sinh */}
+            <div className="relative">
+              <input
+                type="date"
+                value={birthday}
+                onChange={(e) => setBirthday(e.target.value)}
+                max={getCurrentDate()}
+                className={`w-full px-4 py-3 border rounded-lg pr-10 focus:outline-none focus:ring-2 transition-all duration-200 ${
+                  errors.birthday
+                    ? "border-red-500 focus:ring-red-500/20"
+                    : "border-gray-300 focus:ring-[#2A9D8F]/20 focus:border-[#2A9D8F]"
+                }`}
+                disabled={loading}
+              />
+              <Calendar className="absolute top-3.5 right-3 w-5 h-5 text-gray-400 pointer-events-none" />
+              {errors.birthday && (
+                <p className="text-red-500 text-xs mt-1">{errors.birthday}</p>
+              )}
+            </div>
+
+            {/* Nút hoàn tất */}
+            <button
+              type="submit"
+              disabled={loading}
+              className={`w-full py-3 rounded-lg font-medium transition-all duration-200 flex items-center justify-center space-x-2 ${
+                loading
+                  ? "bg-gray-400 cursor-not-allowed"
+                  : "bg-[#2A9D8F] hover:bg-[#228B7E] text-white shadow-md hover:shadow-lg"
+              }`}
+            >
+              {loading ? (
+                <>
+                  <svg
+                    className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
+                  <span>Đang tạo hồ sơ...</span>
+                </>
+              ) : (
+                <span>Hoàn tất đăng ký</span>
+              )}
+            </button>
+          </form>
+
+          <p className="text-sm text-center mt-6">
+            Đã có tài khoản?{" "}
+            <button
+              onClick={() => navigate("/login")}
+              className="text-[#2A9D8F] font-semibold hover:underline transition-all duration-200"
+            >
+              Đăng nhập ngay!
+            </button>
+          </p>
+        </div>
+      </div>
+
+      {/* Bên trái: Logo + mô tả */}
+      <div className="w-1/2 bg-[#E7F3F5] flex flex-col justify-center items-center">
+        <div className="w-full max-w-4xl mx-auto p-4 md:p-6 lg:p-8 rounded-lg">
+          <img
+            src="/public/image/Xanh_dương_pastel_Cầu_vồng_Chương_trình_Đọc_viết_Logo-removebg-preview 1.png"
+            alt="Logo"
+            className="w-full h-auto object-contain max-w-full"
           />
         </div>
       </div>
@@ -9417,14 +9975,13 @@ import {
   Lock,
   Phone,
   MapPin,
-  Building,
   Briefcase,
   Clock,
   ChevronDown,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
-export default function RegisterPage() {
+export default function RegisterShop() {
   const navigate = useNavigate();
 
   interface FormData {
@@ -9975,18 +10532,9 @@ export default function RegisterType() {
       <div className="w-1/2 bg-[#E7F3F5] flex flex-col justify-center items-center">
         <div className="w-full max-w-4xl mx-auto p-4 md:p-6 lg:p-8 rounded-lg">
           <img
-            src="/public/image/ranbowlogo.png"
+            src="/public/image/Xanh_dương_pastel_Cầu_vồng_Chương_trình_Đọc_viết_Logo-removebg-preview 1.png"
             alt="Logo"
             className="w-full h-auto object-contain max-w-full"
-            style={{
-              maxWidth: "100%",
-              width: "auto",
-              height: "auto",
-              objectFit: "contain",
-              userSelect: "none",
-              transform: "scale(1)",
-              transformOrigin: "center center",
-            }}
           />
         </div>
       </div>
@@ -10412,6 +10960,2025 @@ export default ServicesPage;
 
 ### src\pages\Settings\index.tsx
 ```tsx
+
+```
+
+### src\pages\Shop\HotelRoomManagement.tsx
+```tsx
+import React, { useState, useEffect } from 'react';
+import type { Hotel, Room, HotelWithRooms } from '../../types/hotel';
+
+const HotelManagement: React.FC = () => {
+  const [hotels, setHotels] = useState<HotelWithRooms[]>([]);
+  const [selectedHotel, setSelectedHotel] = useState<HotelWithRooms | null>(null);
+  const [showHotelModal, setShowHotelModal] = useState(false);
+  const [showRoomModal, setShowRoomModal] = useState(false);
+  const [editingHotel, setEditingHotel] = useState<Hotel | null>(null);
+  const [editingRoom, setEditingRoom] = useState<Room | null>(null);
+
+  // Sample data
+  const sampleHotels: HotelWithRooms[] = [
+    {
+      id: 1,
+      name: 'Pet Paradise Hotel',
+      description: 'Khách sạn cao cấp dành cho thú cưng',
+      total_room: 20,
+      available_room: 15,
+      shop_id: 1,
+      sub_address_id: 1,
+      is_active: true,
+      star: 5,
+      rooms: [
+        {
+          id: 1,
+          hotel_id: 1,
+          room_number: 'A01',
+          room_type: 'VIP',
+          max_capability: 2,
+          daily_price: 500000,
+          is_available: true,
+          amenities: 'Điều hòa, Camera, Đồ chơi cao cấp',
+          star: 5
+        },
+        {
+          id: 2,
+          hotel_id: 1,
+          room_number: 'B01',
+          room_type: 'Standard',
+          max_capability: 1,
+          daily_price: 300000,
+          is_available: false,
+          amenities: 'Quạt, Đồ chơi cơ bản',
+          star: 3
+        }
+      ]
+    },
+    {
+      id: 2,
+      name: 'Cozy Pet Inn',
+      description: 'Khách sạn ấm cúng cho thú cưng nhỏ',
+      total_room: 15,
+      available_room: 12,
+      shop_id: 1,
+      sub_address_id: 2,
+      is_active: true,
+      star: 4,
+      rooms: []
+    }
+  ];
+
+  useEffect(() => {
+    setHotels(sampleHotels);
+  }, []);
+
+  const handleAddHotel = () => {
+    setEditingHotel(null);
+    setShowHotelModal(true);
+  };
+
+  const handleEditHotel = (hotel: Hotel) => {
+    setEditingHotel(hotel);
+    setShowHotelModal(true);
+  };
+
+  const handleDeleteHotel = (hotelId: number) => {
+    if (confirm('Bạn có chắc chắn muốn xóa khách sạn này?')) {
+      setHotels(hotels.filter(h => h.id !== hotelId));
+    }
+  };
+
+  const handleAddRoom = (hotel: HotelWithRooms) => {
+    setSelectedHotel(hotel);
+    setEditingRoom(null);
+    setShowRoomModal(true);
+  };
+
+  const handleEditRoom = (room: Room) => {
+    setEditingRoom(room);
+    setShowRoomModal(true);
+  };
+
+  const handleDeleteRoom = (roomId: number) => {
+    if (confirm('Bạn có chắc chắn muốn xóa phòng này?')) {
+      setHotels(hotels.map(hotel => ({
+        ...hotel,
+        rooms: hotel.rooms.filter(r => r.id !== roomId)
+      })));
+    }
+  };
+
+  const getRoomTypeColor = (type: Room['room_type']) => {
+    switch (type) {
+      case 'VIP': return 'bg-purple-100 text-purple-800';
+      case 'Suite': return 'bg-gold-100 text-gold-800';
+      case 'Standard': return 'bg-blue-100 text-blue-800';
+      case 'Economy': return 'bg-green-100 text-green-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  return (
+    <div className="p-6 bg-gray-50 min-h-screen">
+      <div className="max-w-7xl mx-auto">
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">
+            Quản lý khách sạn thú cưng
+          </h1>
+          <button
+            onClick={handleAddHotel}
+            className="bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-700 transition-colors"
+          >
+            + Thêm khách sạn mới
+          </button>
+        </div>
+
+        {/* Danh sách khách sạn */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {hotels.map((hotel) => (
+            <div key={hotel.id} className="bg-white rounded-lg shadow-md overflow-hidden">
+              {/* Header khách sạn */}
+              <div className="p-6 border-b border-gray-200">
+                <div className="flex justify-between items-start mb-4">
+                  <div>
+                    <h2 className="text-xl font-semibold text-gray-900">{hotel.name}</h2>
+                    <div className="flex items-center mt-1">
+                      {[...Array(hotel.star)].map((_, i) => (
+                        <span key={i} className="text-yellow-400">⭐</span>
+                      ))}
+                      <span className="ml-2 text-sm text-gray-500">({hotel.star} sao)</span>
+                    </div>
+                  </div>
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={() => handleEditHotel(hotel)}
+                      className="text-blue-600 hover:text-blue-800"
+                    >
+                      ✏️
+                    </button>
+                    <button
+                      onClick={() => handleDeleteHotel(hotel.id)}
+                      className="text-red-600 hover:text-red-800"
+                    >
+                      🗑️
+                    </button>
+                  </div>
+                </div>
+
+                <p className="text-gray-600 text-sm mb-4">{hotel.description}</p>
+
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="text-gray-500">Tổng phòng:</span>
+                    <span className="ml-2 font-medium">{hotel.total_room}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-500">Phòng trống:</span>
+                    <span className="ml-2 font-medium text-green-600">{hotel.available_room}</span>
+                  </div>
+                </div>
+
+                <div className="mt-4">
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                    hotel.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                  }`}>
+                    {hotel.is_active ? 'Hoạt động' : 'Tạm dừng'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Danh sách phòng */}
+              <div className="p-6">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-lg font-medium text-gray-900">
+                    Danh sách phòng ({hotel.rooms.length})
+                  </h3>
+                  <button
+                    onClick={() => handleAddRoom(hotel)}
+                    className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700 transition-colors"
+                  >
+                    + Thêm phòng
+                  </button>
+                </div>
+
+                {hotel.rooms.length > 0 ? (
+                  <div className="space-y-3 max-h-60 overflow-y-auto">
+                    {hotel.rooms.map((room) => (
+                      <div key={room.id} className="border border-gray-200 rounded-lg p-3">
+                        <div className="flex justify-between items-start mb-2">
+                          <div>
+                            <h4 className="font-medium text-gray-900">
+                              Phòng {room.room_number}
+                            </h4>
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${getRoomTypeColor(room.room_type)}`}>
+                              {room.room_type}
+                            </span>
+                          </div>
+                          <div className="flex space-x-2">
+                            <button
+                              onClick={() => handleEditRoom(room)}
+                              className="text-blue-600 hover:text-blue-800 text-sm"
+                            >
+                              ✏️
+                            </button>
+                            <button
+                              onClick={() => handleDeleteRoom(room.id)}
+                              className="text-red-600 hover:text-red-800 text-sm"
+                            >
+                              🗑️
+                            </button>
+                          </div>
+                        </div>
+
+                        <div className="text-xs text-gray-600 space-y-1">
+                          <p>Sức chứa: {room.max_capability} thú cưng</p>
+                          <p>Giá: {room.daily_price.toLocaleString('vi-VN')}đ/ngày</p>
+                          <p>Tiện nghi: {room.amenities}</p>
+                          <p className={`${room.is_available ? 'text-green-600' : 'text-red-600'}`}>
+                            {room.is_available ? 'Có sẵn' : 'Đã đặt'}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    <p>Chưa có phòng nào</p>
+                    <p className="text-sm">Nhấn "Thêm phòng" để bắt đầu</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Thống kê tổng quan */}
+        <div className="mt-8 grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="bg-white p-4 rounded-lg shadow-md">
+            <h3 className="text-sm font-medium text-gray-500">Tổng khách sạn</h3>
+            <p className="text-2xl font-bold text-gray-900">{hotels.length}</p>
+          </div>
+          <div className="bg-white p-4 rounded-lg shadow-md">
+            <h3 className="text-sm font-medium text-gray-500">Tổng phòng</h3>
+            <p className="text-2xl font-bold text-blue-600">
+              {hotels.reduce((sum, hotel) => sum + hotel.total_room, 0)}
+            </p>
+          </div>
+          <div className="bg-white p-4 rounded-lg shadow-md">
+            <h3 className="text-sm font-medium text-gray-500">Phòng trống</h3>
+            <p className="text-2xl font-bold text-green-600">
+              {hotels.reduce((sum, hotel) => sum + hotel.available_room, 0)}
+            </p>
+          </div>
+          <div className="bg-white p-4 rounded-lg shadow-md">
+            <h3 className="text-sm font-medium text-gray-500">Tỷ lệ lấp đầy</h3>
+            <p className="text-2xl font-bold text-purple-600">
+              {hotels.length > 0 ? 
+                Math.round(((hotels.reduce((sum, hotel) => sum + hotel.total_room, 0) - 
+                hotels.reduce((sum, hotel) => sum + hotel.available_room, 0)) / 
+                hotels.reduce((sum, hotel) => sum + hotel.total_room, 0)) * 100) : 0}%
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Modal thêm/sửa khách sạn */}
+      {showHotelModal && (
+        <HotelModal
+          hotel={editingHotel}
+          isOpen={showHotelModal}
+          onClose={() => setShowHotelModal(false)}
+          onSave={(hotelData) => {
+            if (editingHotel) {
+              // Update hotel
+              setHotels(hotels.map(h => h.id === editingHotel.id ? { ...h, ...hotelData } : h));
+            } else {
+              // Add new hotel
+              const newHotel: HotelWithRooms = {
+                ...hotelData,
+                id: Date.now(),
+                rooms: []
+              };
+              setHotels([...hotels, newHotel]);
+            }
+            setShowHotelModal(false);
+          }}
+        />
+      )}
+
+      {/* Modal thêm/sửa phòng */}
+      {showRoomModal && (
+        <RoomModal
+          room={editingRoom}
+          hotel={selectedHotel}
+          isOpen={showRoomModal}
+          onClose={() => setShowRoomModal(false)}
+          onSave={(roomData) => {
+            if (editingRoom) {
+              // Update room
+              setHotels(hotels.map(hotel => ({
+                ...hotel,
+                rooms: hotel.rooms.map(r => r.id === editingRoom.id ? { ...r, ...roomData } : r)
+              })));
+            } else {
+              // Add new room
+              const newRoom: Room = {
+                ...roomData,
+                id: Date.now(),
+                hotel_id: selectedHotel!.id
+              };
+              setHotels(hotels.map(hotel => 
+                hotel.id === selectedHotel!.id 
+                  ? { ...hotel, rooms: [...hotel.rooms, newRoom] }
+                  : hotel
+              ));
+            }
+            setShowRoomModal(false);
+          }}
+        />
+      )}
+    </div>
+  );
+};
+interface RoomModalProps {
+  room: Room | null;
+  hotel: HotelWithRooms | null;
+  isOpen: boolean;
+  onClose: () => void;
+  onSave: (room: Omit<Room, 'id' | 'hotel_id'>) => void;
+}
+
+const RoomModal: React.FC<RoomModalProps> = ({ room, hotel, isOpen, onClose, onSave }) => {
+  const [formData, setFormData] = useState({
+    room_number: '',
+    room_type: 'Standard' as Room['room_type'],
+    max_capability: 1,
+    daily_price: 0,
+    is_available: true,
+    amenities: ''
+    // Bỏ field star
+  });
+
+  useEffect(() => {
+    if (room) {
+      setFormData({
+        room_number: room.room_number,
+        room_type: room.room_type,
+        max_capability: room.max_capability,
+        daily_price: room.daily_price,
+        is_available: room.is_available,
+        amenities: room.amenities
+        // Bỏ star: room.star
+      });
+    } else {
+      setFormData({
+        room_number: '',
+        room_type: 'Standard',
+        max_capability: 1,
+        daily_price: 0,
+        is_available: true,
+        amenities: ''
+        // Bỏ star: 3
+      });
+    }
+  }, [room, isOpen]);
+
+
+  useEffect(() => {
+    if (room) {
+      setFormData({
+        room_number: room.room_number,
+        room_type: room.room_type,
+        max_capability: room.max_capability,
+        daily_price: room.daily_price,
+        is_available: room.is_available,
+        amenities: room.amenities,
+      });
+    } else {
+      setFormData({
+        room_number: '',
+        room_type: 'Standard',
+        max_capability: 1,
+        daily_price: 0,
+        is_available: true,
+        amenities: '',
+      });
+    }
+  }, [room, isOpen]);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSave(formData);
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 backdrop-blur-sm">
+      <div className="bg-white rounded-xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl">
+        <h2 className="text-xl font-semibold mb-4 text-gray-800">
+          {room ? 'Chỉnh sửa phòng' : `Thêm phòng mới - ${hotel?.name}`}
+        </h2>
+        
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Số phòng *
+              </label>
+              <input
+                type="text"
+                value={formData.room_number}
+                onChange={(e) => setFormData({...formData, room_number: e.target.value})}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="VD: A01"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Loại phòng
+              </label>
+              <select
+                value={formData.room_type}
+                onChange={(e) => setFormData({...formData, room_type: e.target.value as Room['room_type']})}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="Economy">Economy</option>
+                <option value="Standard">Standard</option>
+                <option value="Suite">Suite</option>
+                <option value="VIP">VIP</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Sức chứa *
+              </label>
+              <input
+                type="number"
+                value={formData.max_capability}
+                onChange={(e) => setFormData({...formData, max_capability: parseInt(e.target.value) || 1})}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                min="1"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Giá/ngày (VNĐ) *
+              </label>
+              <input
+                type="number"
+                value={formData.daily_price}
+                onChange={(e) => setFormData({...formData, daily_price: parseInt(e.target.value) || 0})}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                min="0"
+                required
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Tiện nghi
+            </label>
+            <textarea
+              value={formData.amenities}
+              onChange={(e) => setFormData({...formData, amenities: e.target.value})}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 h-20 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="VD: Điều hòa, Camera, Đồ chơi..."
+              rows={3}
+            />
+          </div>
+
+          <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-6 py-2.5 text-gray-600 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 focus:ring-2 focus:ring-gray-300 transition-all duration-200 font-medium"
+            >
+              Hủy bỏ
+            </button>
+            <button
+              type="submit"
+              className="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-300 transition-all duration-200 font-medium shadow-sm"
+            >
+              {room ? 'Cập nhật' : 'Thêm mới'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+// Thêm HotelModal component vào đây
+interface HotelModalProps {
+  hotel: Hotel | null;
+  isOpen: boolean;
+  onClose: () => void;
+  onSave: (hotel: Omit<Hotel, 'id'>) => void;
+}
+
+const HotelModal: React.FC<HotelModalProps> = ({ hotel, isOpen, onClose, onSave }) => {
+  const [formData, setFormData] = useState({
+    name: '',
+    description: '',
+    total_room: 0,
+    available_room: 0,
+    shop_id: 1, // Current shop ID
+    sub_address_id: 1,
+    is_active: true,
+  });
+
+  
+  useEffect(() => {
+    if (hotel) {
+      setFormData({
+        name: hotel.name,
+        description: hotel.description,
+        total_room: hotel.total_room,
+        available_room: hotel.available_room,
+        shop_id: hotel.shop_id,
+        sub_address_id: hotel.sub_address_id,
+        is_active: hotel.is_active,
+      });
+    } else {
+      // Reset form khi thêm mới
+      setFormData({
+        name: '',
+        description: '',
+        total_room: 0,
+        available_room: 0,
+        shop_id: 1,
+        sub_address_id: 1,
+        is_active: true,
+      });
+    }
+  }, [hotel, isOpen]);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSave(formData);
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
+        <h2 className="text-xl font-semibold mb-4">
+          {hotel ? 'Chỉnh sửa khách sạn' : 'Thêm khách sạn mới'}
+        </h2>
+        
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Tên khách sạn *
+            </label>
+            <input
+              type="text"
+              value={formData.name}
+              onChange={(e) => setFormData({...formData, name: e.target.value})}
+              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+              placeholder="VD: Pet Paradise Hotel"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Mô tả
+            </label>
+            <textarea
+              value={formData.description}
+              onChange={(e) => setFormData({...formData, description: e.target.value})}
+              className="w-full border border-gray-300 rounded-md px-3 py-2 h-20 focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+              placeholder="Mô tả về khách sạn thú cưng..."
+              rows={3}
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Tổng số phòng *
+              </label>
+              <input
+                type="number"
+                value={formData.total_room}
+                onChange={(e) => {
+                  const totalRooms = parseInt(e.target.value) || 0;
+                  setFormData({
+                    ...formData, 
+                    total_room: totalRooms,
+                    available_room: Math.min(formData.available_room, totalRooms)
+                  });
+                }}
+                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                min="1"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Phòng trống
+              </label>
+              <input
+                type="number"
+                value={formData.available_room}
+                onChange={(e) => setFormData({...formData, available_room: parseInt(e.target.value) || 0})}
+                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                min="0"
+                max={formData.total_room}
+              />
+            </div>
+          </div>
+          <div>
+            <label className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                checked={formData.is_active}
+                onChange={(e) => setFormData({...formData, is_active: e.target.checked})}
+                className="w-4 h-4 text-teal-600 focus:ring-teal-500 border-gray-300 rounded"
+              />
+              <span className="text-sm font-medium text-gray-700">Khách sạn đang hoạt động</span>
+            </label>
+          </div>
+
+          <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+            >
+              Hủy bỏ
+            </button>
+            <button
+              type="submit"
+              className="px-4 py-2 bg-teal-600 text-white rounded-md hover:bg-teal-700 transition-colors"
+            >
+              {hotel ? 'Cập nhật' : 'Thêm mới'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+export default HotelManagement;
+
+```
+
+### src\pages\Shop\OrderManagement.tsx
+```tsx
+import React, { useState } from 'react';
+
+interface ServiceOrder {
+  id: number;
+  customerName: string;
+  services: {
+    id: number;
+    name: string;
+    note: string;
+    price: number;
+  }[];
+  startTime: string;
+  endTime: string;
+  status: 'pending' | 'processing' | 'in-progress' | 'completed' | 'cancelled';
+  totalAmount: number;
+  branch: string;
+  review?: {
+    rating: number;
+    comment: string;
+    reviewDate: string;
+  };
+}
+
+interface ReviewModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  order: ServiceOrder | null;
+}
+
+const ReviewModal: React.FC<ReviewModalProps> = ({ isOpen, onClose, order }) => {
+  if (!isOpen || !order || !order.review) return null;
+
+  const renderStars = (rating: number) => {
+    return Array.from({ length: 5 }, (_, index) => (
+      <svg
+        key={index}
+        className={`w-5 h-5 ${
+          index < rating ? 'text-yellow-400' : 'text-gray-300'
+        }`}
+        fill="currentColor"
+        viewBox="0 0 20 20"
+      >
+        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+      </svg>
+    ));
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+      <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto shadow-2xl">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-xl font-bold text-gray-800">
+            Đánh giá của khách hàng
+          </h2>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-full hover:bg-gray-100"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        
+        <div className="space-y-5">
+          <div className="bg-gray-50 rounded-lg p-4">
+            <label className="text-sm font-medium text-gray-600 block mb-1">Khách hàng:</label>
+            <p className="text-gray-900 font-medium">{order.customerName}</p>
+          </div>
+          
+          <div className="bg-gray-50 rounded-lg p-4">
+            <label className="text-sm font-medium text-gray-600 block mb-1">Đơn hàng:</label>
+            <p className="text-gray-900 font-medium">#{order.id}</p>
+          </div>
+          
+          <div className="bg-gray-50 rounded-lg p-4">
+            <label className="text-sm font-medium text-gray-600 block mb-2">Đánh giá:</label>
+            <div className="flex items-center space-x-1">
+              {renderStars(order.review.rating)}
+              <span className="ml-2 text-sm text-gray-600 font-medium">
+                ({order.review.rating}/5 sao)
+              </span>
+            </div>
+          </div>
+          
+          <div className="bg-gray-50 rounded-lg p-4">
+            <label className="text-sm font-medium text-gray-600 block mb-2">Nhận xét:</label>
+            <div className="bg-white rounded-lg p-3 border border-gray-200">
+              <p className="text-gray-800 leading-relaxed">
+                {order.review.comment}
+              </p>
+            </div>
+          </div>
+          
+          <div className="bg-gray-50 rounded-lg p-4">
+            <label className="text-sm font-medium text-gray-600 block mb-1">Ngày đánh giá:</label>
+            <p className="text-gray-900 font-medium">{order.review.reviewDate}</p>
+          </div>
+        </div>
+        
+        <div className="flex justify-end mt-6">
+          <button
+            onClick={onClose}
+            className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-all duration-200 font-medium"
+          >
+            Đóng
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const OrderManagement = () => {
+  const [activeTab, setActiveTab] = useState<'pending' | 'processing' | 'completed' | 'cancelled' | 'all'>('pending');
+  const [selectedDate, setSelectedDate] = useState('');
+  const [selectedBranch, setSelectedBranch] = useState('');
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [reviewModal, setReviewModal] = useState<{ isOpen: boolean; order: ServiceOrder | null }>({
+    isOpen: false,
+    order: null
+  });
+
+  // Dữ liệu mẫu
+  const orders: ServiceOrder[] = [
+    {
+      id: 1,
+      customerName: 'Nguyễn Văn A',
+      services: [
+        { id: 1, name: 'Dịch vụ tắm cho cún', note: 'Cún bị dị ứng nước', price: 200000 },
+        { id: 2, name: 'Cắt tỉa lông', note: 'Cún bị dị ứng nước', price: 200000 },
+        { id: 3, name: 'Cắt tỉa lông', note: 'Cún bị dị ứng nước', price: 200000 }
+      ],
+      startTime: '2025-01-01 9:00',
+      endTime: '2025-01-01 12:00',
+      status: 'pending',
+      totalAmount: 600000,
+      branch: 'Chi nhánh Vinhome: VinhomeGrandPark, quận 9, Thủ Đức'
+    },
+    {
+      id: 2,
+      customerName: 'Nguyễn Văn B',
+      services: [
+        { id: 1, name: 'Dịch vụ tắm cho cún', note: 'Cún bị dị ứng nước', price: 200000 },
+        { id: 2, name: 'Cắt tỉa lông', note: 'Cún bị dị ứng nước', price: 200000 }
+      ],
+      startTime: '2025-01-01 9:00',
+      endTime: '2025-01-01 12:00',
+      status: 'processing',
+      totalAmount: 400000,
+      branch: 'Chi nhánh Vinhome: VinhomeGrandPark, quận 9, Thủ Đức'
+    },
+    {
+      id: 3,
+      customerName: 'Nguyễn Văn C',
+      services: [
+        { id: 1, name: 'Dịch vụ tắm cho cún', note: 'Cún bị dị ứng nước', price: 200000 }
+      ],
+      startTime: '2025-01-01 9:00',
+      endTime: '2025-01-01 12:00',
+      status: 'in-progress',
+      totalAmount: 200000,
+      branch: 'Chi nhánh Vinhome: VinhomeGrandPark, quận 9, Thủ Đức'
+    },
+    // Đơn hàng hoàn thành
+    {
+      id: 4,
+      customerName: 'Trần Thị D',
+      services: [
+        { id: 1, name: 'Dịch vụ tắm cho cún', note: 'Dịch vụ tốt', price: 200000 },
+        { id: 2, name: 'Cắt tỉa lông', note: 'Rất hài lòng', price: 150000 }
+      ],
+      startTime: '2024-12-28 10:00',
+      endTime: '2024-12-28 13:00',
+      status: 'completed',
+      totalAmount: 350000,
+      branch: 'Chi nhánh Vinhome: VinhomeGrandPark, quận 9, Thủ Đức',
+      review: {
+        rating: 5,
+        comment: 'Dịch vụ rất tốt, nhân viên thân thiện và chuyên nghiệp. Cún cưng của tôi rất thích và sạch sẽ sau khi tắm.',
+        reviewDate: '2024-12-28 14:30'
+      }
+    },
+    {
+      id: 5,
+      customerName: 'Lê Văn E',
+      services: [
+        { id: 1, name: 'Dịch vụ spa cho mèo', note: 'Mèo hiền lành', price: 300000 }
+      ],
+      startTime: '2024-12-27 14:00',
+      endTime: '2024-12-27 16:00',
+      status: 'completed',
+      totalAmount: 300000,
+      branch: 'Chi nhánh Vinhome: VinhomeGrandPark, quận 9, Thủ Đức',
+      review: {
+        rating: 4,
+        comment: 'Dịch vụ khá ổn, tuy nhiên thời gian chờ hơi lâu. Mèo của tôi được chăm sóc tốt.',
+        reviewDate: '2024-12-27 17:15'
+      }
+    },
+    // Đơn hàng bị hủy
+    {
+      id: 6,
+      customerName: 'Phạm Thị F',
+      services: [
+        { id: 1, name: 'Dịch vụ tắm cho cún', note: 'Khách hủy do bận việc', price: 200000 }
+      ],
+      startTime: '2024-12-26 9:00',
+      endTime: '2024-12-26 11:00',
+      status: 'cancelled',
+      totalAmount: 200000,
+      branch: 'Chi nhánh Vinhome: VinhomeGrandPark, quận 9, Thủ Đức'
+    },
+    {
+      id: 7,
+      customerName: 'Hoàng Văn G',
+      services: [
+        { id: 1, name: 'Cắt tỉa lông', note: 'Cún không hợp tác', price: 180000 },
+        { id: 2, name: 'Vệ sinh tai', note: 'Cún sợ hãi', price: 100000 }
+      ],
+      startTime: '2024-12-25 15:00',
+      endTime: '2024-12-25 17:00',
+      status: 'cancelled',
+      totalAmount: 280000,
+      branch: 'Chi nhánh Vinhome: VinhomeGrandPark, quận 9, Thủ Đức'
+    }
+  ];
+
+  // Custom Date Picker Component
+  const CustomDatePicker = () => {
+    const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
+    const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
+
+    const months = [
+      'Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6',
+      'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12'
+    ];
+
+    const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+    const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay();
+    const adjustedFirstDay = firstDayOfMonth === 0 ? 6 : firstDayOfMonth - 1;
+
+    const days = [];
+    for (let i = 0; i < adjustedFirstDay; i++) {
+      days.push(null);
+    }
+    for (let i = 1; i <= daysInMonth; i++) {
+      days.push(i);
+    }
+
+    const handleDateSelect = (day: number) => {
+      const formattedDate = `${String(day).padStart(2, '0')}/${String(currentMonth + 1).padStart(2, '0')}/${currentYear}`;
+      setSelectedDate(formattedDate);
+      setShowDatePicker(false);
+    };
+
+    const nextMonth = () => {
+      if (currentMonth === 11) {
+        setCurrentMonth(0);
+        setCurrentYear(currentYear + 1);
+      } else {
+        setCurrentMonth(currentMonth + 1);
+      }
+    };
+
+    const prevMonth = () => {
+      if (currentMonth === 0) {
+        setCurrentMonth(11);
+        setCurrentYear(currentYear - 1);
+      } else {
+        setCurrentMonth(currentMonth - 1);
+      }
+    };
+
+    return (
+      <div className="absolute top-full left-0 mt-2 bg-white border border-gray-300 rounded-lg shadow-lg z-50 p-4 w-80">
+        {/* Time Period Header */}
+        <div className="mb-4">
+          <div className="bg-teal-500 text-white rounded-lg p-3 text-center">
+            <div className="text-lg font-semibold">Thời gian</div>
+          </div>
+        </div>
+
+        {/* Month Navigation */}
+        <div className="flex items-center justify-between mb-4 bg-gray-100 rounded-lg p-2">
+          <button onClick={prevMonth} className="p-1 hover:bg-gray-200 rounded">
+            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
+            </svg>
+          </button>
+          <div className="text-lg font-semibold">{months[currentMonth]} {currentYear}</div>
+          <button onClick={nextMonth} className="p-1 hover:bg-gray-200 rounded">
+            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Days of Week */}
+        <div className="grid grid-cols-7 gap-1 mb-2">
+          {['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'].map((day) => (
+            <div key={day} className="text-center text-sm font-medium text-gray-600 p-2">
+              {day}
+            </div>
+          ))}
+        </div>
+
+        {/* Calendar Days */}
+        <div className="grid grid-cols-7 gap-1">
+          {days.map((day, index) => (
+            <div key={index} className="aspect-square">
+              {day && (
+                <button
+                  onClick={() => handleDateSelect(day)}
+                  className="w-full h-full flex items-center justify-center text-sm hover:bg-teal-100 hover:text-teal-700 rounded transition-colors"
+                >
+                  {day}
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'processing':
+        return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'in-progress':
+        return 'bg-purple-100 text-purple-800 border-purple-200';
+      case 'completed':
+        return 'bg-green-100 text-green-800 border-green-200';
+      case 'cancelled':
+        return 'bg-red-100 text-red-800 border-red-200';
+      default:
+        return 'bg-gray-100 text-gray-800 border-gray-200';
+    }
+  };
+
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return 'Chưa xử lý';
+      case 'processing':
+        return 'Chưa thực hiện';
+      case 'in-progress':
+        return 'Đang thực hiện';
+      case 'completed':
+        return 'Hoàn thành';
+      case 'cancelled':
+        return 'Đơn Hủy';
+      default:
+        return status;
+    }
+  };
+
+  const getTabColor = (tab: string) => {
+    switch (tab) {
+      case 'pending':
+        return 'bg-yellow-500 text-white';
+      case 'processing':
+        return 'bg-blue-500 text-white';
+      case 'completed':
+        return 'bg-green-500 text-white';
+      case 'cancelled':
+        return 'bg-red-500 text-white';
+      case 'all':
+        return 'bg-gray-500 text-white';
+      default:
+        return 'bg-gray-200 text-gray-600';
+    }
+  };
+
+  // Lọc đơn hàng theo tab
+  const filteredOrders = () => {
+    if (activeTab === 'all') return orders;
+    if (activeTab === 'processing') {
+      return orders.filter(order => order.status === 'processing' || order.status === 'in-progress');
+    }
+    return orders.filter(order => order.status === activeTab);
+  };
+
+  const handleStatusChange = (orderId: number, newStatus: 'processing' | 'in-progress' | 'completed' | 'cancelled') => {
+    console.log(`Changing order ${orderId} status to ${newStatus}`);
+  };
+
+  const openReviewModal = (order: ServiceOrder) => {
+    setReviewModal({ isOpen: true, order });
+  };
+
+  const closeReviewModal = () => {
+    setReviewModal({ isOpen: false, order: null });
+  };
+
+  return (
+    <div className="p-6 bg-gray-50 min-h-screen">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center space-x-4">
+          <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center">
+            <div className="w-12 h-12 bg-orange-200 rounded-full flex items-center justify-center">
+              <span className="text-orange-600 font-bold text-lg">P</span>
+            </div>
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-800 flex items-center">
+              Chào mừng quay trở lại, ✨
+            </h1>
+            <p className="text-lg text-gray-600">
+              Cửa hàng chăm sóc sức khỏe thú cưng Pettiny
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Status Tabs */}
+      <div className="flex space-x-2 mb-6">
+        {[
+          { key: 'pending', label: 'Chưa xử lý' },
+          { key: 'processing', label: 'Đang xử lý' },
+          { key: 'completed', label: 'Hoàn thành' },
+          { key: 'cancelled', label: 'Đơn Hủy' },
+          { key: 'all', label: 'Tất Cả' }
+        ].map((tab) => (
+          <button
+            key={tab.key}
+            onClick={() => setActiveTab(tab.key as any)}
+            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+              activeTab === tab.key
+                ? getTabColor(tab.key)
+                : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Filters */}
+      <div className="flex items-center space-x-4 mb-6">
+        <div className="flex items-center space-x-2">
+          <svg className="w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" clipRule="evenodd" />
+          </svg>
+        </div>
+        
+        {/* Custom Date Picker */}
+        <div className="relative">
+          <button
+            onClick={() => setShowDatePicker(!showDatePicker)}
+            className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-700 min-w-[160px] flex items-center justify-between"
+          >
+            <span>{selectedDate || 'dd/mm/yyyy'}</span>
+            <svg className="w-4 h-4 ml-2" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+            </svg>
+          </button>
+          
+          {showDatePicker && <CustomDatePicker />}
+        </div>
+        
+        <select 
+          className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white min-w-[300px]"
+          value={selectedBranch}
+          onChange={(e) => setSelectedBranch(e.target.value)}
+        >
+          <option value="">Chi nhánh</option>
+          <option value="vinhome">Chi nhánh 1: Vinhome Grand Park, Quận 9, Thành Phố Hồ Chí Minh</option>
+          <option value="branch2">Chi nhánh 2</option>
+        </select>
+
+        {/* Clear filter button */}
+        {selectedDate && (
+          <button
+            onClick={() => setSelectedDate('')}
+            className="px-3 py-2 bg-gray-200 text-gray-600 rounded-lg hover:bg-gray-300 transition-colors"
+            title="Xóa bộ lọc ngày"
+          >
+            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+            </svg>
+          </button>
+        )}
+      </div>
+
+      {/* Orders Table */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-gray-50 border-b border-gray-200">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">STT</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tên khách hàng</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dịch vụ</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Giờ bắt đầu</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Giờ kết thúc</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ghi chú</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Đơn giá</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trạng thái</th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {filteredOrders().map((order, orderIndex) => (
+                <React.Fragment key={order.id}>
+                  {/* Branch Header */}
+                  <tr className="bg-gray-100">
+                    <td colSpan={8} className="px-6 py-3 text-sm font-medium text-gray-700">
+                      {order.branch}
+                    </td>
+                  </tr>
+                  
+                  {/* Customer Row */}
+                  <tr className="border-b border-gray-100">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      {orderIndex + 1}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {order.customerName}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-900">
+                      {/* Để trống cho dịch vụ sẽ hiển thị ở dưới */}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-900">
+                      {order.startTime}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-900">
+                      {order.endTime}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-900">
+                      {/* Để trống cho ghi chú sẽ hiển thị ở dưới */}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-900">
+                      {/* Để trống cho đơn giá sẽ hiển thị ở dưới */}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex space-x-2">
+                        {order.status === 'pending' && (
+                          <>
+                            <button
+                              onClick={() => handleStatusChange(order.id, 'processing')}
+                              className="px-3 py-1 bg-blue-500 text-white text-xs rounded-full hover:bg-blue-600"
+                            >
+                              Xử lý
+                            </button>
+                            <button
+                              onClick={() => handleStatusChange(order.id, 'cancelled')}
+                              className="px-3 py-1 bg-red-500 text-white text-xs rounded-full hover:bg-red-600"
+                            >
+                              Hủy
+                            </button>
+                          </>
+                        )}
+                        {(order.status === 'processing' || order.status === 'in-progress') && (
+                          <span className={`px-3 py-1 text-xs rounded-full border ${getStatusColor(order.status)}`}>
+                            {getStatusText(order.status)}
+                          </span>
+                        )}
+                        {order.status === 'completed' && (
+                          <div className="flex space-x-2">
+                            <span className={`px-3 py-1 text-xs rounded-full border ${getStatusColor(order.status)}`}>
+                              {getStatusText(order.status)}
+                            </span>
+                            <button
+                              onClick={() => openReviewModal(order)}
+                              className="px-3 py-1 bg-blue-500 text-white text-xs rounded-full hover:bg-blue-600"
+                            >
+                              Chi tiết
+                            </button>
+                          </div>
+                        )}
+                        {order.status === 'cancelled' && (
+                          <span className={`px-3 py-1 text-xs rounded-full border ${getStatusColor(order.status)}`}>
+                            {getStatusText(order.status)}
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+
+                  {/* Services Rows */}
+                  {order.services.map((service, serviceIndex) => (
+                    <tr key={service.id} className="bg-white">
+                      <td className="px-6 py-3"></td>
+                      <td className="px-6 py-3 text-sm text-gray-900">{serviceIndex + 1}</td>
+                      <td className="px-6 py-3 text-sm text-gray-900">{service.name}</td>
+                      <td className="px-6 py-3"></td>
+                      <td className="px-6 py-3"></td>
+                      <td className="px-6 py-3 text-sm text-gray-900">{service.note}</td>
+                      <td className="px-6 py-3 text-sm text-gray-900">
+                        {service.price.toLocaleString('vi-VN')}
+                      </td>
+                      <td className="px-6 py-3"></td>
+                    </tr>
+                  ))}
+
+                  {/* Total Row */}
+                  <tr className="bg-gray-50 border-b-2 border-gray-200">
+                    <td className="px-6 py-3"></td>
+                    <td className="px-6 py-3 text-sm font-medium text-gray-900">
+                      Tổng : {order.services.length} dịch vụ
+                    </td>
+                    <td className="px-6 py-3"></td>
+                    <td className="px-6 py-3"></td>
+                    <td className="px-6 py-3"></td>
+                    <td className="px-6 py-3 text-sm font-medium text-gray-900">Thành tiền:</td>
+                    <td className="px-6 py-3 text-sm font-medium text-gray-900">
+                      {order.totalAmount.toLocaleString('vi-VN')}
+                    </td>
+                    <td className="px-6 py-3"></td>
+                  </tr>
+                </React.Fragment>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Review Modal */}
+      <ReviewModal
+        isOpen={reviewModal.isOpen}
+        onClose={closeReviewModal}
+        order={reviewModal.order}
+      />
+
+      {/* Click outside to close date picker */}
+      {showDatePicker && (
+        <div 
+          className="fixed inset-0 z-40" 
+          onClick={() => setShowDatePicker(false)}
+        />
+      )}
+    </div>
+  );
+};
+
+export default OrderManagement;
+
+```
+
+### src\pages\Shop\ServiceManagement.tsx
+```tsx
+import React, { useState } from 'react';
+
+interface Service {
+  id: number;
+  name: string;
+  description: string;
+  price: number;
+  duration: number; // phút
+  category: string;
+  status: 'active' | 'inactive';
+  image: string;
+  createdAt: string;
+}
+
+interface ServiceModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  service: Service | null;
+  onSave: (service: Omit<Service, 'id' | 'createdAt'>) => void;
+}
+
+const ServiceModal: React.FC<ServiceModalProps> = ({ isOpen, onClose, service, onSave }) => {
+  const [formData, setFormData] = useState({
+    name: service?.name || '',
+    description: service?.description || '',
+    price: service?.price || 0,
+    duration: service?.duration || 60,
+    category: service?.category || '',
+    status: service?.status || 'active' as 'active' | 'inactive',
+    image: service?.image || ''
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSave(formData);
+    onClose();
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: name === 'price' || name === 'duration' ? Number(value) : value
+    }));
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+      <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto shadow-2xl">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-xl font-bold text-gray-800">
+            {service ? 'Chỉnh sửa dịch vụ' : 'Thêm dịch vụ mới'}
+          </h2>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-full hover:bg-gray-100"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Tên dịch vụ</label>
+            <input
+              type="text"
+              name="name"
+              value={formData.name}
+              onChange={handleChange}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Mô tả</label>
+            <textarea
+              name="description"
+              value={formData.description}
+              onChange={handleChange}
+              rows={3}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+              required
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Giá (VNĐ)</label>
+              <input
+                type="number"
+                name="price"
+                value={formData.price}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Thời gian (phút)</label>
+              <input
+                type="number"
+                name="duration"
+                value={formData.duration}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                required
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Danh mục</label>
+            <select
+              name="category"
+              value={formData.category}
+              onChange={handleChange}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+              required
+            >
+              <option value="">Chọn danh mục</option>
+              <option value="grooming">Chăm sóc lông</option>
+              <option value="bathing">Tắm rửa</option>
+              <option value="healthcare">Chăm sóc sức khỏe</option>
+              <option value="training">Huấn luyện</option>
+              <option value="boarding">Lưu trú</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Trạng thái</label>
+            <select
+              name="status"
+              value={formData.status}
+              onChange={handleChange}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+            >
+              <option value="active">Hoạt động</option>
+              <option value="inactive">Tạm dừng</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Hình ảnh (URL)</label>
+            <input
+              type="url"
+              name="image"
+              value={formData.image}
+              onChange={handleChange}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+              placeholder="https://example.com/image.jpg"
+            />
+          </div>
+
+          <div className="flex justify-end space-x-3 mt-6">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+            >
+              Hủy
+            </button>
+            <button
+              type="submit"
+              className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors"
+            >
+              {service ? 'Cập nhật' : 'Thêm mới'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+const ServiceManagement = () => {
+  const [services, setServices] = useState<Service[]>([
+    {
+      id: 1,
+      name: 'Tắm rửa cho chó',
+      description: 'Dịch vụ tắm rửa chuyên nghiệp cho chó với sản phẩm cao cấp',
+      price: 200000,
+      duration: 60,
+      category: 'bathing',
+      status: 'active',
+      image: 'https://images.unsplash.com/photo-1583337130417-3346a1be7dee?w=300',
+      createdAt: '2024-12-01'
+    },
+    {
+      id: 2,
+      name: 'Cắt tỉa lông',
+      description: 'Dịch vụ cắt tỉa lông theo yêu cầu, tạo kiểu cho thú cưng',
+      price: 300000,
+      duration: 90,
+      category: 'grooming',
+      status: 'active',
+      image: 'https://images.unsplash.com/photo-1601758228041-f3b2795255f1?w=300',
+      createdAt: '2024-12-02'
+    },
+    {
+      id: 3,
+      name: 'Khám sức khỏe tổng quát',
+      description: 'Kiểm tra sức khỏe định kỳ cho thú cưng',
+      price: 500000,
+      duration: 45,
+      category: 'healthcare',
+      status: 'active',
+      image: 'https://images.unsplash.com/photo-1576201836106-db1758fd1c97?w=300',
+      createdAt: '2024-12-03'
+    }
+  ]);
+
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('');
+  const [selectedStatus, setSelectedStatus] = useState('');
+  const [modal, setModal] = useState<{ isOpen: boolean; service: Service | null }>({
+    isOpen: false,
+    service: null
+  });
+
+  // Filter services
+  const filteredServices = services.filter(service => {
+    const matchesSearch = service.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         service.description.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory = !selectedCategory || service.category === selectedCategory;
+    const matchesStatus = !selectedStatus || service.status === selectedStatus;
+    
+    return matchesSearch && matchesCategory && matchesStatus;
+  });
+
+  const handleAddService = () => {
+    setModal({ isOpen: true, service: null });
+  };
+
+  const handleEditService = (service: Service) => {
+    setModal({ isOpen: true, service });
+  };
+
+  const handleDeleteService = (id: number) => {
+    if (window.confirm('Bạn có chắc chắn muốn xóa dịch vụ này?')) {
+      setServices(prev => prev.filter(service => service.id !== id));
+    }
+  };
+
+  const handleSaveService = (serviceData: Omit<Service, 'id' | 'createdAt'>) => {
+    if (modal.service) {
+      // Update existing service
+      setServices(prev => prev.map(service => 
+        service.id === modal.service!.id 
+          ? { ...service, ...serviceData }
+          : service
+      ));
+    } else {
+      // Add new service
+      const newService: Service = {
+        ...serviceData,
+        id: Math.max(...services.map(s => s.id)) + 1,
+        createdAt: new Date().toISOString().split('T')[0]
+      };
+      setServices(prev => [...prev, newService]);
+    }
+  };
+
+  const getCategoryName = (category: string) => {
+    const categories = {
+      grooming: 'Chăm sóc lông',
+      bathing: 'Tắm rửa',
+      healthcare: 'Chăm sóc sức khỏe',
+      training: 'Huấn luyện',
+      boarding: 'Lưu trú'
+    };
+    return categories[category as keyof typeof categories] || category;
+  };
+
+  const getStatusColor = (status: string) => {
+    return status === 'active' 
+      ? 'bg-green-100 text-green-800 border-green-200'
+      : 'bg-red-100 text-red-800 border-red-200';
+  };
+
+  const getStatusText = (status: string) => {
+    return status === 'active' ? 'Hoạt động' : 'Tạm dừng';
+  };
+
+  return (
+    <div className="p-6 bg-gray-50 min-h-screen">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center space-x-4">
+          <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center">
+            <div className="w-12 h-12 bg-orange-200 rounded-full flex items-center justify-center">
+              <span className="text-orange-600 font-bold text-lg">P</span>
+            </div>
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-800">
+              Dịch vụ của tôi
+            </h1>
+            <p className="text-lg text-gray-600">
+              Quản lý các dịch vụ của cửa hàng
+            </p>
+          </div>
+        </div>
+        <button
+          onClick={handleAddService}
+          className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors flex items-center space-x-2"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+          </svg>
+          <span>Thêm dịch vụ</span>
+        </button>
+      </div>
+
+      {/* Search and Filters */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          {/* Search */}
+          <div className="md:col-span-2">
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Tìm kiếm dịch vụ..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+              />
+              <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+          </div>
+
+          {/* Category Filter */}
+          <div>
+            <select
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+            >
+              <option value="">Tất cả danh mục</option>
+              <option value="grooming">Chăm sóc lông</option>
+              <option value="bathing">Tắm rửa</option>
+              <option value="healthcare">Chăm sóc sức khỏe</option>
+              <option value="training">Huấn luyện</option>
+              <option value="boarding">Lưu trú</option>
+            </select>
+          </div>
+
+          {/* Status Filter */}
+          <div>
+            <select
+              value={selectedStatus}
+              onChange={(e) => setSelectedStatus(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+            >
+              <option value="">Tất cả trạng thái</option>
+              <option value="active">Hoạt động</option>
+              <option value="inactive">Tạm dừng</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      {/* Services Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {filteredServices.map((service) => (
+          <div key={service.id} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+            {/* Service Image */}
+            <div className="h-48 bg-gray-200">
+              {service.image ? (
+                <img
+                  src={service.image}
+                  alt={service.name}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-gray-400">
+                  <svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                </div>
+              )}
+            </div>
+
+            {/* Service Info */}
+            <div className="p-4">
+              <div className="flex justify-between items-start mb-2">
+                <h3 className="text-lg font-semibold text-gray-800">{service.name}</h3>
+                <span className={`px-2 py-1 text-xs rounded-full border ${getStatusColor(service.status)}`}>
+                  {getStatusText(service.status)}
+                </span>
+              </div>
+
+              <p className="text-gray-600 text-sm mb-3 line-clamp-2">{service.description}</p>
+
+              <div className="space-y-2 mb-4">
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-500">Danh mục:</span>
+                  <span className="text-gray-800">{getCategoryName(service.category)}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-500">Giá:</span>
+                  <span className="text-gray-800 font-medium">{service.price.toLocaleString('vi-VN')} VNĐ</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-500">Thời gian:</span>
+                  <span className="text-gray-800">{service.duration} phút</span>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex space-x-2">
+                <button
+                  onClick={() => handleEditService(service)}
+                  className="flex-1 px-3 py-2 bg-blue-500 text-white text-sm rounded-lg hover:bg-blue-600 transition-colors flex items-center justify-center space-x-1"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  </svg>
+                  <span>Sửa</span>
+                </button>
+                <button
+                  onClick={() => handleDeleteService(service.id)}
+                  className="flex-1 px-3 py-2 bg-red-500 text-white text-sm rounded-lg hover:bg-red-600 transition-colors flex items-center justify-center space-x-1"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                  <span>Xóa</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Empty State */}
+      {filteredServices.length === 0 && (
+        <div className="text-center py-12">
+          <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+          </svg>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Không tìm thấy dịch vụ</h3>
+          <p className="text-gray-500">Thử thay đổi bộ lọc hoặc thêm dịch vụ mới</p>
+        </div>
+      )}
+
+      {/* Service Modal */}
+      <ServiceModal
+        isOpen={modal.isOpen}
+        onClose={() => setModal({ isOpen: false, service: null })}
+        service={modal.service}
+        onSave={handleSaveService}
+      />
+    </div>
+  );
+};
+
+export default ServiceManagement;
+
+```
+
+### src\pages\Shop\ShopDashboard.tsx
+```tsx
+import React from 'react';
+import { 
+  BarChart, 
+  Bar, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell
+} from 'recharts';
+
+const AdminDashboard = () => {
+  // Dữ liệu mẫu cho biểu đồ cột
+  const revenueData = [
+    { name: 'T1', value: 400 },
+    { name: 'T2', value: 300 },
+    { name: 'T3', value: 500 },
+    { name: 'T4', value: 280 },
+    { name: 'T5', value: 390 },
+    { name: 'T6', value: 600 },
+    { name: 'T7', value: 320 },
+  ];
+
+  const serviceData = [
+    { name: 'T1', value: 240 },
+    { name: 'T2', value: 139 },
+    { name: 'T3', value: 380 },
+    { name: 'T4', value: 200 },
+    { name: 'T5', value: 278 },
+    { name: 'T6', value: 450 },
+    { name: 'T7', value: 189 },
+  ];
+
+  const productData = [
+    { name: 'T1', value: 340 },
+    { name: 'T2', value: 200 },
+    { name: 'T3', value: 280 },
+    { name: 'T4', value: 180 },
+    { name: 'T5', value: 290 },
+    { name: 'T6', value: 350 },
+    { name: 'T7', value: 220 },
+  ];
+
+
+
+  // Dữ liệu cho biểu đồ tròn dịch vụ
+  const servicePieData = [
+    { name: 'Thành công', value: 70, color: '#4ECDC4' },
+    { name: 'Đang xử lý', value: 18, color: '#45B7D1' },
+    { name: 'Đơn hủy', value: 8, color: '#2E3A59' },
+    { name: 'Chưa xử lý', value: 4, color: '#96CEB4' },
+  ];
+
+  // Màu sắc cho biểu đồ tròn
+  const COLORS = ['#4ECDC4', '#45B7D1', '#2E3A59', '#96CEB4'];
+
+  // Component Legend tùy chỉnh
+  const CustomLegend = ({ data }: { data: any[] }) => (
+    <div className="flex flex-col space-y-2 ml-4">
+      {data.map((item, index) => (
+        <div key={index} className="flex items-center space-x-2">
+          <div 
+            className="w-3 h-3 rounded-sm"
+            style={{ backgroundColor: item.color }}
+          />
+          <span className="text-sm text-gray-700 font-medium">
+            {item.name}
+          </span>
+          <span className="text-sm text-gray-500">
+            {item.value}%
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+
+  return (
+    <div className="p-6 bg-gray-50 min-h-screen">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center space-x-4">
+          <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center">
+            <div className="w-12 h-12 bg-orange-200 rounded-full flex items-center justify-center">
+              <span className="text-orange-600 font-bold text-lg">P</span>
+            </div>
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-800 flex items-center">
+              Chào mừng quay trở lại, ✨
+            </h1>
+            <p className="text-lg text-gray-600">
+              Cửa hàng chăm sóc sức khỏe thú cưng Pettiny
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Filters */}
+      <div className="flex items-center space-x-4 mb-6">
+        <div className="flex items-center space-x-2">
+          <svg className="w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" clipRule="evenodd" />
+          </svg>
+        </div>
+        
+        <select className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+          <option>Thời gian</option>
+          <option>7 ngày qua</option>
+          <option>30 ngày qua</option>
+          <option>3 tháng qua</option>
+        </select>
+        
+        <select className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white min-w-[300px]">
+          <option>Chi nhánh</option>
+          <option>Chi nhánh 1: Vinhome Grand Park, Quận 9, Thành Phố Hồ Chí Minh</option>
+          <option>Chi nhánh 2</option>
+        </select>
+      </div>
+
+      {/* Charts Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Biểu đồ doanh thu */}
+        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+          <h3 className="text-lg font-semibold mb-4 text-gray-800">Biểu đồ doanh thu</h3>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={revenueData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+              <XAxis dataKey="name" axisLine={false} tickLine={false} />
+              <YAxis axisLine={false} tickLine={false} />
+              <Tooltip 
+                contentStyle={{
+                  backgroundColor: 'white',
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '8px',
+                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                }}
+              />
+              <Bar dataKey="value" fill="#f97316" radius={[4, 4, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+
+        {/* Biểu đồ số lượng đơn dịch vụ */}
+        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+          <h3 className="text-lg font-semibold mb-4 text-gray-800">Biểu đồ số lượng đơn dịch vụ</h3>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={serviceData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+              <XAxis dataKey="name" axisLine={false} tickLine={false} />
+              <YAxis axisLine={false} tickLine={false} />
+              <Tooltip 
+                contentStyle={{
+                  backgroundColor: 'white',
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '8px',
+                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                }}
+              />
+              <Bar dataKey="value" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+
+        {/* Biểu đồ số lượng đơn sản phẩm */}
+        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+          <h3 className="text-lg font-semibold mb-4 text-gray-800">Biểu đồ số lượng đơn sản phẩm</h3>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={productData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+              <XAxis dataKey="name" axisLine={false} tickLine={false} />
+              <YAxis axisLine={false} tickLine={false} />
+              <Tooltip 
+                contentStyle={{
+                  backgroundColor: 'white',
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '8px',
+                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                }}
+              />
+              <Bar dataKey="value" fill="#eab308" radius={[4, 4, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+
+        {/* Biểu đồ tỷ lệ thành công của đơn hàng và dịch vụ */}
+        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+          <h3 className="text-lg font-semibold mb-4 text-gray-800">
+            Biểu đồ tỷ lệ thành công của đơn hàng và dịch vụ
+          </h3>
+          
+
+            {/* Biểu đồ tròn Dịch vụ */}
+            <div className="text-center">
+              <h4 className="text-md font-medium mb-2 text-gray-700">Dịch vụ</h4>
+              <div className="flex items-center justify-center">
+                <ResponsiveContainer width={180} height={180}>
+                  <PieChart>
+                    <Pie
+                      data={servicePieData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={30}
+                      outerRadius={70}
+                      paddingAngle={2}
+                      dataKey="value"
+                    >
+                      {servicePieData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip formatter={(value) => [`${value}%`, 'Tỷ lệ']} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+          {/* Legend chung */}
+          <div className="mt-4 flex justify-center">
+            <CustomLegend data={servicePieData} />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default AdminDashboard;
 
 ```
 
@@ -11090,30 +13657,87 @@ export default function Buttons() {
 
 ### src\routes\index.tsx
 ```tsx
+// Import các component cần thiết từ thư viện react-router-dom
 import { Routes, Route, Navigate } from "react-router-dom";
+// Import component dùng để bảo vệ route (chỉ cho phép truy cập nếu đã đăng nhập)
 import { ProtectedRoute } from "../services/ProtectedRoute";
+
+// Import các trang (pages) và layout
 import LoginPage from "../pages/Login";
 import HomePage from "../pages/Home";
-import AppLayoutForUser from "../layout/AppLayoutForUser";
+import AppLayoutForUser from "../layout/AppLayoutForUser"; // Layout cho user đã đăng nhập
+import AppLayoutForGuest from "../layout/AppLayoutForGuest"; // Layout cho user chưa đăng nhập
+import RegisterType from "@/pages/RegisterType";
+import RegisterPage from "@/pages/Register";
+import ShopDashboard from "../pages/Shop/ShopDashboard";
+import OrderManagement from "@/pages/Shop/OrderManagement";
+import ServiceManagement from "@/pages/Shop/ServiceManagement";
+import HotelRoomManagement from "@/pages/Shop/HotelRoomManagement";
 
+import RegisterCustomer from "@/pages/RegisterCustomer"; // Trang đăng ký cho khách hàng
+import AppLayoutForShop from "../layout/AppLayoutForShop"; // Layout cho Shop/Admin
+import SmartRedirect from "@/components/common/SmartRedirect"; // Component điều hướng thông minh dựa trên trạng thái đăng nhập
+import RegisterShop from "@/pages/RegisterShop"; // Trang đăng ký cho Shop
+
+// Component chứa toàn bộ định nghĩa các route
 const AppRoutes = () => {
   return (
     <Routes>
+      {/* --------- Các Route Public --------- */}
+      {/* Trang đăng nhập */}
       <Route path="/login" element={<LoginPage />} />
+      {/* Trang chọn loại tài khoản để đăng ký */}
+      <Route path="/registertype" element={<RegisterType />} />
+      {/* Trang đăng ký tổng quát */}
+      <Route path="/register" element={<RegisterPage />} />
+      {/* Trang đăng ký dành cho khách hàng */}
+      <Route path="/register-customer" element={<RegisterCustomer />} />
+      {/* Trang đăng ký dành cho Shop */}
+      <Route path="/registershop" element={<RegisterShop />} />
 
-      {/* Wrap HomePage with layout components */}
+      {/* --------- Route cho người dùng chưa đăng nhập (Guest Layout) --------- */}
+      <Route path="/guest/*" element={<AppLayoutForGuest />}>
+        {/* Mặc định chuyển hướng tới trang Home */}
+        <Route path="home" element={<HomePage />} />
+        <Route index element={<Navigate to="home" replace />} />
+      </Route>
+
+      {/* --------- Route cho người dùng đã đăng nhập (User Layout) --------- */}
       <Route
-        path="/home"
+        path="/app/*"
         element={
           <ProtectedRoute>
-            <AppLayoutForUser>
-              <HomePage />
-            </AppLayoutForUser>
+            {" "}
+            {/* Chặn truy cập nếu chưa đăng nhập */}
+            <AppLayoutForUser />
           </ProtectedRoute>
         }
-      />
+      >
+        {/* Trang home sau khi đăng nhập */}
+        <Route path="home" element={<HomePage />} />
+        <Route index element={<Navigate to="home" replace />} />
+      </Route>
 
-      <Route path="/" element={<Navigate to="/home" />} />
+      {/* --------- Route dành cho Shop/Admin (Admin Layout) --------- */}
+      <Route
+        path="/admin/*"
+        element={
+          // TODO: Đang bỏ qua việc bảo vệ route, nên thêm lại ProtectedRoute nếu cần
+          // <ProtectedRoute>
+          <AppLayoutForShop />
+          // </ProtectedRoute>
+        }
+      >
+        {/* Dashboard chính của Shop */}
+        <Route path="dashboard" element={<ShopDashboard />} />
+        <Route path="orders" element={<OrderManagement />} />
+        <Route path="services" element={<ServiceManagement />} />
+        <Route path="hotels" element={<HotelRoomManagement/>} />
+        <Route index element={<Navigate to="dashboard" replace />} />
+      </Route>
+
+      {/* --------- Trang gốc ("/") sẽ redirect thông minh theo trạng thái đăng nhập --------- */}
+      <Route path="/" element={<SmartRedirect />} />
     </Routes>
   );
 };
@@ -11205,13 +13829,17 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
 
 ### src\store\store.ts
 ```ts
-// src/store/store.ts
+// store/store.ts
 import { configureStore } from "@reduxjs/toolkit";
 import authReducer from "./slices/authSlice";
+import registeReducer from "./slices/registerSlice";
+import registerCustomerReducer from "./slices/registerCustomerSlice";
 
 export const store = configureStore({
   reducer: {
     auth: authReducer,
+    register: registeReducer,
+    registerCustomer: registerCustomerReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
@@ -11532,8 +14160,354 @@ export default userSlice.reducer;
 
 ```
 
+### src\store\slices\registerCustomerSlice.ts
+```ts
+// store/slices/registerCustomerSlice.ts
+import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import type { PayloadAction } from "@reduxjs/toolkit";
+import api from "@/config/axios";
+
+// Interfaces
+interface RegisterCustomerState {
+  loading: boolean;
+  success: boolean;
+  error: {
+    code: number;
+    message: string;
+  } | null;
+}
+
+interface RegisterCustomerRequest {
+  account_id: string;
+  full_name: string;
+  gender: string;
+  birthday: string; // ISO string format
+}
+
+interface RegisterCustomerResponse {
+  message: string;
+  data: {
+    account_id: string;
+    full_name: string;
+    gender: string;
+    birthday: string;
+  };
+}
+
+interface ErrorResponse {
+  error: number;
+  message: string;
+}
+
+// Initial state
+const initialState: RegisterCustomerState = {
+  loading: false,
+  success: false,
+  error: null,
+};
+
+// Async thunk for creating customer profile
+export const registerCustomer = createAsyncThunk<
+  RegisterCustomerResponse,
+  RegisterCustomerRequest,
+  { rejectValue: ErrorResponse }
+>("registerCustomer/create", async (data, { rejectWithValue }) => {
+  try {
+    const response = await api.post(
+      `Customer/${data.account_id}`,
+      {
+        account_id: data.account_id,
+        full_name: data.full_name,
+        gender: data.gender,
+        birthday: data.birthday,
+      },
+      {
+        headers: {
+          "Content-Type": "application/json",
+          accept: "*/*",
+        },
+      }
+    );
+
+    console.log("✅ Create Customer Response:", response.data);
+
+    if (!response.data) {
+      return rejectWithValue({
+        error: 1,
+        message: "Phản hồi từ server không hợp lệ",
+      });
+    }
+
+    return response.data;
+  } catch (err: any) {
+    console.error("❌ Create Customer Error:", err.response?.data);
+
+    if (err.response && err.response.data) {
+      return rejectWithValue({
+        error: 1,
+        message: err.response.data.message || "Tạo hồ sơ khách hàng thất bại",
+      });
+    }
+
+    return rejectWithValue({
+      error: 1,
+      message: err.message || "Không thể kết nối đến máy chủ",
+    });
+  }
+});
+
+// Register customer slice
+const registerCustomerSlice = createSlice({
+  name: "registerCustomer",
+  initialState,
+  reducers: {
+    resetRegisterCustomerState: (state) => {
+      Object.assign(state, initialState);
+    },
+    clearRegisterCustomerError: (state) => {
+      state.error = null;
+    },
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(registerCustomer.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+        state.success = false;
+      })
+      .addCase(
+        registerCustomer.fulfilled,
+        (state, action: PayloadAction<RegisterCustomerResponse>) => {
+          state.loading = false;
+          state.success = true;
+          state.error = null;
+          console.log(
+            "✅ Customer profile created successfully:",
+            action.payload.message
+          );
+        }
+      )
+      .addCase(registerCustomer.rejected, (state, action) => {
+        state.loading = false;
+        state.success = false;
+        if (action.payload) {
+          state.error = {
+            code: action.payload.error,
+            message: action.payload.message,
+          };
+        } else {
+          state.error = {
+            code: 1,
+            message: action.error.message || "Tạo hồ sơ khách hàng thất bại",
+          };
+        }
+      });
+  },
+});
+
+export const { resetRegisterCustomerState, clearRegisterCustomerError } =
+  registerCustomerSlice.actions;
+export default registerCustomerSlice.reducer;
+
+```
+
+### src\store\slices\registerSlice.ts
+```ts
+// store/slices/registerSlice.ts
+import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import type { PayloadAction } from "@reduxjs/toolkit";
+import api from "@/config/axios";
+
+// Interfaces
+interface RegisterState {
+  loading: boolean;
+  success: boolean;
+  error: {
+    code: number;
+    message: string;
+  } | null;
+  accountData: any | null; // ✅ Thêm để lưu thông tin account
+}
+
+interface RegisterRequest {
+  username: string;
+  email: string;
+  password: string;
+  role: string;
+}
+
+interface RegisterResponse {
+  message: string;
+  data: {
+    username: string;
+    password: string;
+    email: string;
+    img_url: string | null;
+    img_url_id: string | null;
+  };
+}
+
+interface ErrorResponse {
+  error: number;
+  message: string;
+}
+
+// Initial state
+const initialState: RegisterState = {
+  loading: false,
+  success: false,
+  error: null,
+  accountData: null, // ✅ Thêm vào initial state
+};
+
+// Async thunk for registration
+// Cập nhật async thunk
+export const register = createAsyncThunk<
+  RegisterResponse,
+  RegisterRequest,
+  { rejectValue: ErrorResponse }
+>("register/submit", async (data, { rejectWithValue }) => {
+  try {
+    // Create FormData object
+    const formData = new FormData();
+    formData.append("username", data.username);
+    formData.append("email", data.email);
+    formData.append("password", data.password);
+    formData.append("img", "undefined");
+    if (data.role) {
+      formData.append("role", data.role);
+    }
+
+    const response = await api.post("account/register", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+        accept: "*/*",
+      },
+    });
+
+    console.log("✅ Register Response:", response.data);
+
+    if (!response.data) {
+      return rejectWithValue({
+        error: 1,
+        message: "Phản hồi từ server không hợp lệ",
+      });
+    }
+
+    return response.data; // Trả về { message, data }
+  } catch (err: any) {
+    console.error("❌ Register Error status:", err.response?.status);
+    console.error("❌ Register Error data:", err.response?.data);
+
+    if (err.response && err.response.data) {
+      return rejectWithValue({
+        error: 1,
+        message: err.response.data.message || "Đăng ký thất bại",
+      });
+    }
+
+    return rejectWithValue({
+      error: 1,
+      message: err.message || "Không thể kết nối đến máy chủ",
+    });
+  }
+});
+
+// Register slice
+const registerSlice = createSlice({
+  name: "register",
+  initialState,
+  reducers: {
+    resetRegisterState: (state) => {
+      Object.assign(state, initialState);
+    },
+    clearRegisterError: (state) => {
+      state.error = null;
+    },
+  },
+  // Cập nhật extraReducers
+  extraReducers: (builder) => {
+    builder
+      .addCase(register.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+        state.success = false;
+      })
+      .addCase(
+        register.fulfilled,
+        (state, action: PayloadAction<RegisterResponse>) => {
+          state.loading = false;
+          state.success = true;
+          state.error = null;
+          state.accountData = action.payload.data; // ✅ Lưu account data
+
+          console.log("✅ Registration successful:", action.payload.message);
+          // Không auto login, chỉ hiển thị thông báo thành công
+        }
+      )
+      .addCase(register.rejected, (state, action) => {
+        state.loading = false;
+        state.success = false;
+        state.accountData = null; // ✅ Reset khi lỗi
+        if (action.payload) {
+          state.error = {
+            code: action.payload.error,
+            message: action.payload.message,
+          };
+        } else {
+          state.error = {
+            code: 1,
+            message: action.error.message || "Đăng ký thất bại",
+          };
+        }
+      });
+  },
+});
+
+export const { resetRegisterState, clearRegisterError } = registerSlice.actions;
+export default registerSlice.reducer;
+
+```
+
 ### src\types\auth.ts
 ```ts
+
+```
+
+### src\types\room.ts
+```ts
+// types/hotel.ts
+export interface Hotel {
+  id: number;
+  name: string;
+  description: string;
+  total_room: number;
+  available_room: number;
+  shop_id: number;
+  sub_address_id: number;
+  is_active: boolean;
+  star: number;
+  created_at?: Date;
+  updated_at?: Date;
+}
+
+export interface Room {
+  id: number;
+  hotel_id: number;
+  room_number: string;
+  room_type: 'VIP' | 'Standard' | 'Economy' | 'Suite';
+  max_capability: number;
+  daily_price: number;
+  is_available: boolean;
+  amenities: string;
+  star: number;
+  created_at?: Date;
+  updated_at?: Date;
+}
+
+export interface HotelWithRooms extends Hotel {
+  rooms: Room[];
+}
 
 ```
 
