@@ -1,9 +1,28 @@
-// File: src/pages/RegisterPage.tsx
 import { User, Home, Store } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 export default function RegisterType() {
   const navigate = useNavigate();
+
+  // ✅ Handler cho Khách Hàng
+  const handleCustomerChoice = () => {
+    navigate("/register", {
+      state: {
+        userType: "customer",
+        fromRegisterType: true,
+      },
+    });
+  };
+
+  // ✅ Handler cho Cửa Hàng
+  const handleShopChoice = () => {
+    navigate("/register", {
+      state: {
+        userType: "shop",
+        fromRegisterType: true,
+      },
+    });
+  };
 
   return (
     <div className="min-h-screen flex bg-white relative">
@@ -25,9 +44,9 @@ export default function RegisterType() {
           </p>
 
           <form className="space-y-4">
-            {/* Nút Khách Hàng */}
+            {/* ✅ Nút Khách Hàng - Updated */}
             <button
-              onClick={() => navigate("/register")}
+              onClick={handleCustomerChoice}
               type="button"
               className="w-full bg-[#2A9D8F] text-white py-3 px-4 rounded-lg hover:bg-[#228B7E] transition-all duration-200 flex items-center justify-center space-x-3 font-medium shadow-md hover:shadow-lg"
             >
@@ -35,9 +54,9 @@ export default function RegisterType() {
               <span>Khách Hàng</span>
             </button>
 
-            {/* Nút Cửa Hàng */}
+            {/* ✅ Nút Cửa Hàng - Updated */}
             <button
-              onClick={() => navigate("/registershop")}
+              onClick={handleShopChoice}
               type="button"
               className="w-full bg-[#2A9D8F] text-white py-3 px-4 rounded-lg hover:bg-[#228B7E] transition-all duration-200 flex items-center justify-center space-x-3 font-medium shadow-md hover:shadow-lg"
             >

@@ -1,7 +1,7 @@
 // pages/Register/index.tsx
 import { useEffect, useState } from "react";
 import { Eye, EyeOff, User, Mail, Home } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import type { AppDispatch, RootState } from "@/store/store";
 import { register, resetRegisterState } from "@/store/slices/registerSlice";
@@ -24,6 +24,7 @@ export default function RegisterPage() {
   });
 
   const navigate = useNavigate();
+  const location = useLocation();
   const dispatch = useDispatch<AppDispatch>();
 
   // Lấy state từ Redux store
@@ -39,25 +40,42 @@ export default function RegisterPage() {
     };
   }, [dispatch]);
 
-  // ✅ Cập nhật xử lý khi đăng ký thành công
   useEffect(() => {
     if (success && accountData) {
-      toast.success(
-        "Đăng ký tài khoản thành công! Tiếp tục tạo hồ sơ cá nhân."
-      );
+      toast.success("Đăng ký tài khoản thành công!");
 
-      // Truyền account data qua state navigation
-      setTimeout(() => {
-        navigate("/register-customer", {
-          state: {
-            accountData: accountData,
-            fromRegister: true,
-          },
-        });
-      }, 1500);
+      // ✅ Lấy userType từ location state
+      const userType = location.state?.userType;
+      const fromRegisterType = location.state?.fromRegisterType;
+
+      if (fromRegisterType && userType) {
+        setTimeout(() => {
+          if (userType === "customer") {
+            // Chuyển đến trang đăng ký khách hàng
+            navigate("/register-customer", {
+              state: {
+                accountData: accountData,
+                fromRegister: true,
+              },
+            });
+          } else if (userType === "shop") {
+            // Chuyển đến trang đăng ký cửa hàng
+            navigate("/registershop", {
+              state: {
+                accountData: accountData,
+                fromRegister: true,
+              },
+            });
+          }
+        }, 1500);
+      } else {
+        // Nếu không có userType, chuyển về login
+        setTimeout(() => {
+          navigate("/login");
+        }, 2000);
+      }
     }
-  }, [success, accountData, navigate]);
-
+  }, [success, accountData, navigate, location.state]);
   // Xử lý khi có lỗi từ server
   useEffect(() => {
     if (error) {

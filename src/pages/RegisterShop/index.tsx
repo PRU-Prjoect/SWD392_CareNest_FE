@@ -1,169 +1,166 @@
-// File: src/pages/RegisterPage.tsx (thêm vào form đăng ký)
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { Store, Home } from "lucide-react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import type { AppDispatch, RootState } from "@/store/store";
 import {
-  User,
-  Home,
-  Store,
-  Mail,
-  Lock,
-  Phone,
-  MapPin,
-  Briefcase,
-  Clock,
-  ChevronDown,
-} from "lucide-react";
-import { useNavigate } from "react-router-dom";
+  registerShop,
+  resetRegisterShopState,
+} from "@/store/slices/registerShopSlice";
+import { toast } from "react-toastify";
 
-export default function RegisterShop() {
-  const navigate = useNavigate();
+// Danh sách các ngày làm việc
+const workingDayOptions = [
+  "Thứ 2",
+  "Thứ 3",
+  "Thứ 4",
+  "Thứ 5",
+  "Thứ 6",
+  "Thứ 7",
+  "Chủ nhật",
+];
 
-  interface FormData {
-    businessName: string;
-    businessAddress: string;
-    phoneNumber: string;
-    email: string;
-    password: string;
-    confirmPassword: string;
-    businessFields: string[]; // Thay vì never[]
-    representativeName: string;
-    workScheduleType: string;
-    allWeekHours: {
-      startTime: string;
-      endTime: string;
-    };
-    customSchedule: {
-      monday: { isWorking: boolean; startTime: string; endTime: string };
-      tuesday: { isWorking: boolean; startTime: string; endTime: string };
-      wednesday: { isWorking: boolean; startTime: string; endTime: string };
-      thursday: { isWorking: boolean; startTime: string; endTime: string };
-      friday: { isWorking: boolean; startTime: string; endTime: string };
-      saturday: { isWorking: boolean; startTime: string; endTime: string };
-      sunday: { isWorking: boolean; startTime: string; endTime: string };
-    };
-  }
+export default function RegisterShopPage() {
+  // ✅ State variables được cập nhật
+  const [shopName, setShopName] = useState("");
+  const [shopDescription, setShopDescription] = useState("");
+  const [workingDays, setWorkingDays] = useState<string[]>([]); // ✅ Thêm working days
 
-  type DayKey =
-    | "monday"
-    | "tuesday"
-    | "wednesday"
-    | "thursday"
-    | "friday"
-    | "saturday"
-    | "sunday";
-
-  // Sử dụng interface trong useState
-  const [formData, setFormData] = useState<FormData>({
-    businessName: "",
-    businessAddress: "",
-    phoneNumber: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-    businessFields: [] as string[], // Khởi tạo đúng kiểu
-    representativeName: "",
-    workScheduleType: "",
-    allWeekHours: {
-      startTime: "08:00",
-      endTime: "17:00",
-    },
-    customSchedule: {
-      monday: { isWorking: true, startTime: "08:00", endTime: "17:00" },
-      tuesday: { isWorking: true, startTime: "08:00", endTime: "17:00" },
-      wednesday: { isWorking: true, startTime: "08:00", endTime: "17:00" },
-      thursday: { isWorking: true, startTime: "08:00", endTime: "17:00" },
-      friday: { isWorking: true, startTime: "08:00", endTime: "17:00" },
-      saturday: { isWorking: true, startTime: "08:00", endTime: "14:00" },
-      sunday: { isWorking: false, startTime: "08:00", endTime: "17:00" },
-    },
+  // ✅ Validation errors
+  const [errors, setErrors] = useState({
+    shopName: "",
+    shopDescription: "",
+    workingDays: "",
   });
 
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  // const [errors, setErrors] = useState({});
+  const navigate = useNavigate();
+  const location = useLocation();
+  const dispatch = useDispatch<AppDispatch>();
 
-  // Danh sách lĩnh vực kinh doanh
-  const businessFieldOptions = [
-    "Massage",
-    "Grooming",
-    "Lưu trú",
-    "Dịch vụ thú y",
-    "Huấn luyện",
-    "Chụp ảnh",
-    "Tổ chức tiệc",
-    "Chăm sóc đặc biệt",
-  ];
+  // ✅ Lấy account data từ navigation state
+  const accountData = location.state?.accountData;
 
-  // Danh sách các ngày trong tuần
-  const daysOfWeek = [
-    { key: "monday", label: "Thứ 2" },
-    { key: "tuesday", label: "Thứ 3" },
-    { key: "wednesday", label: "Thứ 4" },
-    { key: "thursday", label: "Thứ 5" },
-    { key: "friday", label: "Thứ 6" },
-    { key: "saturday", label: "Thứ 7" },
-    { key: "sunday", label: "Chủ nhật" },
-  ];
+  // Lấy state từ Redux store
+  const { loading, success, error } = useSelector(
+    (state: RootState) => state.registerShop
+  );
 
-  // Xử lý thay đổi checkbox cho lĩnh vực kinh doanh
-  const handleBusinessFieldChange = (field: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      businessFields: prev.businessFields.includes(field)
-        ? prev.businessFields.filter((f) => f !== field)
-        : [...prev.businessFields, field],
-    }));
+  // ✅ Kiểm tra nếu không có account data thì redirect về register
+  useEffect(() => {
+    if (!accountData || !location.state?.fromRegister) {
+      toast.error("Vui lòng đăng ký tài khoản trước");
+      navigate("/register");
+      return;
+    }
+  }, [accountData, location.state, navigate]);
+
+  // Cleanup khi component unmount
+  useEffect(() => {
+    return () => {
+      dispatch(resetRegisterShopState());
+    };
+  }, [dispatch]);
+
+  // Xử lý khi tạo shop profile thành công
+  useEffect(() => {
+    if (success) {
+      toast.success(
+        "Tạo hồ sơ cửa hàng thành công! Bạn có thể đăng nhập ngay bây giờ."
+      );
+      setTimeout(() => {
+        navigate("/login");
+      }, 2000);
+    }
+  }, [success, navigate]);
+
+  // Xử lý khi có lỗi từ server
+  useEffect(() => {
+    if (error) {
+      toast.error(error.message);
+    }
+  }, [error]);
+
+  // ✅ Handler cho working days
+  const handleWorkingDayChange = (day: string) => {
+    setWorkingDays((prev) => {
+      if (prev.includes(day)) {
+        return prev.filter((d) => d !== day);
+      } else {
+        return [...prev, day];
+      }
+    });
   };
 
-  // Xử lý thay đổi input thông thường
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+  const validateForm = () => {
+    const newErrors = {
+      shopName: "",
+      shopDescription: "",
+      workingDays: "",
+    };
+    let isValid = true;
+
+    // Validate shop name
+    if (!shopName.trim()) {
+      newErrors.shopName = "Tên cửa hàng không được để trống";
+      isValid = false;
+    } else if (shopName.trim().length < 2) {
+      newErrors.shopName = "Tên cửa hàng phải có ít nhất 2 ký tự";
+      isValid = false;
+    }
+
+    // Validate shop description
+    if (!shopDescription.trim()) {
+      newErrors.shopDescription = "Mô tả cửa hàng không được để trống";
+      isValid = false;
+    }
+
+    // Validate working days
+    if (workingDays.length === 0) {
+      newErrors.workingDays = "Vui lòng chọn ít nhất một ngày làm việc";
+      isValid = false;
+    }
+
+    setErrors(newErrors);
+    return isValid;
   };
 
-  // Xử lý thay đổi loại lịch làm việc
-  const handleWorkScheduleTypeChange = (e) => {
-    setFormData((prev) => ({
-      ...prev,
-      workScheduleType: e.target.value,
-    }));
-  };
-
-  // Xử lý thay đổi giờ làm việc toàn tuần
-  const handleAllWeekHoursChange = (field, value) => {
-    setFormData((prev) => ({
-      ...prev,
-      allWeekHours: {
-        ...prev.allWeekHours,
-        [field]: value,
-      },
-    }));
-  };
-
-  // Cập nhật function với đúng kiểu
-  const handleCustomScheduleChange = (
-    day: DayKey,
-    field: "isWorking" | "startTime" | "endTime",
-    value: boolean | string
-  ) => {
-    setFormData((prev) => ({
-      ...prev,
-      customSchedule: {
-        ...prev.customSchedule,
-        [day]: {
-          ...prev.customSchedule[day],
-          [field]: value,
-        },
-      },
-    }));
-  };
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Form data:", formData);
+
+    // Validate form trước khi submit
+    if (!validateForm()) {
+      return;
+    }
+
+    // ✅ Sử dụng account_id từ accountData
+    const account_id = accountData.id;
+
+    // ✅ Gửi request theo format API mới
+    const shopData = {
+      account_id: account_id,
+      name: shopName.trim(), // ✅ Đổi từ shop_name
+      description: shopDescription.trim(), // ✅ Đổi từ shop_description
+      status: true, // ✅ Thêm status
+      working_day: workingDays, // ✅ Thêm working_day
+    };
+
+    try {
+      const result = await dispatch(registerShop(shopData));
+      if (registerShop.fulfilled.match(result)) {
+        console.log("✅ Tạo shop profile thành công:", result.payload);
+      } else if (registerShop.rejected.match(result)) {
+        console.error("❌ Tạo shop profile thất bại:", result.payload);
+      }
+    } catch (error) {
+      console.error("❌ Unexpected error:", error);
+      toast.error("Có lỗi không mong muốn xảy ra");
+    }
   };
+
+  // ✅ Không render nếu không có account data
+  if (!accountData) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen flex bg-white relative">
@@ -177,300 +174,128 @@ export default function RegisterShop() {
       </button>
 
       {/* Bên phải: Form đăng ký */}
-      <div className="w-full md:w-1/2 flex items-center justify-center p-8 overflow-y-auto">
-        <div className="w-full max-w-md bg-white p-8 rounded-xl shadow-lg border my-8">
-          <h2 className="text-2xl font-bold mb-2 text-center">
-            Đăng ký cửa hàng
-          </h2>
-          <p className="text-sm text-gray-600 mb-6 text-center">
-            Điền thông tin để đăng ký tài khoản doanh nghiệp
-          </p>
+      <div className="w-full md:w-1/2 flex items-center justify-center p-8">
+        <div className="w-full max-w-md bg-white p-8 rounded-xl shadow-lg border">
+          <div className="text-center mb-6">
+            <Store className="w-12 h-12 text-[#2A9D8F] mx-auto mb-3" />
+            <h2 className="text-2xl font-bold mb-2">Hoàn tất đăng ký</h2>
+            <p className="text-sm text-gray-600">
+              Bước 2: Tạo hồ sơ cửa hàng cho{" "}
+              <span className="font-semibold text-[#2A9D8F]">
+                {accountData.username}
+              </span>
+            </p>
+          </div>
 
-          <form className="space-y-4" onSubmit={handleSubmit}>
-            {/* Tên doanh nghiệp/cửa hàng */}
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {/* ✅ Ô nhập tên cửa hàng */}
             <div className="relative">
               <input
                 type="text"
-                name="businessName"
-                value={formData.businessName}
-                onChange={handleInputChange}
-                placeholder="Tên doanh nghiệp/Tên cửa hàng"
-                className="w-full px-4 py-3 border rounded-lg pr-10 focus:outline-none focus:ring-2 focus:ring-[#2A9D8F] focus:border-transparent"
-                required
+                value={shopName}
+                onChange={(e) => setShopName(e.target.value)}
+                placeholder="Tên cửa hàng"
+                className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 transition-all duration-200 ${
+                  errors.shopName
+                    ? "border-red-500 focus:ring-red-500/20"
+                    : "border-gray-300 focus:ring-[#2A9D8F]/20 focus:border-[#2A9D8F]"
+                }`}
+                disabled={loading}
               />
-              <Store className="absolute top-3.5 right-3 w-5 h-5 text-gray-400" />
+              {errors.shopName && (
+                <p className="text-red-500 text-xs mt-1">{errors.shopName}</p>
+              )}
             </div>
 
-            {/* Địa chỉ doanh nghiệp */}
+            {/* ✅ Ô nhập mô tả cửa hàng */}
             <div className="relative">
               <textarea
-                name="businessAddress"
-                value={formData.businessAddress}
-                onChange={handleInputChange}
-                placeholder="Địa chỉ đầy đủ (số nhà, tên đường, phường/xã, quận/huyện, tỉnh/thành phố)"
-                className="w-full px-4 py-3 border rounded-lg pr-10 focus:outline-none focus:ring-2 focus:ring-[#2A9D8F] focus:border-transparent resize-none"
-                rows="3"
-                required
+                value={shopDescription}
+                onChange={(e) => setShopDescription(e.target.value)}
+                placeholder="Mô tả cửa hàng"
+                rows={3}
+                className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 transition-all duration-200 resize-none ${
+                  errors.shopDescription
+                    ? "border-red-500 focus:ring-red-500/20"
+                    : "border-gray-300 focus:ring-[#2A9D8F]/20 focus:border-[#2A9D8F]"
+                }`}
+                disabled={loading}
               />
-              <MapPin className="absolute top-3.5 right-3 w-5 h-5 text-gray-400" />
+              {errors.shopDescription && (
+                <p className="text-red-500 text-xs mt-1">
+                  {errors.shopDescription}
+                </p>
+              )}
             </div>
 
-            {/* Số điện thoại */}
-            <div className="relative">
-              <input
-                type="tel"
-                name="phoneNumber"
-                value={formData.phoneNumber}
-                onChange={handleInputChange}
-                placeholder="Số điện thoại liên hệ chính"
-                className="w-full px-4 py-3 border rounded-lg pr-10 focus:outline-none focus:ring-2 focus:ring-[#2A9D8F] focus:border-transparent"
-                required
-              />
-              <Phone className="absolute top-3.5 right-3 w-5 h-5 text-gray-400" />
-            </div>
-
-            {/* Email */}
-            <div className="relative">
-              <input
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleInputChange}
-                placeholder="Email liên hệ chính"
-                className="w-full px-4 py-3 border rounded-lg pr-10 focus:outline-none focus:ring-2 focus:ring-[#2A9D8F] focus:border-transparent"
-                required
-              />
-              <Mail className="absolute top-3.5 right-3 w-5 h-5 text-gray-400" />
-            </div>
-
-            {/* Mật khẩu */}
-            <div className="relative">
-              <input
-                type={showPassword ? "text" : "password"}
-                name="password"
-                value={formData.password}
-                onChange={handleInputChange}
-                placeholder="Mật khẩu (ít nhất 8 ký tự)"
-                className="w-full px-4 py-3 border rounded-lg pr-10 focus:outline-none focus:ring-2 focus:ring-[#2A9D8F] focus:border-transparent"
-                required
-                minLength="8"
-              />
-              <div
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute top-3.5 right-3 cursor-pointer text-gray-500"
-              >
-                <Lock className="w-5 h-5" />
+            {/* ✅ Hiển thị thông báo status mặc định */}
+            <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+              <div className="flex items-center">
+                <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                <span className="text-sm text-green-700">
+                  Cửa hàng sẽ được kích hoạt ngay sau khi đăng ký
+                </span>
               </div>
             </div>
 
-            {/* Xác nhận mật khẩu */}
-            <div className="relative">
-              <input
-                type={showConfirmPassword ? "text" : "password"}
-                name="confirmPassword"
-                value={formData.confirmPassword}
-                onChange={handleInputChange}
-                placeholder="Nhập lại mật khẩu"
-                className="w-full px-4 py-3 border rounded-lg pr-10 focus:outline-none focus:ring-2 focus:ring-[#2A9D8F] focus:border-transparent"
-                required
-              />
-              <div
-                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="absolute top-3.5 right-3 cursor-pointer text-gray-500"
-              >
-                <Lock className="w-5 h-5" />
-              </div>
-            </div>
-
-            {/* Lĩnh vực kinh doanh */}
-            <div className="space-y-3">
-              <label className="flex items-center text-sm font-medium text-gray-700">
-                <Briefcase className="w-4 h-4 mr-2" />
-                Lĩnh vực kinh doanh (chọn nhiều):
+            {/* ✅ Working days selection */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Ngày làm việc:
               </label>
-              <div className="grid grid-cols-2 gap-2 max-h-32 overflow-y-auto border rounded-lg p-3">
-                {businessFieldOptions.map((field) => (
+              <div className="grid grid-cols-2 gap-2">
+                {workingDayOptions.map((day) => (
                   <label
-                    key={field}
-                    className="flex items-center space-x-2 text-sm"
+                    key={day}
+                    className="flex items-center space-x-2 cursor-pointer"
                   >
                     <input
                       type="checkbox"
-                      checked={formData.businessFields.includes(field)}
-                      onChange={() => handleBusinessFieldChange(field)}
+                      checked={workingDays.includes(day)}
+                      onChange={() => handleWorkingDayChange(day)}
                       className="rounded border-gray-300 text-[#2A9D8F] focus:ring-[#2A9D8F]"
+                      disabled={loading}
                     />
-                    <span>{field}</span>
+                    <span className="text-sm">{day}</span>
                   </label>
                 ))}
               </div>
-            </div>
-
-            {/* Ngày làm việc */}
-            <div className="space-y-4">
-              <label className="flex items-center text-sm font-medium text-gray-700">
-                <Clock className="w-4 h-4 mr-2" />
-                Ngày làm việc:
-              </label>
-
-              {/* Dropdown chọn loại lịch */}
-              <div className="relative">
-                <select
-                  value={formData.workScheduleType}
-                  onChange={handleWorkScheduleTypeChange}
-                  className="w-full px-4 py-3 border rounded-lg pr-10 focus:outline-none focus:ring-2 focus:ring-[#2A9D8F] focus:border-transparent appearance-none bg-white"
-                  required
-                >
-                  <option value="">Chọn loại lịch làm việc</option>
-                  <option value="all-week">Toàn bộ các ngày trong tuần</option>
-                  <option value="custom">Tùy chỉnh</option>
-                </select>
-                <ChevronDown className="absolute top-3.5 right-3 w-5 h-5 text-gray-400 pointer-events-none" />
-              </div>
-
-              {/* Hiển thị component tương ứng */}
-              {formData.workScheduleType === "all-week" && (
-                <div className="border rounded-lg p-4 bg-gray-50">
-                  <h4 className="text-sm font-medium text-gray-700 mb-3">
-                    Giờ làm việc (áp dụng cho tất cả các ngày)
-                  </h4>
-                  <div className="flex items-center space-x-3">
-                    <div className="flex-1">
-                      <label className="block text-xs text-gray-600 mb-1">
-                        Giờ bắt đầu
-                      </label>
-                      <input
-                        type="time"
-                        value={formData.allWeekHours.startTime}
-                        onChange={(e) =>
-                          handleAllWeekHoursChange("startTime", e.target.value)
-                        }
-                        className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-[#2A9D8F]"
-                      />
-                    </div>
-                    <span className="text-gray-500 mt-6">-</span>
-                    <div className="flex-1">
-                      <label className="block text-xs text-gray-600 mb-1">
-                        Giờ kết thúc
-                      </label>
-                      <input
-                        type="time"
-                        value={formData.allWeekHours.endTime}
-                        onChange={(e) =>
-                          handleAllWeekHoursChange("endTime", e.target.value)
-                        }
-                        className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-[#2A9D8F]"
-                      />
-                    </div>
-                  </div>
-                  <p className="text-xs text-gray-500 mt-2">
-                    Ví dụ: 8:00 - 17:00. Muốn tùy chỉnh chi tiết hơn, hãy chọn
-                    "Tùy chỉnh" ở trên.
-                  </p>
-                </div>
-              )}
-
-              {formData.workScheduleType === "custom" && (
-                <div className="border rounded-lg p-4 bg-gray-50 space-y-3">
-                  <h4 className="text-sm font-medium text-gray-700 mb-3">
-                    Tùy chỉnh lịch làm việc theo từng ngày
-                  </h4>
-                  {daysOfWeek.map((day) => (
-                    <div
-                      key={day.key}
-                      className="flex items-center space-x-3 p-3 bg-white rounded border"
-                    >
-                      <div className="w-20">
-                        <span className="text-sm font-medium text-gray-700">
-                          {day.label}
-                        </span>
-                      </div>
-
-                      <div className="flex items-center space-x-2">
-                        <input
-                          type="checkbox"
-                          checked={formData.customSchedule[day.key].isWorking}
-                          onChange={(e) =>
-                            handleCustomScheduleChange(
-                              day.key,
-                              "isWorking",
-                              e.target.checked
-                            )
-                          }
-                          className="rounded border-gray-300 text-[#2A9D8F] focus:ring-[#2A9D8F]"
-                        />
-                        <span className="text-xs text-gray-600">Làm việc</span>
-                      </div>
-
-                      {formData.customSchedule[day.key].isWorking && (
-                        <>
-                          <div className="flex-1">
-                            <input
-                              type="time"
-                              value={formData.customSchedule[day.key].startTime}
-                              onChange={(e) =>
-                                handleCustomScheduleChange(
-                                  day.key,
-                                  "startTime",
-                                  e.target.value
-                                )
-                              }
-                              className="w-full px-2 py-1 border rounded text-sm focus:outline-none focus:ring-1 focus:ring-[#2A9D8F]"
-                            />
-                          </div>
-                          <span className="text-gray-500 text-sm">-</span>
-                          <div className="flex-1">
-                            <input
-                              type="time"
-                              value={formData.customSchedule[day.key].endTime}
-                              onChange={(e) =>
-                                handleCustomScheduleChange(
-                                  day.key,
-                                  "endTime",
-                                  e.target.value
-                                )
-                              }
-                              className="w-full px-2 py-1 border rounded text-sm focus:outline-none focus:ring-1 focus:ring-[#2A9D8F]"
-                            />
-                          </div>
-                        </>
-                      )}
-                    </div>
-                  ))}
-                </div>
+              {errors.workingDays && (
+                <p className="text-red-500 text-xs mt-1">
+                  {errors.workingDays}
+                </p>
               )}
             </div>
 
-            {/* Tên người đại diện */}
-            <div className="relative">
-              <input
-                type="text"
-                name="representativeName"
-                value={formData.representativeName}
-                onChange={handleInputChange}
-                placeholder="Tên người đại diện/Chủ doanh nghiệp"
-                className="w-full px-4 py-3 border rounded-lg pr-10 focus:outline-none focus:ring-2 focus:ring-[#2A9D8F] focus:border-transparent"
-                required
-              />
-              <User className="absolute top-3.5 right-3 w-5 h-5 text-gray-400" />
-            </div>
-
-            {/* Nút đăng ký */}
+            {/* ✅ Nút hoàn tất */}
             <button
               type="submit"
-              className="w-full bg-[#2A9D8F] text-white py-3 rounded-lg hover:bg-[#228B7E] transition-all duration-200 font-medium shadow-md hover:shadow-lg"
+              disabled={loading}
+              className={`w-full py-3 rounded-lg font-medium transition-all duration-200 ${
+                loading
+                  ? "bg-gray-400 text-white cursor-not-allowed"
+                  : "bg-[#2A9D8F] text-white hover:bg-[#228B7E] shadow-md hover:shadow-lg"
+              }`}
             >
-              Đăng ký tài khoản
+              {loading ? (
+                <>
+                  <div className="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Đang tạo hồ sơ...
+                </>
+              ) : (
+                "Hoàn tất đăng ký"
+              )}
             </button>
           </form>
 
           <p className="text-sm text-center mt-6">
-            <a
-              href="/login"
+            Đã có tài khoản?{" "}
+            <button
+              onClick={() => navigate("/login")}
               className="text-[#2A9D8F] font-semibold hover:underline transition-all duration-200"
             >
-              Đã có tài khoản? Đăng nhập ngay
-            </a>
+              Đăng nhập ngay!
+            </button>
           </p>
         </div>
       </div>
@@ -479,18 +304,9 @@ export default function RegisterShop() {
       <div className="w-1/2 bg-[#E7F3F5] flex flex-col justify-center items-center">
         <div className="w-full max-w-4xl mx-auto p-4 md:p-6 lg:p-8 rounded-lg">
           <img
-            src="/public/image/ranbowlogo.png"
+            src="/public/image/Xanh_dương_pastel_Cầu_vồng_Chương_trình_Đọc_viết_Logo-removebg-preview 1.png"
             alt="Logo"
             className="w-full h-auto object-contain max-w-full"
-            style={{
-              maxWidth: "100%",
-              width: "auto",
-              height: "auto",
-              objectFit: "contain",
-              userSelect: "none",
-              transform: "scale(1)",
-              transformOrigin: "center center",
-            }}
           />
         </div>
       </div>

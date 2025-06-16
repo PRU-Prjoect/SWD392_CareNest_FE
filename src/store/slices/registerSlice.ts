@@ -11,7 +11,7 @@ interface RegisterState {
     code: number;
     message: string;
   } | null;
-  accountData: any | null; // ✅ Thêm để lưu thông tin account
+  accountData: any | null;
 }
 
 interface RegisterRequest {
@@ -21,11 +21,13 @@ interface RegisterRequest {
   role: string;
 }
 
+// ✅ Cập nhật interface để match với response thực tế
 interface RegisterResponse {
   message: string;
   data: {
+    id: string; // ✅ Thêm field id
     username: string;
-    password: string;
+    password: string; // ✅ Password đã được hash
     email: string;
     img_url: string | null;
     img_url_id: string | null;
@@ -42,11 +44,10 @@ const initialState: RegisterState = {
   loading: false,
   success: false,
   error: null,
-  accountData: null, // ✅ Thêm vào initial state
+  accountData: null,
 };
 
 // Async thunk for registration
-// Cập nhật async thunk
 export const register = createAsyncThunk<
   RegisterResponse,
   RegisterRequest,
@@ -110,7 +111,6 @@ const registerSlice = createSlice({
       state.error = null;
     },
   },
-  // Cập nhật extraReducers
   extraReducers: (builder) => {
     builder
       .addCase(register.pending, (state) => {
@@ -125,15 +125,14 @@ const registerSlice = createSlice({
           state.success = true;
           state.error = null;
           state.accountData = action.payload.data; // ✅ Lưu account data
-
           console.log("✅ Registration successful:", action.payload.message);
-          // Không auto login, chỉ hiển thị thông báo thành công
+          console.log("✅ Account ID:", action.payload.data.id);
         }
       )
       .addCase(register.rejected, (state, action) => {
         state.loading = false;
         state.success = false;
-        state.accountData = null; // ✅ Reset khi lỗi
+        state.accountData = null;
         if (action.payload) {
           state.error = {
             code: action.payload.error,

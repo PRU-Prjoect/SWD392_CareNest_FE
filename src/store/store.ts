@@ -3,12 +3,14 @@ import { configureStore } from "@reduxjs/toolkit";
 import authReducer from "./slices/authSlice";
 import registeReducer from "./slices/registerSlice";
 import registerCustomerReducer from "./slices/registerCustomerSlice";
+import registerShopReducer from "./slices/registerShopSlice"; // ✅ Import mới
 
 export const store = configureStore({
   reducer: {
     auth: authReducer,
     register: registeReducer,
     registerCustomer: registerCustomerReducer,
+    registerShop: registerShopReducer, // ✅ Thêm reducer mới
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
