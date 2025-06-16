@@ -8,14 +8,13 @@ import {
   Lock,
   Phone,
   MapPin,
-  Building,
   Briefcase,
   Clock,
   ChevronDown,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
-export default function RegisterPage() {
+export default function RegisterShop() {
   const navigate = useNavigate();
 
   interface FormData {

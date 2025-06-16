@@ -1,12 +1,14 @@
-// src/store/store.ts
+// store/store.ts
 import { configureStore } from "@reduxjs/toolkit";
 import authReducer from "./slices/authSlice";
 import registeReducer from "./slices/registerSlice";
+import registerCustomerReducer from "./slices/registerCustomerSlice";
 
 export const store = configureStore({
   reducer: {
     auth: authReducer,
     register: registeReducer,
+    registerCustomer: registerCustomerReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
