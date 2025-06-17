@@ -9,7 +9,6 @@ import {
   Edit,
   Camera,
   Upload,
-  Underline,
 } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import type { AppDispatch, RootState } from "@/store/store";
@@ -21,6 +20,7 @@ import {
 import { updateAuthUser } from "@/store/slices/authSlice";
 import {
   uploadImage,
+  getAccountById, // ✅ Import getAccountById
   clearAllAccountErrors,
 } from "@/store/slices/AccountSlice"; // ✅ Import uploadImage từ accountSlice
 import { toast } from "react-toastify";
@@ -29,19 +29,18 @@ import ChangePasswordModal from "../../components/ChangePasswordModal";
 export default function ProfilePage() {
   const dispatch = useDispatch<AppDispatch>();
   const { user } = useSelector((state: RootState) => state.auth);
-  const [currentAvatarUrl, setCurrentAvatarUrl] = useState<string | null>(null);
-  // ✅ Sync với user.img_url khi component mount hoặc user thay đổi
-  useEffect(() => {
-    if (user?.img_url) {
-      setCurrentAvatarUrl(user.img_url);
-    }
-  }, [user?.img_url]);
-  const { currentCustomer, loading, updating, updateError } = useSelector(
-    (state: RootState) => state.customer
-  );
-  const { uploadingImage, updateError: imageUploadError } = useSelector(
-    (state: RootState) => state.account
-  );
+  const {
+    currentCustomer,
+    loading: customerLoading,
+    updating,
+    updateError,
+  } = useSelector((state: RootState) => state.customer);
+  const {
+    currentAccount, // ✅ Lấy account data
+    loading: accountLoading,
+    uploadingImage,
+    updateError: imageUploadError,
+  } = useSelector((state: RootState) => state.account);
 
   // Form states cho customer info
   const [customerFormData, setCustomerFormData] = useState({
@@ -65,12 +64,31 @@ export default function ProfilePage() {
     birthday: "",
   });
 
-  // Load customer profile khi component mount
+  // ✅ Load cả customer profile và account data
   useEffect(() => {
     if (user?.id) {
+      // Fetch customer data
       dispatch(getCustomerById(user.id));
+      // ✅ Fetch account data để lấy img_url mới nhất
+      dispatch(getAccountById(user.id));
     }
   }, [dispatch, user?.id]);
+
+  // ✅ Update auth state khi có account data mới
+  useEffect(() => {
+    if (currentAccount && user) {
+      // So sánh và update img_url nếu khác
+      if (currentAccount.img_url !== user.img_url) {
+        dispatch(
+          updateAuthUser({
+            img_url: currentAccount.img_url ?? undefined,
+            img_url_id: currentAccount.img_url_id ?? undefined,
+          })
+        );
+        console.log("✅ Updated auth user img_url:", currentAccount.img_url);
+      }
+    }
+  }, [currentAccount, user, dispatch]);
 
   // Sync form data với customer profile từ API
   useEffect(() => {
@@ -80,7 +98,7 @@ export default function ProfilePage() {
         gender: currentCustomer.gender || "",
         birthday: currentCustomer.birthday
           ? currentCustomer.birthday.split("T")[0]
-          : "", // Convert to YYYY-MM-DD format
+          : "",
       });
     }
   }, [currentCustomer]);
@@ -130,7 +148,7 @@ export default function ProfilePage() {
     setShowImageUpload(true);
   };
 
-  // ✅ Update handleImageUpload
+  // ✅ Handle image upload
   const handleImageUpload = async () => {
     if (!selectedFile || !user?.id) {
       toast.error("Vui lòng chọn ảnh và đảm bảo đã đăng nhập");
@@ -148,6 +166,15 @@ export default function ProfilePage() {
       if (uploadImage.fulfilled.match(result)) {
         toast.success("Cập nhật ảnh đại diện thành công!");
 
+        // ✅ Update auth state với img_url mới
+        const updatedAccount = result.payload.data;
+        dispatch(
+          updateAuthUser({
+            img_url: updatedAccount.img_url ?? undefined,
+            img_url_id: updatedAccount.img_url_id ?? undefined,
+          })
+        );
+
         const updatedUser = result.payload.data;
 
         // ✅ Update cả auth state và local state
@@ -159,7 +186,6 @@ export default function ProfilePage() {
         );
 
         // ✅ Update local state để hiển thị ngay
-        setCurrentAvatarUrl(updatedUser.img_url);
 
         setShowImageUpload(false);
         setSelectedFile(null);
@@ -170,16 +196,14 @@ export default function ProfilePage() {
           fileInputRef.current.value = "";
         }
 
-        console.log("✅ User avatar updated:", updatedUser.img_url);
+        // ✅ Fetch account data lại để đảm bảo sync
+        dispatch(getAccountById(user.id));
+
+        console.log("✅ User avatar updated:", updatedAccount.img_url);
       }
     } catch (error) {
       console.error("❌ Upload image error:", error);
     }
-  };
-
-  // ✅ Update getCurrentAvatarUrl để dùng local state
-  const getCurrentAvatarUrl = () => {
-    return currentAvatarUrl || user?.img_url;
   };
 
   // ✅ Cancel image upload
@@ -190,8 +214,25 @@ export default function ProfilePage() {
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
+    return null;
   };
 
+  // ✅ Get fallback letter
+  const getFallbackLetter = () => {
+    return (
+      customerFormData.full_name?.charAt(0) || user?.username?.charAt(0) || "U"
+    );
+  };
+
+  // ✅ Get current avatar URL (from account, user, or preview)
+  const getCurrentAvatarUrl = () => {
+    if (previewUrl) return previewUrl;
+    if (currentAccount?.img_url) return currentAccount.img_url;
+    if (user?.img_url) return user.img_url;
+    return null;
+  };
+
+  // Rest of your existing functions (handleCustomerInputChange, validateCustomerForm, etc.)
   const handleCustomerInputChange = (
     field: keyof typeof customerFormData,
     value: string
@@ -302,7 +343,8 @@ export default function ProfilePage() {
     setIsEditingCustomer(false);
   };
 
-  if (loading) {
+  // ✅ Update loading condition
+  if (customerLoading || accountLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -334,7 +376,7 @@ export default function ProfilePage() {
           {/* Profile Content */}
           <div className="px-6 py-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* ✅ Avatar với upload image */}
+              {/* ✅ Avatar với upload image - Updated */}
               <div className="md:col-span-2 flex items-center gap-6">
                 <div className="relative">
                   {/* Avatar */}
@@ -351,9 +393,7 @@ export default function ProfilePage() {
                       />
                     ) : (
                       <span className="text-white text-2xl font-bold">
-                        {customerFormData.full_name.charAt(0) ||
-                          user?.username?.charAt(0) ||
-                          "U"}
+                        {getFallbackLetter()}
                       </span>
                     )}
                   </div>

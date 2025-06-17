@@ -493,7 +493,7 @@ export const getAccountById = createAsyncThunk<
   { rejectValue: ErrorResponse }
 >("account/getById", async (accountId, { rejectWithValue }) => {
   try {
-    const response = await api.get(`account/id/${accountId}`, {
+    const response = await api.get(`account/${accountId}`, {
       headers: {
         accept: "*/*",
       },

@@ -37,14 +37,51 @@ const UserDropdown: React.FC = () => {
     navigate("/login");
   };
 
+  // ✅ Get current avatar URL
+  const getCurrentAvatarUrl = () => {
+    if (user?.img_url) {
+      return user.img_url;
+    }
+    return null;
+  };
+
+  // ✅ Get fallback letter
+  const getFallbackLetter = () => {
+    return user.name?.charAt(0) || user.username?.charAt(0) || "U";
+  };
+
   return (
     <div className="relative group">
       <button className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/10 transition-colors duration-200">
-        <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
-          <span className="text-white font-medium text-sm">
-            {user.name?.charAt(0) || user.username?.charAt(0) || "U"}
-          </span>
+        {/* ✅ Avatar với image hoặc text fallback */}
+        <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center overflow-hidden">
+          {getCurrentAvatarUrl() ? (
+            <>
+              {/* Avatar image */}
+              <img
+                src={getCurrentAvatarUrl()!}
+                alt="Avatar"
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  // ✅ Fallback to text avatar if image fails to load
+                  const target = e.target as HTMLImageElement;
+                  target.style.display = "none";
+                  // Show fallback text
+                  const parent = target.parentElement;
+                  if (parent) {
+                    parent.innerHTML = `<span class="text-white font-medium text-sm">${getFallbackLetter()}</span>`;
+                  }
+                }}
+              />
+            </>
+          ) : (
+            /* Text avatar fallback */
+            <span className="text-white font-medium text-sm">
+              {getFallbackLetter()}
+            </span>
+          )}
         </div>
+
         <div className="text-left hidden lg:block">
           <span className="block font-medium text-white text-sm">
             {user.name || user.username}
