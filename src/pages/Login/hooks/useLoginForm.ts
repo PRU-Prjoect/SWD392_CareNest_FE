@@ -1,5 +1,5 @@
 // src/pages/Login/hooks/useLoginForm.ts
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import type { AppDispatch, RootState } from "@/store/store";
@@ -26,6 +26,10 @@ export const useLoginForm = () => {
 
   const [showPassword, setShowPassword] = useState(false);
 
+  // ✅ Thêm ref để track login attempts
+  const hasRedirected = useRef(false);
+  const loginAttempted = useRef(false);
+
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
 
@@ -33,12 +37,24 @@ export const useLoginForm = () => {
     (state: RootState) => state.auth
   );
 
-  // ✅ Sửa useEffect để redirect dựa trên role
+  // ✅ Sửa useEffect với proper conditions
   useEffect(() => {
-    if (isAuthenticated && user) {
+    // Chỉ redirect nếu:
+    // 1. Đã authenticated
+    // 2. Có user data
+    // 3. Đã attempt login (không phải từ restoreAuth)
+    // 4. Chưa redirect lần nào
+    if (
+      isAuthenticated &&
+      user &&
+      loginAttempted.current &&
+      !hasRedirected.current
+    ) {
+      hasRedirected.current = true;
       toast.success("Đăng nhập thành công!");
 
-      // ✅ Kiểm tra role để điều hướng
+      console.log("🔄 Redirecting user with role:", user.role);
+
       setTimeout(() => {
         if (user.role === "Shop") {
           navigate("/shop/dashboard", { replace: true });
@@ -48,6 +64,14 @@ export const useLoginForm = () => {
       }, 1000);
     }
   }, [isAuthenticated, user, navigate]);
+
+  // ✅ Reset redirect flag khi component unmount hoặc logout
+  useEffect(() => {
+    if (!isAuthenticated) {
+      hasRedirected.current = false;
+      loginAttempted.current = false;
+    }
+  }, [isAuthenticated]);
 
   const handleInputChange = (
     field: keyof FormData,
@@ -87,7 +111,10 @@ export const useLoginForm = () => {
     }
 
     try {
-      // ✅ Use the correct async thunk based on rememberMe
+      // ✅ Mark that login was attempted manually
+      loginAttempted.current = true;
+      hasRedirected.current = false;
+
       const loginAction = formData.rememberMe ? Login : LoginNoRemember;
 
       const result = await dispatch(
@@ -99,9 +126,15 @@ export const useLoginForm = () => {
 
       if (loginAction.fulfilled.match(result)) {
         console.log("✅ Login successful:", result.payload);
+      } else {
+        // Reset flags nếu login failed
+        loginAttempted.current = false;
+        hasRedirected.current = false;
       }
     } catch (error) {
       console.error("❌ Login error:", error);
+      loginAttempted.current = false;
+      hasRedirected.current = false;
     }
   };
 
