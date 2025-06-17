@@ -22,7 +22,7 @@ const AppSidebarForShop = () => {
         },
         {
           label: 'Khách sạn',
-          path: '/shop/hotels',
+          path: '/shop/booking',
         },
       ],
     },
