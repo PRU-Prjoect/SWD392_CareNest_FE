@@ -270,14 +270,18 @@ export const resetPassword = createAsyncThunk<
   { rejectValue: ErrorResponse }
 >("account/resetPassword", async (data, { rejectWithValue }) => {
   try {
-    const response = await api.patch(`account/reset-password/${data.id}`, {
-      password: data.password
-    }, {
-      headers: {
-        "Content-Type": "application/json",
-        accept: "*/*",
+    const response = await api.patch(
+      `account/reset-password/${data.id}`,
+      {
+        password: data.password,
       },
-    });
+      {
+        headers: {
+          "Content-Type": "application/json",
+          accept: "*/*",
+        },
+      }
+    );
 
     console.log("✅ Reset Password Response:", response.data);
 
@@ -313,11 +317,15 @@ export const activateAccount = createAsyncThunk<
   { rejectValue: ErrorResponse }
 >("account/activate", async (accountId, { rejectWithValue }) => {
   try {
-    const response = await api.patch(`account/activate/${accountId}`, {}, {
-      headers: {
-        accept: "*/*",
-      },
-    });
+    const response = await api.patch(
+      `account/activate/${accountId}`,
+      {},
+      {
+        headers: {
+          accept: "*/*",
+        },
+      }
+    );
 
     console.log("✅ Activate Account Response:", response.data);
 
@@ -398,13 +406,17 @@ export const updateAccount = createAsyncThunk<
 >("account/update", async (data, { rejectWithValue }) => {
   try {
     const { id, ...updateData } = data;
-    
-    const response = await api.patch(`account/update-account/${id}`, updateData, {
-      headers: {
-        "Content-Type": "application/json",
-        accept: "*/*",
-      },
-    });
+
+    const response = await api.patch(
+      `account/update-account/${id}`,
+      updateData,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          accept: "*/*",
+        },
+      }
+    );
 
     console.log("✅ Update Account Response:", response.data);
 
@@ -462,7 +474,8 @@ export const getAllAccounts = createAsyncThunk<
     if (err.response) {
       return rejectWithValue({
         error: err.response.status,
-        message: err.response.data?.message || "Lấy danh sách tài khoản thất bại",
+        message:
+          err.response.data?.message || "Lấy danh sách tài khoản thất bại",
       });
     }
 
@@ -502,7 +515,8 @@ export const getAccountById = createAsyncThunk<
     if (err.response) {
       return rejectWithValue({
         error: err.response.status,
-        message: err.response.data?.message || "Lấy thông tin tài khoản thất bại",
+        message:
+          err.response.data?.message || "Lấy thông tin tài khoản thất bại",
       });
     }
 
@@ -658,7 +672,10 @@ const accountSlice = createSlice({
         (state, action: PayloadAction<SimpleResponse>) => {
           state.confirmingOtp = false;
           state.otpError = null;
-          console.log("✅ Confirm email OTP successful:", action.payload.message);
+          console.log(
+            "✅ Confirm email OTP successful:",
+            action.payload.message
+          );
         }
       )
       .addCase(confirmEmailOtp.rejected, (state, action) => {
@@ -714,7 +731,10 @@ const accountSlice = createSlice({
         (state, action: PayloadAction<SimpleResponse>) => {
           state.activating = false;
           state.updateError = null;
-          console.log("✅ Activate account successful:", action.payload.message);
+          console.log(
+            "✅ Activate account successful:",
+            action.payload.message
+          );
         }
       )
       .addCase(activateAccount.rejected, (state, action) => {
@@ -775,7 +795,7 @@ const accountSlice = createSlice({
 
           // Update trong accounts list nếu tồn tại
           const index = state.accounts.findIndex(
-            account => account.id === action.payload.data.id
+            (account) => account.id === action.payload.data.id
           );
           if (index !== -1) {
             state.accounts[index] = action.payload.data;
@@ -867,9 +887,12 @@ const accountSlice = createSlice({
         (state, action: PayloadAction<DeleteResponse>) => {
           state.deleting = false;
           state.deleteError = null;
-          
+
           // Reset currentAccount nếu đã bị xóa
-          if (state.currentAccount && action.meta.arg === state.currentAccount.id) {
+          if (
+            state.currentAccount &&
+            action.meta.arg === state.currentAccount.id
+          ) {
             state.currentAccount = null;
           }
 

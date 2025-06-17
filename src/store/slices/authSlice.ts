@@ -6,11 +6,13 @@ import { jwtDecode } from "jwt-decode";
 
 // Interfaces
 export interface User {
-  id: string;
+  id: string; // ✅ Đây sẽ là nameidentifier (account_id thật)
   email: string;
-  name?: string;
+  name?: string; // ✅ Đây là username
   role?: string;
-  username?: string;
+  img_url?: string;
+  img_url_id?: string;
+  username?: string; // ✅ Đây cũng là username
 }
 
 interface UserState {
@@ -24,10 +26,12 @@ interface UserState {
   } | null;
 }
 
+// ✅ Updated DecodedToken interface
 interface DecodedToken {
   "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress": string;
   "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name": string;
   "http://schemas.microsoft.com/ws/2008/06/identity/claims/role": string;
+  "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier": string; // ✅ Account ID thật
   exp: number;
   iss: string;
   aud: string;
@@ -70,16 +74,23 @@ const clearAuthData = () => {
   sessionStorage.removeItem("user");
 };
 
+// ✅ Fixed createUserFromToken function
 const createUserFromToken = (token: string): User => {
   try {
     const decoded: DecodedToken = jwtDecode(token);
 
-    return {
-      id: decoded["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"],
+    console.log("🔍 Decoded token:", decoded); // Debug log
+
+    const user = {
+      // ✅ ID thật từ nameidentifier
+      id: decoded[
+        "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"
+      ],
       email:
         decoded[
           "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"
         ],
+      // ✅ Name là username
       name: decoded[
         "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"
       ],
@@ -89,29 +100,36 @@ const createUserFromToken = (token: string): User => {
         "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
       ],
     };
+
+    console.log("✅ Created user from token:", {
+      id: user.id,
+      username: user.username,
+      email: user.email,
+      role: user.role,
+    });
+
+    return user;
   } catch (error) {
     console.error("Error decoding token:", error);
     throw new Error("Token không hợp lệ");
   }
 };
 
-// ✅ ASYNC THUNKS với GET request và query parameters
+// ✅ ASYNC THUNKS - Keep existing Login and LoginNoRemember as they are
 export const Login = createAsyncThunk<
   AuthResponse,
   LoginRequest,
   { rejectValue: ErrorResponse }
 >("auth/login", async (credentials, { rejectWithValue }) => {
   try {
-    console.log("🚀 Login request payload:", credentials); // Debug log
+    console.log("🚀 Login request payload:", credentials);
 
     const res = await api.post(
       "account/login",
-      // Request body directly
       {
         username: credentials.username,
         password: credentials.password,
       },
-      // Request config as third parameter
       {
         headers: {
           "Content-Type": "application/json",
@@ -120,7 +138,7 @@ export const Login = createAsyncThunk<
       }
     );
 
-    console.log("✅ Response:", res.data); // Debug log
+    console.log("✅ Login Response:", res.data);
 
     if (!res.data || !res.data.data) {
       return rejectWithValue({
@@ -130,7 +148,7 @@ export const Login = createAsyncThunk<
     }
 
     const token = res.data.data;
-    const user = createUserFromToken(token);
+    const user = createUserFromToken(token); // ✅ Sẽ lấy đúng ID từ nameidentifier
 
     return { user, token };
   } catch (err: any) {
@@ -151,23 +169,20 @@ export const Login = createAsyncThunk<
   }
 });
 
-// ✅ Define LoginNoRemember async thunk (same as Login but without saving to localStorage)
 export const LoginNoRemember = createAsyncThunk<
   AuthResponse,
   LoginRequest,
   { rejectValue: ErrorResponse }
 >("authNoRemember/login", async (credentials, { rejectWithValue }) => {
   try {
-    console.log("🚀 Login request payload:", credentials); // Debug log
+    console.log("🚀 LoginNoRemember request payload:", credentials);
 
     const res = await api.post(
       "account/login",
-      // Request body directly
       {
         username: credentials.username,
         password: credentials.password,
       },
-      // Request config as third parameter
       {
         headers: {
           "Content-Type": "application/json",
@@ -176,7 +191,7 @@ export const LoginNoRemember = createAsyncThunk<
       }
     );
 
-    console.log("✅ Response:", res.data); // Debug log
+    console.log("✅ LoginNoRemember Response:", res.data);
 
     if (!res.data || !res.data.data) {
       return rejectWithValue({
@@ -186,12 +201,12 @@ export const LoginNoRemember = createAsyncThunk<
     }
 
     const token = res.data.data;
-    const user = createUserFromToken(token);
+    const user = createUserFromToken(token); // ✅ Sẽ lấy đúng ID từ nameidentifier
 
     return { user, token };
   } catch (err: any) {
-    console.error("❌ Error status:", err.response?.status);
-    console.error("❌ Error data:", err.response?.data);
+    console.error("❌ LoginNoRemember Error status:", err.response?.status);
+    console.error("❌ LoginNoRemember Error data:", err.response?.data);
 
     if (err.response && err.response.data) {
       return rejectWithValue({
@@ -207,7 +222,7 @@ export const LoginNoRemember = createAsyncThunk<
   }
 });
 
-// Slice (giữ nguyên)
+// ✅ Auth slice - Keep existing slice as is
 const userSlice = createSlice({
   name: "auth",
   initialState,
@@ -227,6 +242,7 @@ const userSlice = createSlice({
           state.token = token;
           state.user = user;
           console.log("✅ Auth restored:", {
+            id: user.id, // ✅ Đây sẽ là account_id thật
             username: user.username,
             role: user.role,
           });
@@ -236,10 +252,21 @@ const userSlice = createSlice({
         }
       }
     },
+    updateAuthUser(state, action: PayloadAction<Partial<User>>) {
+      if (state.user) {
+        state.user = { ...state.user, ...action.payload };
+
+        // ✅ Cập nhật localStorage
+        localStorage.setItem("user", JSON.stringify(state.user));
+
+        console.log("✅ Auth user updated:", action.payload);
+      }
+    },
   },
+
   extraReducers: (builder) => {
     builder
-      // ✅ Login cases
+      // Login cases
       .addCase(Login.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -251,13 +278,14 @@ const userSlice = createSlice({
           state.isAuthenticated = true;
           state.user = action.payload.user;
           state.token = action.payload.token;
-          saveAuthData(action.payload); // ✅ Lưu vào localStorage
+          saveAuthData(action.payload);
           state.error = null;
 
           console.log("✅ Login successful with user:", {
+            id: action.payload.user.id, // ✅ Account ID thật
             username: action.payload.user.username,
             role: action.payload.user.role,
-            id: action.payload.user.id,
+            email: action.payload.user.email,
           });
         }
       )
@@ -278,7 +306,7 @@ const userSlice = createSlice({
           };
         }
       })
-      // ✅ LoginNoRemember cases
+      // LoginNoRemember cases
       .addCase(LoginNoRemember.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -291,12 +319,12 @@ const userSlice = createSlice({
           state.token = action.payload.token;
           state.user = action.payload.user;
           state.error = null;
-          // ✅ LoginNoRemember không lưu vào localStorage
 
           console.log("✅ LoginNoRemember successful with user:", {
+            id: action.payload.user.id, // ✅ Account ID thật
             username: action.payload.user.username,
             role: action.payload.user.role,
-            id: action.payload.user.id,
+            email: action.payload.user.email,
           });
         }
       )
@@ -320,5 +348,5 @@ const userSlice = createSlice({
   },
 });
 
-export const { logout, restoreAuth } = userSlice.actions;
+export const { logout, restoreAuth, updateAuthUser } = userSlice.actions;
 export default userSlice.reducer;

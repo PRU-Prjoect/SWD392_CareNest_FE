@@ -8,7 +8,7 @@ import registerCustomerReducer from "./slices/registerCustomerSlice";
 import registerShopReducer from "./slices/registerShopSlice";
 import customerReducer from "./slices/customerSlice";
 import shopReducer from "./slices/shopSlice";
-import accountReducer from "./slices/accountSlice"; 
+import accountReducer from "./slices/AccountSlice";
 
 const persistConfig = {
   key: "root",
@@ -23,7 +23,7 @@ const rootReducer = combineReducers({
   registerShop: registerShopReducer,
   customer: customerReducer,
   shop: shopReducer,
-account: accountReducer,
+  account: accountReducer,
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

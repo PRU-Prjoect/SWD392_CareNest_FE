@@ -14,6 +14,7 @@ import ShopDashboard from "../pages/Shop/ShopDashboard";
 import OrderManagement from "@/pages/Shop/Order/OrderManagement";
 import ServiceManagement from "@/pages/Shop/ServiceManagement";
 import HotelRoomManagement from "@/pages/Shop/Order/HotelRoomManagement";
+import ProfilePage from "../pages/Profile"; // ✅ Import ProfilePage
 
 import RegisterCustomer from "@/pages/RegisterCustomer"; // Trang đăng ký cho khách hàng
 import AppLayoutForShop from "../layout/AppLayoutForShop"; // Layout cho Shop/Admin
@@ -57,6 +58,8 @@ const AppRoutes = () => {
       >
         {/* Trang home sau khi đăng nhập */}
         <Route path="home" element={<HomePage />} />
+        {/* ✅ Trang thông tin cá nhân cho user */}
+        <Route path="profile" element={<ProfilePage />} />
         <Route index element={<Navigate to="home" replace />} />
       </Route>
 
@@ -74,8 +77,11 @@ const AppRoutes = () => {
         <Route path="dashboard" element={<ShopDashboard />} />
         <Route path="orders" element={<OrderManagement />} />
         <Route path="services" element={<ServiceManagement />} />
-        <Route path="hotels" element={<HotelRoomManagement/>} />
-        <Route path="shop-profile" element={<StoreProfile/>} />
+        <Route path="hotels" element={<HotelRoomManagement />} />
+        {/* ✅ Trang thông tin cửa hàng (đã có sẵn) */}
+        <Route path="shop-profile" element={<StoreProfile />} />
+        {/* ✅ Trang thông tin cá nhân cho shop owner (nếu muốn tách riêng) */}
+        <Route path="profile" element={<ProfilePage />} />
         <Route index element={<Navigate to="dashboard" replace />} />
       </Route>
 
