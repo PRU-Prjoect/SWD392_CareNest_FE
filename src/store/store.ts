@@ -3,15 +3,19 @@ import { configureStore } from "@reduxjs/toolkit";
 import authReducer from "./slices/authSlice";
 import registeReducer from "./slices/registerSlice";
 import registerCustomerReducer from "./slices/registerCustomerSlice";
-import registerShopReducer from "./slices/registerShopSlice"; // ✅ Import mới
+import registerShopReducer from "./slices/registerShopSlice"; 
+import customerReducer from "./slices/customerSlice";
+import shopReducer from "./slices/shopSlice";
 
 export const store = configureStore({
-  reducer: {
+ reducer: {
     auth: authReducer,
-    register: registeReducer,
+    register: registerReducer,
     registerCustomer: registerCustomerReducer,
-    registerShop: registerShopReducer, // ✅ Thêm reducer mới
-  },
+    registerShop: registerShopReducer,
+    customer: customerReducer,
+    shop: shopReducer,
+ },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: {
