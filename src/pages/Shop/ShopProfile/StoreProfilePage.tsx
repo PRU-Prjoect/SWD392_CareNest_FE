@@ -1,9 +1,39 @@
-import React, { useState, useEffect } from 'react';
-import { User, Lock, MapPin, Building, Plus, Edit2, Trash2 } from 'lucide-react';
+import React, { useState, useEffect } from "react";
+import { useAppSelector, useAppDispatch } from "@/store/hooks";
+import {
+  User,
+  Lock,
+  MapPin,
+  Building,
+  Plus,
+  Edit2,
+  Trash2,
+  Mail,
+  Phone,
+  Clock,
+  Shield,
+  Settings,
+} from "lucide-react";
 
-// Interfaces dựa trên ERD
+// ✅ Import các actions từ slices
+import { getLoginAccount } from "@/store/slices/AccountSlice";
+import { getShopById, updateShop } from "@/store/slices/shopSlice";
+import {
+  searchSubAddresses,
+  createSubAddress,
+  updateSubAddress,
+  deleteSubAddress,
+} from "@/store/slices/subAddressSlice";
+import {
+  forgetPassword,
+  sendEmailOtp,
+  confirmEmailOtp,
+  resetPassword,
+} from "@/store/slices/AccountSlice";
+
+// ✅ Interfaces
 interface Account {
-  id: number;
+  id: string;
   username: string;
   email: string;
   role: string;
@@ -12,147 +42,325 @@ interface Account {
 }
 
 interface Shop {
-  account_id: number;
+  account_id: string;
   name: string;
   description: string;
-  status: string;
-  array_working_day: string[];
-  working_hours: Record<string, { start: string; end: string; isWorking: boolean }>;
+  status: boolean;
+  working_day: string[];
 }
 
 interface SubAddress {
-  id: number;
+  id: string;
   name: string;
-  shop_id: number;
-  phone: string;
+  shop_id: string;
+  phone: string | number;
   address_name: string;
   is_default: boolean;
 }
 
 const StoreProfile: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'info' | 'security' | 'branches'>('info');
-  const [account, setAccount] = useState<Account | null>(null);
-  const [shop, setShop] = useState<Shop | null>(null);
-  const [subAddresses, setSubAddresses] = useState<SubAddress[]>([]);
+  const dispatch = useAppDispatch();
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [showBranchModal, setShowBranchModal] = useState(false);
   const [editingBranch, setEditingBranch] = useState<SubAddress | null>(null);
 
-  // Trong useEffect của component StoreProfile
-useEffect(() => {
-  setAccount({
-    id: 1,
-    username: 'shop_owner',
-    email: 'owner@myshop.com',
-    role: 'shop_owner',
-    is_active: true,
-    img_url: '/image/avatar.jpg'
-  });
+  // ✅ Lấy data từ Redux store
+  const { user } = useAppSelector((state) => state.auth);
+  const {
+    currentAccount,
+    loadingLogin,
+    updating: accountUpdating,
+    sendingOtp,
+    confirmingOtp,
+    resettingPassword,
+    error: accountError,
+  } = useAppSelector((state) => state.account);
+  const {
+    currentShop,
+    loading: shopLoading,
+    updating: shopUpdating,
+    error: shopError,
+  } = useAppSelector((state) => state.shop);
+  const {
+    subAddresses,
+    loading: subAddressLoading,
+    creating: subAddressCreating,
+    updating: subAddressUpdating,
+    deleting: subAddressDeleting,
+    error: subAddressError,
+  } = useAppSelector((state) => state.subAddress);
 
-  setShop({
-    account_id: 1,
-    name: 'Cửa hàng ABC',
-    description: 'Chuyên bán đồ gia dụng và điện tử',
-    status: 'active',
-    array_working_day: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
-    working_hours: {
-      Monday: { start: '08:00', end: '18:00', isWorking: true },
-      Tuesday: { start: '08:00', end: '18:00', isWorking: true },
-      Wednesday: { start: '08:00', end: '18:00', isWorking: true },
-      Thursday: { start: '08:00', end: '18:00', isWorking: true },
-      Friday: { start: '08:00', end: '18:00', isWorking: true },
-      Saturday: { start: '09:00', end: '17:00', isWorking: true },
-      Sunday: { start: '09:00', end: '17:00', isWorking: false }
+  // ✅ Fetch data khi component mount
+  useEffect(() => {
+    if (user?.id) {
+      console.log("🚀 Fetching account and shop data for user:", user.id);
+      dispatch(getLoginAccount());
+      dispatch(getShopById(user.id));
+      dispatch(searchSubAddresses({ shopId: user.id }));
     }
-  });
+  }, [dispatch, user?.id]);
 
-  // ... rest of the data
-}, []);
+  // ✅ Handle cập nhật shop
+  const handleUpdateShop = async (shopData: Partial<Shop>) => {
+    if (!user?.id) return;
 
+    try {
+      await dispatch(
+        updateShop({
+          account_id: user.id,
+          name: shopData.name || currentShop?.name || "",
+          description: shopData.description || currentShop?.description || "",
+          status: shopData.status ?? currentShop?.status ?? true,
+          working_day: shopData.working_day || currentShop?.working_day || [],
+        })
+      ).unwrap();
+
+      dispatch(getShopById(user.id));
+    } catch (error) {
+      console.error("Update shop failed:", error);
+    }
+  };
+
+  // ✅ Handle CRUD chi nhánh
+  const handleCreateBranch = async (
+    branchData: Omit<SubAddress, "id" | "shop_id">
+  ) => {
+    if (!user?.id) return;
+
+    try {
+      await dispatch(
+        createSubAddress({
+          id: crypto.randomUUID(),
+          shop_id: user.id,
+          name: branchData.name,
+          phone: branchData.phone.toString(),
+          address_name: branchData.address_name,
+          is_default: branchData.is_default,
+        })
+      ).unwrap();
+
+      dispatch(searchSubAddresses({ shopId: user.id }));
+    } catch (error) {
+      console.error("Create branch failed:", error);
+    }
+  };
+
+  const handleUpdateBranch = async (
+    branchId: string,
+    branchData: Omit<SubAddress, "id" | "shop_id">
+  ) => {
+    if (!user?.id) return;
+
+    try {
+      await dispatch(
+        updateSubAddress({
+          id: branchId,
+          shop_id: user.id,
+          name: branchData.name,
+          phone: branchData.phone.toString(),
+          address_name: branchData.address_name,
+          is_default: branchData.is_default,
+        })
+      ).unwrap();
+
+      dispatch(searchSubAddresses({ shopId: user.id }));
+    } catch (error) {
+      console.error("Update branch failed:", error);
+    }
+  };
+
+  const handleDeleteBranch = async (branchId: string) => {
+    if (!confirm("Bạn có chắc chắn muốn xóa chi nhánh này?")) return;
+
+    try {
+      await dispatch(deleteSubAddress(branchId)).unwrap();
+      if (user?.id) {
+        dispatch(searchSubAddresses({ shopId: user.id }));
+      }
+    } catch (error) {
+      console.error("Delete branch failed:", error);
+    }
+  };
+
+  // ✅ Loading state
+  if (loadingLogin || shopLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-teal-600"></div>
+          <p className="mt-4 text-gray-600">Đang tải thông tin cửa hàng...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-6xl mx-auto px-4">
-        <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-          {/* Header */}
-          <div className="bg-gradient-to-r from-teal-600 to-teal-700 px-6 py-8">
-            <div className="flex items-center space-x-4">
-              <div className="w-20 h-20 rounded-full bg-white/20 flex items-center justify-center">
-                {account?.img_url ? (
-                  <img src={account.img_url} alt="Profile" className="w-full h-full rounded-full object-cover" />
-                ) : (
-                  <Building className="w-10 h-10 text-white" />
-                )}
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-white">{shop?.name}</h1>
-                <p className="text-teal-100">@{account?.username}</p>
-                <span className="inline-block mt-2 px-3 py-1 bg-green-500 text-white text-sm rounded-full">
-                  {shop?.status === 'active' ? 'Hoạt động' : 'Tạm dừng'}
-                </span>
-              </div>
+    <div className="min-h-screen bg-gray-50">
+      {/* ✅ Header Section */}
+      <div className="bg-gradient-to-r from-[#FF7D29] to-[#511D43]">
+        <div className="max-w-6xl mx-auto px-4 py-12">
+          <div className="flex items-center space-x-6">
+            <div className="w-24 h-24 rounded-full bg-white/20 flex items-center justify-center">
+              {currentAccount?.img_url ? (
+                <img
+                  src={currentAccount.img_url}
+                  alt="Profile"
+                  className="w-full h-full rounded-full object-cover"
+                />
+              ) : (
+                <Building className="w-12 h-12 text-white" />
+              )}
             </div>
-          </div>
-
-          {/* Navigation Tabs */}
-          <div className="border-b border-gray-200">
-            <nav className="flex space-x-8 px-6">
-              {[
-                { key: 'info', label: 'Thông tin cửa hàng', icon: Building },
-                { key: 'security', label: 'Bảo mật', icon: Lock },
-                { key: 'branches', label: 'Chi nhánh', icon: MapPin }
-              ].map(({ key, label, icon: Icon }) => (
-                <button
-                  key={key}
-                  onClick={() => setActiveTab(key as any)}
-                  className={`flex items-center space-x-2 py-4 border-b-2 font-medium text-sm transition-colors ${
-                    activeTab === key
-                      ? 'border-teal-500 text-teal-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700'
+            <div className="flex-1">
+              <h1 className="text-3xl font-bold text-white mb-2">
+                {currentShop?.name || "Đang tải..."}
+              </h1>
+              <p className="text-teal-100 text-lg mb-3">
+                @{currentAccount?.username || user?.username}
+              </p>
+              <div className="flex items-center space-x-4">
+                <span
+                  className={`inline-block px-4 py-2 rounded-full text-sm font-medium ${
+                    currentShop?.status
+                      ? "bg-green-500 text-white"
+                      : "bg-red-500 text-white"
                   }`}
                 >
-                  <Icon className="w-4 h-4" />
-                  <span>{label}</span>
-                </button>
-              ))}
-            </nav>
-          </div>
-
-          {/* Tab Content */}
-          <div className="p-6">
-            {activeTab === 'info' && <StoreInfoTab shop={shop} setShop={setShop} />}
-            {activeTab === 'security' && (
-              <SecurityTab 
-                account={account} 
-                onChangePassword={() => setShowPasswordModal(true)} 
-              />
-            )}
-            {activeTab === 'branches' && (
-              <BranchesTab 
-                subAddresses={subAddresses}
-                setSubAddresses={setSubAddresses}
-                onAddBranch={() => {
-                  setEditingBranch(null);
-                  setShowBranchModal(true);
-                }}
-                onEditBranch={(branch) => {
-                  setEditingBranch(branch);
-                  setShowBranchModal(true);
-                }}
-              />
-            )}
+                  {currentShop?.status ? "Hoạt động" : "Tạm dừng"}
+                </span>
+                <div className="flex items-center text-teal-100">
+                  <Mail className="w-4 h-4 mr-2" />
+                  <span>{currentAccount?.email}</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Modals */}
+      <div className="max-w-6xl mx-auto px-4 py-8 space-y-12">
+        {/* ✅ Store Information Section */}
+        <section id="store-info" className="bg-white rounded-xl shadow-lg p-8">
+          <div className="flex items-center mb-8">
+            <div className="w-12 h-12 bg-teal-100 rounded-lg flex items-center justify-center mr-4">
+              <Building className="w-6 h-6 text-teal-600" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900">
+                Thông tin cửa hàng
+              </h2>
+              <p className="text-gray-600">
+                Quản lý thông tin cơ bản của cửa hàng
+              </p>
+            </div>
+          </div>
+
+          <StoreInfoSection
+            shop={currentShop}
+            account={
+              currentAccount
+                ? {
+                    ...currentAccount,
+                    img_url: currentAccount.img_url ?? undefined,
+                  }
+                : null
+            }
+            onUpdateShop={handleUpdateShop}
+            updating={shopUpdating}
+            error={shopError}
+          />
+        </section>
+
+        {/* ✅ Security Section */}
+        <section id="security" className="bg-white rounded-xl shadow-lg p-8">
+          <div className="flex items-center mb-8">
+            <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mr-4">
+              <Shield className="w-6 h-6 text-orange-600" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900">
+                Bảo mật tài khoản
+              </h2>
+              <p className="text-gray-600">Quản lý mật khẩu và bảo mật</p>
+            </div>
+          </div>
+
+          <SecuritySection
+            account={
+              currentAccount
+                ? {
+                    ...currentAccount,
+                    img_url: currentAccount.img_url ?? undefined,
+                  }
+                : null
+            }
+            onChangePassword={() => setShowPasswordModal(true)}
+          />
+        </section>
+
+        {/* ✅ Branches Section */}
+        <section id="branches" className="bg-white rounded-xl shadow-lg p-8">
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center">
+              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mr-4">
+                <MapPin className="w-6 h-6 text-blue-600" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900">
+                  Quản lý chi nhánh
+                </h2>
+                <p className="text-gray-600">
+                  Thêm và quản lý các chi nhánh của cửa hàng
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => {
+                setEditingBranch(null);
+                setShowBranchModal(true);
+              }}
+              disabled={subAddressCreating}
+              className="flex items-center space-x-2 px-6 py-3 bg-teal-600 text-white rounded-lg hover:bg-teal-700 focus:ring-2 focus:ring-teal-300 transition-all duration-200 font-medium disabled:opacity-50"
+            >
+              <Plus className="w-5 h-5" />
+              <span>
+                {subAddressCreating ? "Đang thêm..." : "Thêm chi nhánh"}
+              </span>
+            </button>
+          </div>
+
+          <BranchesSection
+            subAddresses={subAddresses}
+            loading={subAddressLoading}
+            creating={subAddressCreating}
+            updating={subAddressUpdating}
+            deleting={subAddressDeleting}
+            error={subAddressError}
+            onEditBranch={(branch) => {
+              setEditingBranch(branch);
+              setShowBranchModal(true);
+            }}
+            onDeleteBranch={handleDeleteBranch}
+          />
+        </section>
+      </div>
+
+      {/* ✅ Modals */}
       {showPasswordModal && (
-        <PasswordChangeModal 
+        <PasswordChangeModal
+          account={
+            currentAccount
+              ? {
+                  ...currentAccount,
+                  img_url: currentAccount.img_url ?? undefined,
+                }
+              : null
+          }
           onClose={() => setShowPasswordModal(false)}
-          onSave={(data) => {
-            console.log('Change password:', data);
-            setShowPasswordModal(false);
-          }}
+          sendingOtp={sendingOtp}
+          confirmingOtp={confirmingOtp}
+          resettingPassword={resettingPassword}
+          error={accountError}
         />
       )}
 
@@ -162,350 +370,251 @@ useEffect(() => {
           onClose={() => setShowBranchModal(false)}
           onSave={(branchData) => {
             if (editingBranch) {
-              setSubAddresses(prev => prev.map(b => 
-                b.id === editingBranch.id ? { ...b, ...branchData } : b
-              ));
+              handleUpdateBranch(editingBranch.id, branchData);
             } else {
-              const newBranch: SubAddress = {
-                ...branchData,
-                id: Date.now(),
-                shop_id: 1
-              };
-              setSubAddresses(prev => [...prev, newBranch]);
+              handleCreateBranch(branchData);
             }
             setShowBranchModal(false);
           }}
+          creating={subAddressCreating}
+          updating={subAddressUpdating}
         />
       )}
     </div>
   );
 };
 
-interface StoreInfoTabProps {
+// ✅ Store Information Component
+interface StoreInfoSectionProps {
   shop: Shop | null;
-  setShop: (shop: Shop) => void;
+  account: Account | null;
+  onUpdateShop: (shop: Partial<Shop>) => void;
+  updating: boolean;
+  error: any;
 }
 
-const StoreInfoTab: React.FC<StoreInfoTabProps> = ({ shop, setShop }) => {
+const StoreInfoSection: React.FC<StoreInfoSectionProps> = ({
+  shop,
+  account,
+  onUpdateShop,
+  updating,
+  error,
+}) => {
   const [formData, setFormData] = useState({
-    name: shop?.name || '',
-    description: shop?.description || '',
-    working_hours: shop?.working_hours || {
-      Monday: { start: '09:00', end: '17:00', isWorking: true },
-      Tuesday: { start: '09:00', end: '17:00', isWorking: true },
-      Wednesday: { start: '09:00', end: '17:00', isWorking: true },
-      Thursday: { start: '09:00', end: '17:00', isWorking: true },
-      Friday: { start: '09:00', end: '17:00', isWorking: true },
-      Saturday: { start: '09:00', end: '17:00', isWorking: true },
-      Sunday: { start: '09:00', end: '17:00', isWorking: false }
-    }
+    name: "",
+    description: "",
+    working_day: [] as string[],
   });
 
-  const workingDays = [
-    { key: 'Monday', label: 'Thứ 2' },
-    { key: 'Tuesday', label: 'Thứ 3' },
-    { key: 'Wednesday', label: 'Thứ 4' },
-    { key: 'Thursday', label: 'Thứ 5' },
-    { key: 'Friday', label: 'Thứ 6' },
-    { key: 'Saturday', label: 'Thứ 7' },
-    { key: 'Sunday', label: 'Chủ nhật' }
+  useEffect(() => {
+    if (shop) {
+      setFormData({
+        name: shop.name,
+        description: shop.description,
+        working_day: shop.working_day || [],
+      });
+    }
+  }, [shop]);
+
+  const workingDaysOptions = [
+    { key: "Monday", label: "Thứ 2" },
+    { key: "Tuesday", label: "Thứ 3" },
+    { key: "Wednesday", label: "Thứ 4" },
+    { key: "Thursday", label: "Thứ 5" },
+    { key: "Friday", label: "Thứ 6" },
+    { key: "Saturday", label: "Thứ 7" },
+    { key: "Sunday", label: "Chủ nhật" },
   ];
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (shop) {
-      // Tạo array_working_day từ working_hours
-      const workingDays = Object.entries(formData.working_hours)
-        .filter(([_, hours]) => hours.isWorking)
-        .map(([day, _]) => day);
-      
-      setShop({ 
-        ...shop, 
-        name: formData.name,
-        description: formData.description,
-        working_hours: formData.working_hours,
-        array_working_day: workingDays
-      });
-    }
+    onUpdateShop({
+      name: formData.name,
+      description: formData.description,
+      working_day: formData.working_day,
+      status: shop?.status ?? true,
+    });
   };
 
   const toggleWorkingDay = (day: string) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      working_hours: {
-        ...prev.working_hours,
-        [day]: {
-          ...prev.working_hours[day],
-          isWorking: !prev.working_hours[day].isWorking
-        }
-      }
+      working_day: prev.working_day.includes(day)
+        ? prev.working_day.filter((d) => d !== day)
+        : [...prev.working_day, day],
     }));
   };
-
-  const updateWorkingHours = (day: string, field: 'start' | 'end', value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      working_hours: {
-        ...prev.working_hours,
-        [day]: {
-          ...prev.working_hours[day],
-          [field]: value
-        }
-      }
-    }));
-  };
-
-  const generateTimeOptions = () => {
-    const options = [];
-    for (let hour = 0; hour < 24; hour++) {
-      for (let minute = 0; minute < 60; minute += 30) {
-        const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
-        options.push(timeString);
-      }
-    }
-    return options;
-  };
-
-  const timeOptions = generateTimeOptions();
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <form onSubmit={handleSubmit} className="space-y-8">
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <p className="text-red-700 text-sm">Lỗi: {error.message}</p>
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="space-y-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-3">
+              Tên cửa hàng *
+            </label>
+            <input
+              type="text"
+              value={formData.name}
+              onChange={(e) =>
+                setFormData({ ...formData, name: e.target.value })
+              }
+              className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 text-lg"
+              required
+              disabled={updating}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-3">
+              Email (Không thể thay đổi)
+            </label>
+            <input
+              type="email"
+              value={account?.email || ""}
+              disabled
+              className="w-full border border-gray-300 rounded-lg px-4 py-3 bg-gray-100 text-gray-500 text-lg"
+            />
+          </div>
+        </div>
+
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Tên cửa hàng *
+          <label className="block text-sm font-medium text-gray-700 mb-3">
+            Mô tả cửa hàng
           </label>
-          <input
-            type="text"
-            value={formData.name}
-            onChange={(e) => setFormData({...formData, name: e.target.value})}
+          <textarea
+            value={formData.description}
+            onChange={(e) =>
+              setFormData({ ...formData, description: e.target.value })
+            }
+            rows={6}
             className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
-            required
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Email (Không thể thay đổi)
-          </label>
-          <input
-            type="email"
-            value="owner@myshop.com"
-            disabled
-            className="w-full border border-gray-300 rounded-lg px-4 py-3 bg-gray-100 text-gray-500"
+            placeholder="Mô tả về cửa hàng của bạn..."
+            disabled={updating}
           />
         </div>
       </div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Mô tả cửa hàng
-        </label>
-        <textarea
-          value={formData.description}
-          onChange={(e) => setFormData({...formData, description: e.target.value})}
-          rows={4}
-          className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
-          placeholder="Mô tả về cửa hàng của bạn..."
-        />
-      </div>
-
-      {/* Giờ làm việc cho từng ngày */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-4">
-          Giờ làm việc
+          <Clock className="w-5 h-5 inline mr-2" />
+          Ngày làm việc
         </label>
-        <div className="space-y-4">
-          {workingDays.map(({ key, label }) => (
-            <div key={key} className="border border-gray-200 rounded-lg p-4">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center space-x-3">
-                  <input
-                    type="checkbox"
-                    id={`working-${key}`}
-                    checked={formData.working_hours[key]?.isWorking || false}
-                    onChange={() => toggleWorkingDay(key)}
-                    className="w-4 h-4 text-teal-600 focus:ring-teal-500 border-gray-300 rounded"
-                  />
-                  <label 
-                    htmlFor={`working-${key}`}
-                    className="text-sm font-medium text-gray-700 cursor-pointer"
-                  >
-                    {label}
-                  </label>
-                </div>
-                
-                {formData.working_hours[key]?.isWorking && (
-                  <span className="text-xs text-green-600 bg-green-100 px-2 py-1 rounded-full">
-                    Mở cửa
-                  </span>
-                )}
-              </div>
-
-              {formData.working_hours[key]?.isWorking && (
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">
-                      Giờ mở cửa
-                    </label>
-                    <select
-                      value={formData.working_hours[key]?.start || '09:00'}
-                      onChange={(e) => updateWorkingHours(key, 'start', e.target.value)}
-                      className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
-                    >
-                      {timeOptions.map(time => (
-                        <option key={time} value={time}>{time}</option>
-                      ))}
-                    </select>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">
-                      Giờ đóng cửa
-                    </label>
-                    <select
-                      value={formData.working_hours[key]?.end || '17:00'}
-                      onChange={(e) => updateWorkingHours(key, 'end', e.target.value)}
-                      className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
-                    >
-                      {timeOptions.map(time => (
-                        <option key={time} value={time}>{time}</option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-              )}
-
-              {!formData.working_hours[key]?.isWorking && (
-                <div className="text-center py-2">
-                  <span className="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
-                    Đóng cửa
-                  </span>
-                </div>
-              )}
-            </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
+          {workingDaysOptions.map(({ key, label }) => (
+            <label
+              key={key}
+              className={`flex items-center justify-center p-3 border-2 rounded-lg cursor-pointer transition-all ${
+                formData.working_day.includes(key)
+                  ? "border-teal-500 bg-teal-50 text-teal-700"
+                  : "border-gray-300 bg-white text-gray-700 hover:border-teal-300"
+              }`}
+            >
+              <input
+                type="checkbox"
+                checked={formData.working_day.includes(key)}
+                onChange={() => toggleWorkingDay(key)}
+                className="sr-only"
+                disabled={updating}
+              />
+              <span className="text-sm font-medium">{label}</span>
+            </label>
           ))}
         </div>
       </div>
 
-      {/* Nút copy giờ làm việc */}
-      <div className="bg-gray-50 rounded-lg p-4">
-        <h4 className="text-sm font-medium text-gray-700 mb-3">Thao tác nhanh</h4>
-        <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            onClick={() => {
-              const mondayHours = formData.working_hours.Monday;
-              const updatedHours = { ...formData.working_hours };
-              
-              ['Tuesday', 'Wednesday', 'Thursday', 'Friday'].forEach(day => {
-                updatedHours[day] = { ...mondayHours };
-              });
-              
-              setFormData(prev => ({ ...prev, working_hours: updatedHours }));
-            }}
-            className="px-3 py-1.5 text-xs bg-teal-100 text-teal-700 rounded-md hover:bg-teal-200 transition-colors"
-          >
-            Áp dụng T2 cho T2-T6
-          </button>
-          
-          <button
-            type="button"
-            onClick={() => {
-              const updatedHours = { ...formData.working_hours };
-              Object.keys(updatedHours).forEach(day => {
-                updatedHours[day] = { start: '09:00', end: '17:00', isWorking: true };
-              });
-              setFormData(prev => ({ ...prev, working_hours: updatedHours }));
-            }}
-            className="px-3 py-1.5 text-xs bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 transition-colors"
-          >
-            Đặt tất cả 9:00 - 17:00
-          </button>
-          
-          <button
-            type="button"
-            onClick={() => {
-              const updatedHours = { ...formData.working_hours };
-              ['Saturday', 'Sunday'].forEach(day => {
-                updatedHours[day].isWorking = false;
-              });
-              setFormData(prev => ({ ...prev, working_hours: updatedHours }));
-            }}
-            className="px-3 py-1.5 text-xs bg-red-100 text-red-700 rounded-md hover:bg-red-200 transition-colors"
-          >
-            Đóng cửa cuối tuần
-          </button>
-        </div>
-      </div>
-
-      <div className="flex justify-end">
+      <div className="flex justify-end pt-6 border-t border-gray-200">
         <button
           type="submit"
-          className="px-6 py-3 bg-teal-600 text-white rounded-lg hover:bg-teal-700 focus:ring-2 focus:ring-teal-300 transition-all duration-200 font-medium"
+          disabled={updating}
+          className="px-8 py-3 bg-teal-600 text-white rounded-lg hover:bg-teal-700 focus:ring-2 focus:ring-teal-300 transition-all duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed text-lg"
         >
-          Lưu thay đổi
+          {updating ? "Đang lưu..." : "Lưu thay đổi"}
         </button>
       </div>
     </form>
   );
 };
 
-// Component Tab Bảo mật
-interface SecurityTabProps {
+// ✅ Security Component
+interface SecuritySectionProps {
   account: Account | null;
   onChangePassword: () => void;
 }
 
-const SecurityTab: React.FC<SecurityTabProps> = ({ account, onChangePassword }) => {
+const SecuritySection: React.FC<SecuritySectionProps> = ({
+  account,
+  onChangePassword,
+}) => {
   return (
-    <div className="space-y-6">
-      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-        <div className="flex items-center space-x-2">
-          <Lock className="w-5 h-5 text-yellow-600" />
-          <h3 className="font-medium text-yellow-800">Bảo mật tài khoản</h3>
+    <div className="space-y-8">
+      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
+        <div className="flex items-center space-x-3">
+          <Lock className="w-6 h-6 text-yellow-600" />
+          <div>
+            <h3 className="font-medium text-yellow-800 text-lg">
+              Bảo mật tài khoản
+            </h3>
+            <p className="text-yellow-700 text-sm mt-1">
+              Thường xuyên thay đổi mật khẩu để bảo vệ tài khoản của bạn
+            </p>
+          </div>
         </div>
-        <p className="text-yellow-700 text-sm mt-1">
-          Thường xuyên thay đổi mật khẩu để bảo vệ tài khoản của bạn
-        </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="space-y-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="space-y-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Tên đăng nhập
+            <label className="block text-sm font-medium text-gray-700 mb-3">
+              Tên đăng nhập (Không thể thay đổi)
             </label>
-            <input
-              type="text"
-              value={account?.username || ''}
-              disabled
-              className="w-full border border-gray-300 rounded-lg px-4 py-3 bg-gray-100 text-gray-500"
-            />
+            <div className="flex items-center space-x-3">
+              <User className="w-5 h-5 text-gray-400" />
+              <input
+                type="text"
+                value={account?.username || ""}
+                disabled
+                className="flex-1 border border-gray-300 rounded-lg px-4 py-3 bg-gray-100 text-gray-500 text-lg"
+              />
+            </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Email
+            <label className="block text-sm font-medium text-gray-700 mb-3">
+              Email (Không thể thay đổi)
             </label>
-            <input
-              type="email"
-              value={account?.email || ''}
-              disabled
-              className="w-full border border-gray-300 rounded-lg px-4 py-3 bg-gray-100 text-gray-500"
-            />
+            <div className="flex items-center space-x-3">
+              <Mail className="w-5 h-5 text-gray-400" />
+              <input
+                type="email"
+                value={account?.email || ""}
+                disabled
+                className="flex-1 border border-gray-300 rounded-lg px-4 py-3 bg-gray-100 text-gray-500 text-lg"
+              />
+            </div>
           </div>
         </div>
 
-        <div className="space-y-4">
-          <div className="border border-gray-200 rounded-lg p-4">
-            <h4 className="font-medium text-gray-900 mb-2">Đổi mật khẩu</h4>
-            <p className="text-gray-600 text-sm mb-4">
+        <div className="flex items-center justify-center">
+          <div className="border border-gray-200 rounded-xl p-8 w-full max-w-sm text-center">
+            <div className="w-16 h-16 bg-teal-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Lock className="w-8 h-8 text-teal-600" />
+            </div>
+            <h4 className="font-medium text-gray-900 mb-2 text-lg">
+              Đổi mật khẩu
+            </h4>
+            <p className="text-gray-600 text-sm mb-6">
               Cập nhật mật khẩu của bạn để bảo mật tài khoản
             </p>
             <button
               onClick={onChangePassword}
-              className="w-full px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 focus:ring-2 focus:ring-teal-300 transition-all duration-200 font-medium"
+              className="w-full px-6 py-3 bg-teal-600 text-white rounded-lg hover:bg-teal-700 focus:ring-2 focus:ring-teal-300 transition-all duration-200 font-medium"
             >
               Đổi mật khẩu
             </button>
@@ -516,128 +625,191 @@ const SecurityTab: React.FC<SecurityTabProps> = ({ account, onChangePassword }) 
   );
 };
 
-// Component Tab Chi nhánh
-interface BranchesTabProps {
+// ✅ Branches Component
+interface BranchesSectionProps {
   subAddresses: SubAddress[];
-  setSubAddresses: (addresses: SubAddress[]) => void;
-  onAddBranch: () => void;
+  loading: boolean;
+  creating: boolean;
+  updating: boolean;
+  deleting: boolean;
+  error: any;
   onEditBranch: (branch: SubAddress) => void;
+  onDeleteBranch: (id: string) => void;
 }
 
-const BranchesTab: React.FC<BranchesTabProps> = ({ 
-  subAddresses, 
-  setSubAddresses, 
-  onAddBranch, 
-  onEditBranch 
+const BranchesSection: React.FC<BranchesSectionProps> = ({
+  subAddresses,
+  loading,
+  creating,
+  updating,
+  deleting,
+  error,
+  onEditBranch,
+  onDeleteBranch,
 }) => {
-  const handleDeleteBranch = (id: number) => {
-    if (confirm('Bạn có chắc chắn muốn xóa chi nhánh này?')) {
-      setSubAddresses(subAddresses.filter(branch => branch.id !== id));
-    }
-  };
-
-  const handleSetDefault = (id: number) => {
-    setSubAddresses(subAddresses.map(branch => ({
-      ...branch,
-      is_default: branch.id === id
-    })));
-  };
+  if (loading) {
+    return (
+      <div className="text-center py-12">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600 mx-auto"></div>
+        <p className="mt-4 text-gray-600">Đang tải danh sách chi nhánh...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h3 className="text-lg font-medium text-gray-900">Quản lý chi nhánh</h3>
-        <button
-          onClick={onAddBranch}
-          className="flex items-center space-x-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 focus:ring-2 focus:ring-teal-300 transition-all duration-200 font-medium"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Thêm chi nhánh</span>
-        </button>
-      </div>
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <p className="text-red-700 text-sm">Lỗi: {error.message}</p>
+        </div>
+      )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {subAddresses.map((branch) => (
-          <div key={branch.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-            <div className="flex justify-between items-start mb-3">
-              <div className="flex items-center space-x-2">
-                <h4 className="font-medium text-gray-900">{branch.name}</h4>
-                {branch.is_default && (
-                  <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
-                    Mặc định
-                  </span>
-                )}
-              </div>
-              <div className="flex space-x-1">
-                <button
-                  onClick={() => onEditBranch(branch)}
-                  className="p-1 text-teal-600 hover:bg-teal-50 rounded"
-                  title="Chỉnh sửa"
-                >
-                  <Edit2 className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => handleDeleteBranch(branch.id)}
-                  className="p-1 text-red-600 hover:bg-red-50 rounded"
-                  title="Xóa"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-
-            <div className="space-y-2 text-sm text-gray-600">
-              <div className="flex items-center space-x-2">
-                <MapPin className="w-4 h-4" />
-                <span>{branch.address_name}</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <span>📞</span>
-                <span>{branch.phone}</span>
-              </div>
-            </div>
-
-            {!branch.is_default && (
-              <button
-                onClick={() => handleSetDefault(branch.id)}
-                className="mt-3 w-full px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 transition-colors"
-              >
-                Đặt làm mặc định
-              </button>
-            )}
+      {subAddresses.length === 0 ? (
+        <div className="text-center py-12 text-gray-500">
+          <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <MapPin className="w-12 h-12 text-gray-300" />
           </div>
-        ))}
-      </div>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">
+            Chưa có chi nhánh nào
+          </h3>
+          <p className="text-gray-600">
+            Hãy thêm chi nhánh đầu tiên của cửa hàng bạn
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {subAddresses.map((branch) => (
+            <div
+              key={branch.id}
+              className="border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-all duration-200 bg-white"
+            >
+              <div className="flex justify-between items-start mb-4">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <Building className="w-5 h-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-gray-900 text-lg">
+                      {branch.name}
+                    </h4>
+                    {branch.is_default && (
+                      <span className="inline-block px-3 py-1 bg-green-100 text-green-800 text-xs rounded-full font-medium">
+                        Mặc định
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <div className="flex space-x-2">
+                  <button
+                    onClick={() => onEditBranch(branch)}
+                    disabled={updating}
+                    className="p-2 text-teal-600 hover:bg-teal-50 rounded-lg disabled:opacity-50 transition-colors"
+                    title="Chỉnh sửa"
+                  >
+                    <Edit2 className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => onDeleteBranch(branch.id)}
+                    disabled={deleting}
+                    className="p-2 text-red-600 hover:bg-red-50 rounded-lg disabled:opacity-50 transition-colors"
+                    title="Xóa"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex items-start space-x-3">
+                  <MapPin className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" />
+                  <span className="text-gray-700 text-sm leading-relaxed">
+                    {branch.address_name}
+                  </span>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <Phone className="w-5 h-5 text-gray-400 flex-shrink-0" />
+                  <span className="text-gray-700 font-medium">
+                    {branch.phone}
+                  </span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
 
-// Modal đổi mật khẩu
+// ✅ Password Change Modal (giữ nguyên từ code cũ)
 interface PasswordChangeModalProps {
+  account: Account | null;
   onClose: () => void;
-  onSave: (data: { currentPassword: string; newPassword: string }) => void;
+  sendingOtp: boolean;
+  confirmingOtp: boolean;
+  resettingPassword: boolean;
+  error: any;
 }
 
-const PasswordChangeModal: React.FC<PasswordChangeModalProps> = ({ onClose, onSave }) => {
+const PasswordChangeModal: React.FC<PasswordChangeModalProps> = ({
+  account,
+  onClose,
+  sendingOtp,
+  confirmingOtp,
+  resettingPassword,
+  error,
+}) => {
+  const dispatch = useAppDispatch();
+  const [step, setStep] = useState<"email" | "otp" | "password">("email");
   const [formData, setFormData] = useState({
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: ''
+    email: account?.email || "",
+    otp: "",
+    newPassword: "",
+    confirmPassword: "",
   });
   const [errors, setErrors] = useState<string[]>([]);
 
   const validatePassword = (password: string): string[] => {
     const errors: string[] = [];
-    if (password.length < 8) errors.push('Mật khẩu phải có ít nhất 8 ký tự');
-    if (!/[A-Z]/.test(password)) errors.push('Mật khẩu phải có ít nhất 1 chữ hoa');
-    if (!/[a-z]/.test(password)) errors.push('Mật khẩu phải có ít nhất 1 chữ thường');
-    if (!/[0-9]/.test(password)) errors.push('Mật khẩu phải có ít nhất 1 số');
+    if (password.length < 8) errors.push("Mật khẩu phải có ít nhất 8 ký tự");
+    if (!/[A-Z]/.test(password))
+      errors.push("Mật khẩu phải có ít nhất 1 chữ hoa");
+    if (!/[a-z]/.test(password))
+      errors.push("Mật khẩu phải có ít nhất 1 chữ thường");
+    if (!/[0-9]/.test(password)) errors.push("Mật khẩu phải có ít nhất 1 số");
     return errors;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+    try {
+      await dispatch(sendEmailOtp({ email: formData.email })).unwrap();
+      setStep("otp");
+      setErrors([]);
+    } catch (error: any) {
+      setErrors([error.message || "Gửi OTP thất bại"]);
+    }
+  };
+
+  const handleConfirmOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await dispatch(
+        confirmEmailOtp({
+          email: formData.email,
+          otp: formData.otp,
+        })
+      ).unwrap();
+      setStep("password");
+      setErrors([]);
+    } catch (error: any) {
+      setErrors([error.message || "Xác nhận OTP thất bại"]);
+    }
+  };
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+
     const passwordErrors = validatePassword(formData.newPassword);
     if (passwordErrors.length > 0) {
       setErrors(passwordErrors);
@@ -645,205 +817,328 @@ const PasswordChangeModal: React.FC<PasswordChangeModalProps> = ({ onClose, onSa
     }
 
     if (formData.newPassword !== formData.confirmPassword) {
-      setErrors(['Mật khẩu xác nhận không khớp']);
+      setErrors(["Mật khẩu xác nhận không khớp"]);
       return;
     }
 
-    setErrors([]);
-    onSave({
-      currentPassword: formData.currentPassword,
-      newPassword: formData.newPassword
-    });
+    try {
+      await dispatch(
+        resetPassword({
+          id: account?.id || "",
+          password: formData.newPassword,
+        })
+      ).unwrap();
+
+      setErrors([]);
+      onClose();
+      alert("Đổi mật khẩu thành công!");
+    } catch (error: any) {
+      setErrors([error.message || "Reset mật khẩu thất bại"]);
+    }
   };
 
   return (
-    <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 backdrop-blur-sm">
-      <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-2xl">
-        <h2 className="text-xl font-semibold mb-4 text-gray-800">Đổi mật khẩu</h2>
-        
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Mật khẩu hiện tại *
-            </label>
-            <input
-              type="password"
-              value={formData.currentPassword}
-              onChange={(e) => setFormData({...formData, currentPassword: e.target.value})}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
-              required
-            />
-          </div>
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 backdrop-blur-sm">
+      <div className="bg-white rounded-xl p-8 w-full max-w-md shadow-2xl">
+        <h2 className="text-2xl font-semibold mb-6 text-gray-800">
+          Đổi mật khẩu
+        </h2>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Mật khẩu mới *
-            </label>
-            <input
-              type="password"
-              value={formData.newPassword}
-              onChange={(e) => setFormData({...formData, newPassword: e.target.value})}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
-              required
-            />
+        {(errors.length > 0 || error) && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+            <ul className="text-red-700 text-sm space-y-1">
+              {errors.map((err, index) => (
+                <li key={index}>• {err}</li>
+              ))}
+              {error && <li>• {error.message}</li>}
+            </ul>
           </div>
+        )}
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Xác nhận mật khẩu mới *
-            </label>
-            <input
-              type="password"
-              value={formData.confirmPassword}
-              onChange={(e) => setFormData({...formData, confirmPassword: e.target.value})}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
-              required
-            />
-          </div>
-
-          {errors.length > 0 && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-              <ul className="text-red-700 text-sm space-y-1">
-                {errors.map((error, index) => (
-                  <li key={index}>• {error}</li>
-                ))}
-              </ul>
+        {step === "email" && (
+          <form onSubmit={handleSendOtp} className="space-y-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Email *
+              </label>
+              <input
+                type="email"
+                value={formData.email}
+                onChange={(e) =>
+                  setFormData({ ...formData, email: e.target.value })
+                }
+                className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                required
+                disabled={sendingOtp}
+              />
             </div>
-          )}
 
-          <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-6 py-2.5 text-gray-600 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 focus:ring-2 focus:ring-gray-300 transition-all duration-200 font-medium"
-            >
-              Hủy bỏ
-            </button>
-            <button
-              type="submit"
-              className="px-6 py-2.5 bg-teal-600 text-white rounded-lg hover:bg-teal-700 focus:ring-2 focus:ring-teal-300 transition-all duration-200 font-medium shadow-sm"
-            >
-              Đổi mật khẩu
-            </button>
-          </div>
-        </form>
+            <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-6 py-3 text-gray-600 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 transition-all duration-200 font-medium"
+                disabled={sendingOtp}
+              >
+                Hủy bỏ
+              </button>
+              <button
+                type="submit"
+                className="px-6 py-3 bg-teal-600 text-white rounded-lg hover:bg-teal-700 focus:ring-2 focus:ring-teal-300 transition-all duration-200 font-medium disabled:opacity-50"
+                disabled={sendingOtp}
+              >
+                {sendingOtp ? "Đang gửi..." : "Gửi OTP"}
+              </button>
+            </div>
+          </form>
+        )}
+
+        {step === "otp" && (
+          <form onSubmit={handleConfirmOtp} className="space-y-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Mã OTP *
+              </label>
+              <input
+                type="text"
+                value={formData.otp}
+                onChange={(e) =>
+                  setFormData({ ...formData, otp: e.target.value })
+                }
+                className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                placeholder="Nhập mã OTP từ email"
+                required
+                disabled={confirmingOtp}
+              />
+            </div>
+
+            <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+              <button
+                type="button"
+                onClick={() => setStep("email")}
+                className="px-6 py-3 text-gray-600 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 transition-all duration-200 font-medium"
+                disabled={confirmingOtp}
+              >
+                Quay lại
+              </button>
+              <button
+                type="submit"
+                className="px-6 py-3 bg-teal-600 text-white rounded-lg hover:bg-teal-700 focus:ring-2 focus:ring-teal-300 transition-all duration-200 font-medium disabled:opacity-50"
+                disabled={confirmingOtp}
+              >
+                {confirmingOtp ? "Đang xác nhận..." : "Xác nhận OTP"}
+              </button>
+            </div>
+          </form>
+        )}
+
+        {step === "password" && (
+          <form onSubmit={handleResetPassword} className="space-y-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Mật khẩu mới *
+              </label>
+              <input
+                type="password"
+                value={formData.newPassword}
+                onChange={(e) =>
+                  setFormData({ ...formData, newPassword: e.target.value })
+                }
+                className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                required
+                disabled={resettingPassword}
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Xác nhận mật khẩu mới *
+              </label>
+              <input
+                type="password"
+                value={formData.confirmPassword}
+                onChange={(e) =>
+                  setFormData({ ...formData, confirmPassword: e.target.value })
+                }
+                className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                required
+                disabled={resettingPassword}
+              />
+            </div>
+
+            <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-6 py-3 text-gray-600 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 transition-all duration-200 font-medium"
+                disabled={resettingPassword}
+              >
+                Hủy bỏ
+              </button>
+              <button
+                type="submit"
+                className="px-6 py-3 bg-teal-600 text-white rounded-lg hover:bg-teal-700 focus:ring-2 focus:ring-teal-300 transition-all duration-200 font-medium disabled:opacity-50"
+                disabled={resettingPassword}
+              >
+                {resettingPassword ? "Đang cập nhật..." : "Đổi mật khẩu"}
+              </button>
+            </div>
+          </form>
+        )}
       </div>
     </div>
   );
 };
 
-// Modal quản lý chi nhánh
+// ✅ Branch Modal (giữ nguyên từ code cũ)
 interface BranchModalProps {
   branch: SubAddress | null;
   onClose: () => void;
-  onSave: (data: Omit<SubAddress, 'id' | 'shop_id'>) => void;
+  onSave: (data: Omit<SubAddress, "id" | "shop_id">) => void;
+  creating: boolean;
+  updating: boolean;
 }
 
-const BranchModal: React.FC<BranchModalProps> = ({ branch, onClose, onSave }) => {
+const BranchModal: React.FC<BranchModalProps> = ({
+  branch,
+  onClose,
+  onSave,
+  creating,
+  updating,
+}) => {
   const [formData, setFormData] = useState({
-    name: '',
-    phone: '',
-    address_name: '',
-    is_default: false
+    name: "",
+    phone: "",
+    address_name: "",
+    is_default: false,
   });
 
   useEffect(() => {
     if (branch) {
       setFormData({
         name: branch.name,
-        phone: branch.phone,
+        phone: branch.phone.toString(),
         address_name: branch.address_name,
-        is_default: branch.is_default
+        is_default: branch.is_default,
       });
     } else {
       setFormData({
-        name: '',
-        phone: '',
-        address_name: '',
-        is_default: false
+        name: "",
+        phone: "",
+        address_name: "",
+        is_default: false,
       });
     }
   }, [branch]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave(formData);
+    onSave({
+      name: formData.name,
+      phone: formData.phone,
+      address_name: formData.address_name,
+      is_default: formData.is_default,
+    });
   };
 
+  const isLoading = creating || updating;
+
   return (
-    <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 backdrop-blur-sm">
-      <div className="bg-white rounded-xl p-6 w-full max-w-lg shadow-2xl">
-        <h2 className="text-xl font-semibold mb-4 text-gray-800">
-          {branch ? 'Chỉnh sửa chi nhánh' : 'Thêm chi nhánh mới'}
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 backdrop-blur-sm">
+      <div className="bg-white rounded-xl p-8 w-full max-w-lg shadow-2xl">
+        <h2 className="text-2xl font-semibold mb-6 text-gray-800">
+          {branch ? "Chỉnh sửa chi nhánh" : "Thêm chi nhánh mới"}
         </h2>
-        
-        <form onSubmit={handleSubmit} className="space-y-4">
+
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
               Tên chi nhánh *
             </label>
             <input
               type="text"
               value={formData.name}
-              onChange={(e) => setFormData({...formData, name: e.target.value})}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+              onChange={(e) =>
+                setFormData({ ...formData, name: e.target.value })
+              }
+              className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
               placeholder="VD: Chi nhánh quận 1"
               required
+              disabled={isLoading}
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
               Số điện thoại *
             </label>
             <input
               type="tel"
               value={formData.phone}
-              onChange={(e) => setFormData({...formData, phone: e.target.value})}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+              onChange={(e) =>
+                setFormData({ ...formData, phone: e.target.value })
+              }
+              className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
               placeholder="0123456789"
               required
+              disabled={isLoading}
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
               Địa chỉ *
             </label>
             <textarea
               value={formData.address_name}
-              onChange={(e) => setFormData({...formData, address_name: e.target.value})}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 h-20 focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+              onChange={(e) =>
+                setFormData({ ...formData, address_name: e.target.value })
+              }
+              className="w-full border border-gray-300 rounded-lg px-4 py-3 h-24 focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
               placeholder="Nhập địa chỉ chi tiết..."
               required
+              disabled={isLoading}
             />
           </div>
 
           <div className="flex items-center">
-            <label className="flex items-center space-x-2">
+            <label className="flex items-center space-x-3">
               <input
                 type="checkbox"
                 checked={formData.is_default}
-                onChange={(e) => setFormData({...formData, is_default: e.target.checked})}
-                className="w-4 h-4 text-teal-600 focus:ring-teal-500 border-gray-300 rounded"
+                onChange={(e) =>
+                  setFormData({ ...formData, is_default: e.target.checked })
+                }
+                className="w-5 h-5 text-teal-600 focus:ring-teal-500 border-gray-300 rounded"
+                disabled={isLoading}
               />
-              <span className="text-sm font-medium text-gray-700">Đặt làm chi nhánh mặc định</span>
+              <span className="text-sm font-medium text-gray-700">
+                Đặt làm chi nhánh mặc định
+              </span>
             </label>
           </div>
 
-          <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+          <div className="flex justify-end space-x-3 pt-6 border-t border-gray-200">
             <button
               type="button"
               onClick={onClose}
-              className="px-6 py-2.5 text-gray-600 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 focus:ring-2 focus:ring-gray-300 transition-all duration-200 font-medium"
+              className="px-6 py-3 text-gray-600 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 transition-all duration-200 font-medium"
+              disabled={isLoading}
             >
               Hủy bỏ
             </button>
             <button
               type="submit"
-              className="px-6 py-2.5 bg-teal-600 text-white rounded-lg hover:bg-teal-700 focus:ring-2 focus:ring-teal-300 transition-all duration-200 font-medium shadow-sm"
+              className="px-6 py-3 bg-teal-600 text-white rounded-lg hover:bg-teal-700 focus:ring-2 focus:ring-teal-300 transition-all duration-200 font-medium disabled:opacity-50"
+              disabled={isLoading}
             >
-              {branch ? 'Cập nhật' : 'Thêm mới'}
+              {isLoading
+                ? branch
+                  ? "Đang cập nhật..."
+                  : "Đang thêm..."
+                : branch
+                ? "Cập nhật"
+                : "Thêm mới"}
             </button>
           </div>
         </form>

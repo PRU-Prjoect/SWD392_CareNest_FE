@@ -20,7 +20,12 @@ import RegisterCustomer from "@/pages/RegisterCustomer"; // Trang đăng ký cho
 import AppLayoutForShop from "../layout/AppLayoutForShop"; // Layout cho Shop/Admin
 import SmartRedirect from "@/components/common/SmartRedirect"; // Component điều hướng thông minh dựa trên trạng thái đăng nhập
 import RegisterShop from "@/pages/RegisterShop"; // Trang đăng ký cho Shop
-import StoreProfile from "@/pages/Shop/ShopProfile/StoreProfilePage";
+
+// ✅ Import các component cho Shop Profile
+import ShopProfileLayout from "@/pages/Shop/components/ShopProfileLayout";
+import ShopInfo from "@/pages/Shop/ShopProfile/ShopInfo";
+import ShopSecurity from "@/pages/Shop/ShopProfile/ShopSecurity";
+import ShopBranches from "@/pages/Shop/ShopProfile/ShopBranches";
 
 // Component chứa toàn bộ định nghĩa các route
 const AppRoutes = () => {
@@ -68,9 +73,9 @@ const AppRoutes = () => {
         path="/shop/*"
         element={
           // TODO: Đang bỏ qua việc bảo vệ route, nên thêm lại ProtectedRoute nếu cần
-          // <ProtectedRoute>
-          <AppLayoutForShop />
-          // </ProtectedRoute>
+          <ProtectedRoute>
+            <AppLayoutForShop />
+          </ProtectedRoute>
         }
       >
         {/* Dashboard chính của Shop */}
@@ -78,8 +83,16 @@ const AppRoutes = () => {
         <Route path="orders" element={<OrderManagement />} />
         <Route path="services" element={<ServiceManagement />} />
         <Route path="hotels" element={<HotelRoomManagement />} />
-        {/* ✅ Trang thông tin cửa hàng (đã có sẵn) */}
-        <Route path="shop-profile" element={<StoreProfile />} />
+
+        {/* ✅ Nested Routes cho Shop Profile */}
+        <Route path="shop-profile" element={<ShopProfileLayout />}>
+          <Route path="info" element={<ShopInfo />} />
+          <Route path="security" element={<ShopSecurity />} />
+          <Route path="branches" element={<ShopBranches />} />
+          {/* Redirect mặc định từ /shop/shop-profile về /shop/shop-profile/info */}
+          <Route index element={<Navigate to="info" replace />} />
+        </Route>
+
         {/* ✅ Trang thông tin cá nhân cho shop owner (nếu muốn tách riêng) */}
         <Route path="profile" element={<ProfilePage />} />
         <Route index element={<Navigate to="dashboard" replace />} />

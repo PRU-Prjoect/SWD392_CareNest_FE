@@ -14,6 +14,7 @@ interface AccountState {
   resettingPassword: boolean;
   activating: boolean;
   uploadingImage: boolean;
+  loadingLogin: boolean;
   accounts: AccountData[];
   currentAccount: AccountData | null;
   error: {
@@ -133,6 +134,7 @@ const initialState: AccountState = {
   uploadingImage: false,
   accounts: [],
   currentAccount: null,
+  loadingLogin: false,
   error: null,
   searchError: null,
   updateError: null,
@@ -567,6 +569,47 @@ export const deleteAccount = createAsyncThunk<
   }
 });
 
+// ✅ 11. Get Login Account
+export const getLoginAccount = createAsyncThunk<
+  AccountResponse,
+  void,
+  { rejectValue: ErrorResponse }
+>("account/getLogin", async (_, { rejectWithValue }) => {
+  try {
+    const response = await api.get("account/get-login", {
+      headers: {
+        accept: "*/*",
+      },
+    });
+
+    console.log("✅ Get Login Account Response:", response.data);
+
+    if (!response.data) {
+      return rejectWithValue({
+        error: 1,
+        message: "Phản hồi từ server không hợp lệ",
+      });
+    }
+
+    return response.data;
+  } catch (err: any) {
+    console.error("❌ Get Login Account Error:", err.response?.data);
+
+    if (err.response) {
+      return rejectWithValue({
+        error: err.response.status,
+        message:
+          err.response.data?.message || "Lấy thông tin đăng nhập thất bại",
+      });
+    }
+
+    return rejectWithValue({
+      error: 1,
+      message: err.message || "Không thể kết nối đến máy chủ",
+    });
+  }
+});
+
 // Account slice
 const accountSlice = createSlice({
   name: "account",
@@ -910,6 +953,36 @@ const accountSlice = createSlice({
           state.deleteError = {
             code: 1,
             message: action.error.message || "Xóa tài khoản thất bại",
+          };
+        }
+      })
+      .addCase(getLoginAccount.pending, (state) => {
+        state.loadingLogin = true;
+        state.error = null;
+      })
+      .addCase(
+        getLoginAccount.fulfilled,
+        (state, action: PayloadAction<AccountResponse>) => {
+          state.loadingLogin = false;
+          state.currentAccount = action.payload.data;
+          state.error = null;
+          console.log(
+            "✅ Retrieved login account:",
+            action.payload.data.username
+          );
+        }
+      )
+      .addCase(getLoginAccount.rejected, (state, action) => {
+        state.loadingLogin = false;
+        if (action.payload) {
+          state.error = {
+            code: action.payload.error,
+            message: action.payload.message,
+          };
+        } else {
+          state.error = {
+            code: 1,
+            message: action.error.message || "Lấy thông tin đăng nhập thất bại",
           };
         }
       });
