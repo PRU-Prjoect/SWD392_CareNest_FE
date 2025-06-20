@@ -4,7 +4,7 @@ import type { PayloadAction } from "@reduxjs/toolkit";
 import api from "@/config/axios";
 
 // Interfaces
-interface ServiceShopState {
+interface serviceTypeShopState {
   loading: boolean;
   updating: boolean;
   searching: boolean;
@@ -84,7 +84,7 @@ interface ErrorResponse {
 }
 
 // Initial state
-const initialState: ServiceShopState = {
+const initialState: serviceTypeShopState = {
   loading: false,
   updating: false,
   searching: false,
@@ -104,7 +104,7 @@ export const searchServiceTypes = createAsyncThunk<
   ServiceTypeListResponse,
   SearchServiceTypeRequest | void,
   { rejectValue: ErrorResponse }
->("serviceShop/search", async (params = {}, { rejectWithValue }) => {
+>("serviceTypeShop/search", async (params = {}, { rejectWithValue }) => {
   try {
     // ✅ Sử dụng type guard để kiểm tra params
     const queryParams = new URLSearchParams();
@@ -186,7 +186,7 @@ export const createServiceType = createAsyncThunk<
   ServiceTypeResponse,
   CreateServiceTypeRequest,
   { rejectValue: ErrorResponse }
->("serviceShop/create", async (data, { rejectWithValue }) => {
+>("serviceTypeShop/create", async (data, { rejectWithValue }) => {
   try {
     const formData = new FormData();
     formData.append("name", data.name);
@@ -260,7 +260,7 @@ export const getServiceTypeById = createAsyncThunk<
   ServiceTypeDetailResponse,
   string, // service_type_id
   { rejectValue: ErrorResponse }
->("serviceShop/getById", async (serviceTypeId, { rejectWithValue }) => {
+>("serviceTypeShop/getById", async (serviceTypeId, { rejectWithValue }) => {
   try {
     const response = await api.get(`Service_Type/${serviceTypeId}`, {
       headers: {
@@ -323,7 +323,7 @@ export const updateServiceType = createAsyncThunk<
   SimpleResponse,
   UpdateServiceTypeRequest,
   { rejectValue: ErrorResponse }
->("serviceShop/update", async (data, { rejectWithValue }) => {
+>("serviceTypeShop/update", async (data, { rejectWithValue }) => {
   try {
     const { id, ...updateData } = data;
 
@@ -403,7 +403,7 @@ export const deleteServiceType = createAsyncThunk<
   SimpleResponse,
   string, // service_type_id
   { rejectValue: ErrorResponse }
->("serviceShop/delete", async (serviceTypeId, { rejectWithValue }) => {
+>("serviceTypeShop/delete", async (serviceTypeId, { rejectWithValue }) => {
   try {
     const response = await api.delete(`Service_Type/${serviceTypeId}`, {
       headers: {
@@ -465,11 +465,11 @@ export const deleteServiceType = createAsyncThunk<
 });
 
 // Service Shop slice
-const serviceShopSlice = createSlice({
+const serviceTypeShopSlice = createSlice({
   name: "serviceShop",
   initialState,
   reducers: {
-    clearServiceShopError: (state) => {
+    clearServiceTypeShopError: (state) => {
       state.error = null;
     },
     clearSearchError: (state) => {
@@ -484,14 +484,14 @@ const serviceShopSlice = createSlice({
     clearCreateError: (state) => {
       state.createError = null;
     },
-    clearAllServiceShopErrors: (state) => {
+    clearAllServiceTypeShopErrors: (state) => {
       state.error = null;
       state.searchError = null;
       state.updateError = null;
       state.deleteError = null;
       state.createError = null;
     },
-    resetServiceShopState: (state) => {
+    resetServiceTypeShopState: (state) => {
       Object.assign(state, initialState);
     },
     clearServiceTypesList: (state) => {
@@ -668,15 +668,19 @@ const serviceShopSlice = createSlice({
 });
 
 export const {
-  clearServiceShopError,
+  clearServiceTypeShopError,
   clearSearchError,
   clearUpdateError,
   clearDeleteError,
   clearCreateError,
-  clearAllServiceShopErrors,
-  resetServiceShopState,
+  clearAllServiceTypeShopErrors,
+  resetServiceTypeShopState,
   clearServiceTypesList,
   setCurrentServiceType,
-} = serviceShopSlice.actions;
+} = serviceTypeShopSlice.actions;
 
-export default serviceShopSlice.reducer;
+export default serviceTypeShopSlice.reducer;
+///số lượng người đặt cuộc hẹn = purchase
+// hôm nay đẫ fetch được những api liên quan đến thông tin của shop
+// cũng như là điều chỉnh lại side bar cho đẹp
+// ĐANG BỊ TRỄ

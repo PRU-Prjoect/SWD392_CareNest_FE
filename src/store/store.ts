@@ -10,7 +10,7 @@ import customerReducer from "./slices/customerSlice";
 import shopReducer from "./slices/shopSlice";
 import accountReducer from "./slices/AccountSlice";
 import subAddressSliceReducer from "./slices/subAddressSlice";
-import serviceShopReducer from "./slices/serviceShopSlice";
+import serviceShopReducer from "./slices/serviceTypeShopSlice";
 
 const persistConfig = {
   key: "root",
