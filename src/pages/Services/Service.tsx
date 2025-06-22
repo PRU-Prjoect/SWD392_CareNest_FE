@@ -10,11 +10,11 @@ const ServicesPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useDispatch<AppDispatch>();
+
   const { services, searching, searchError } = useSelector(
     (state: RootState) => state.service
   );
 
-  // ✅ Local state
   const [currentSearchTerm, setCurrentSearchTerm] = useState("");
   const [currentFilters, setCurrentFilters] = useState<Record<string, string>>(
     {}
@@ -83,9 +83,17 @@ const ServicesPage: React.FC = () => {
     }
   };
 
-  // ✅ Handle service click - TypeScript tự hiểu service.id là string
-  const handleServiceClick = (id: string) => {
-    navigate(`/service-detail/${id}`);
+  // ✅ Handle service detail view
+  const handleServiceDetail = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent parent onClick
+    navigate(`/app/service-detail/${id}`);
+  };
+
+  // ✅ Handle book now
+  const handleBookNow = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent parent onClick
+    // Navigate to booking page or open booking modal
+    navigate(`/app/booking/${id}`);
   };
 
   // ✅ Handle retry on error
@@ -95,7 +103,7 @@ const ServicesPage: React.FC = () => {
 
   return (
     <div className="container mx-auto px-4 py-6">
-      {/* ✅ Show search info */}
+      {/* Search info và filters như cũ */}
       {currentSearchTerm && (
         <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
           <p className="text-blue-800">
@@ -146,14 +154,13 @@ const ServicesPage: React.FC = () => {
         </div>
       )}
 
-      {/* ✅ Services Grid */}
+      {/* ✅ Services Grid - Cập nhật với 2 nút */}
       {!searching && services.length > 0 && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
           {services.map((service) => (
             <div
               key={service.id}
-              onClick={() => handleServiceClick(service.id)}
-              className="cursor-pointer bg-white rounded-lg shadow p-4 flex flex-col items-center hover:shadow-lg transition"
+              className="bg-white rounded-lg shadow p-4 flex flex-col hover:shadow-lg transition"
             >
               {/* Service Image Placeholder */}
               <div className="w-full h-28 bg-gradient-to-r from-teal-100 to-blue-100 rounded mb-3 flex items-center justify-center">
@@ -173,7 +180,7 @@ const ServicesPage: React.FC = () => {
               </div>
 
               {/* Service Info */}
-              <div className="text-center w-full">
+              <div className="text-center w-full flex-1">
                 <div className="font-medium text-gray-800 mb-1 line-clamp-2">
                   {service.name}
                 </div>
@@ -203,7 +210,7 @@ const ServicesPage: React.FC = () => {
                 </div>
 
                 {/* Status badge */}
-                <div className="mt-2">
+                <div className="mt-2 mb-3">
                   <span
                     className={`inline-block px-2 py-1 text-xs rounded-full ${
                       service.is_active
@@ -215,12 +222,62 @@ const ServicesPage: React.FC = () => {
                   </span>
                 </div>
               </div>
+
+              {/* ✅ Action Buttons */}
+              <div className="flex flex-col gap-2 mt-auto">
+                <button
+                  onClick={(e) => handleServiceDetail(service.id, e)}
+                  className="w-full px-3 py-2 bg-gray-100 text-gray-700 text-sm rounded-lg hover:bg-gray-200 transition-colors flex items-center justify-center space-x-1"
+                >
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                    />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                    />
+                  </svg>
+                  <span>Xem chi tiết</span>
+                </button>
+
+                <button
+                  onClick={(e) => handleBookNow(service.id, e)}
+                  disabled={!service.is_active}
+                  className="w-full px-3 py-2 bg-[#2A9D8F] text-white text-sm rounded-lg hover:bg-[#238276] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-1"
+                >
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                  <span>Đặt ngay</span>
+                </button>
+              </div>
             </div>
           ))}
         </div>
       )}
 
-      {/* ✅ Empty State */}
+      {/* Empty State */}
       {!searching && services.length === 0 && !searchError && (
         <div className="flex flex-col items-center justify-center py-12">
           <svg
