@@ -1,5 +1,9 @@
 // layout/AppHeaderForUser.tsx
 import { useState } from "react";
+import { useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import type { AppDispatch } from "@/store/store";
+import { getAllServices } from "@/store/slices/serviceSlice"; // ✅ Import action
 import NotificationDropdown from "../components/header/NotificationDropdown";
 import UserDropdown from "../components/header/UserDropdown";
 import SearchBar from "../components/common/SearchBar";
@@ -13,9 +17,84 @@ interface HeaderProps {
 
 const AppHeaderForUser: React.FC<HeaderProps> = () => {
   const [isApplicationMenuOpen, setApplicationMenuOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState(""); // ✅ State cho search term
+  const dispatch = useDispatch<AppDispatch>(); // ✅ Redux dispatch
+  const navigate = useNavigate(); // ✅ Navigation
 
   const toggleApplicationMenu = () => {
     setApplicationMenuOpen(!isApplicationMenuOpen);
+  };
+
+  // ✅ Handle search submit
+  const handleSearchSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!searchTerm.trim()) return;
+
+    try {
+      // Dispatch search action với parameters
+      await dispatch(
+        getAllServices({
+          name: searchTerm,
+          sortBy: "createdAt",
+        })
+      );
+
+      // Navigate to services page
+      navigate("/app/services", {
+        state: { searchTerm: searchTerm.trim() },
+      });
+    } catch (error) {
+      console.error("Search error:", error);
+    }
+  };
+
+  // ✅ Handle filter search (từ SearchBar component)
+  const handleSearch = async (values: Record<string, string>) => {
+    console.log("Filter values:", values);
+
+    try {
+      // Tạo search parameters từ filter
+      const searchParams: any = {};
+
+      if (values.sortBy) {
+        switch (values.sortBy) {
+          case "price_asc":
+            searchParams.sortBy = "price";
+            break;
+          case "price_desc":
+            searchParams.sortBy = "price_desc";
+            break;
+          case "rating":
+            searchParams.sortBy = "star";
+            break;
+          case "newest":
+            searchParams.sortBy = "createdAt";
+            break;
+          default:
+            searchParams.sortBy = "createdAt";
+        }
+      }
+
+      // Thêm service type mapping nếu cần
+      if (values.petType) {
+        // Map pet type to service_type_id nếu có mapping
+        searchParams.serviceTypeId = "f11909c0-89c2-4c5a-8fd9-21511a619e2c";
+      }
+
+      // Dispatch search với filters
+      await dispatch(getAllServices(searchParams));
+
+      // Navigate to services page với filter state
+      navigate("/app/services", {
+        state: {
+          filters: values,
+          searchType: "filter",
+        },
+      });
+    } catch (error) {
+      console.error("Filter search error:", error);
+    }
   };
 
   // Định nghĩa các trường filter
@@ -77,10 +156,6 @@ const AppHeaderForUser: React.FC<HeaderProps> = () => {
     },
   ];
 
-  const handleSearch = (values: Record<string, string>) => {
-    console.log("Filter values:", values);
-  };
-
   return (
     <>
       {/* Header chính */}
@@ -105,18 +180,21 @@ const AppHeaderForUser: React.FC<HeaderProps> = () => {
               </Link>
             </div>
 
-            {/* Search bar - Ở giữa, chỉ hiện trên desktop */}
+            {/* ✅ Search bar cập nhật - Ở giữa, chỉ hiện trên desktop */}
             <div className="hidden lg:flex flex-1 justify-center max-w-2xl mx-8">
-              <form className="w-full">
+              <form onSubmit={handleSearchSubmit} className="w-full">
                 <div className="relative">
                   <input
                     type="text"
                     placeholder="Tìm tên dịch vụ"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
                     className="h-12 w-full rounded-lg border-0 bg-white py-3 pl-4 pr-24 text-sm text-gray-800 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-white/50"
                   />
                   <button
                     type="submit"
-                    className="absolute right-2 top-1/2 -translate-y-1/2 bg-[#2A9D8F] hover:bg-[#238276] text-white px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200"
+                    disabled={!searchTerm.trim()}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 bg-[#2A9D8F] hover:bg-[#238276] text-white px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200 disabled:opacity-50"
                   >
                     Tìm kiếm
                   </button>
@@ -174,19 +252,23 @@ const AppHeaderForUser: React.FC<HeaderProps> = () => {
               </Link>
             </div>
           </div>
-          {/* Mobile search và menu */}
+
+          {/* ✅ Mobile search và menu cập nhật */}
           {isApplicationMenuOpen && (
             <div className="lg:hidden pb-4">
-              <form>
+              <form onSubmit={handleSearchSubmit}>
                 <div className="relative">
                   <input
                     type="text"
                     placeholder="Tìm tên dịch vụ"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
                     className="h-11 w-full rounded-lg border-0 bg-white py-3 pl-4 pr-20 text-sm text-gray-800 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-white/50"
                   />
                   <button
                     type="submit"
-                    className="absolute right-2 top-1/2 -translate-y-1/2 bg-[#2A9D8F] hover:bg-[#238276] text-white px-3 py-1.5 rounded text-sm font-medium"
+                    disabled={!searchTerm.trim()}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 bg-[#2A9D8F] hover:bg-[#238276] text-white px-3 py-1.5 rounded text-sm font-medium disabled:opacity-50"
                   >
                     Tìm kiếm
                   </button>
@@ -230,7 +312,7 @@ const AppHeaderForUser: React.FC<HeaderProps> = () => {
         <div className="w-full max-w-8xl mx-auto px-6 lg:px-8 p-2">
           <SearchBar
             fields={filterFields}
-            onSearch={handleSearch}
+            onSearch={handleSearch} // ✅ Sử dụng function đã cập nhật
             buttonLabel="Lọc kết quả"
           />
         </div>

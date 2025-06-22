@@ -15,6 +15,7 @@ import OrderManagement from "@/pages/Shop/Order/OrderManagement";
 import ServiceManagement from "@/pages/Shop/ServiceManagement";
 import HotelRoomManagement from "@/pages/Shop/Order/HotelRoomManagement";
 import ProfilePage from "../pages/Profile"; // ✅ Import ProfilePage
+import ServicesPage from "@/pages/Services/Service"; // ✅ Thêm import
 
 import RegisterCustomer from "@/pages/RegisterCustomer"; // Trang đăng ký cho khách hàng
 import AppLayoutForShop from "../layout/AppLayoutForShop"; // Layout cho Shop/Admin
@@ -33,21 +34,17 @@ const AppRoutes = () => {
   return (
     <Routes>
       {/* --------- Các Route Public --------- */}
-      {/* Trang đăng nhập */}
       <Route path="/login" element={<LoginPage />} />
-      {/* Trang chọn loại tài khoản để đăng ký */}
       <Route path="/registertype" element={<RegisterType />} />
-      {/* Trang đăng ký tổng quát */}
       <Route path="/register" element={<RegisterPage />} />
-      {/* Trang đăng ký dành cho khách hàng */}
       <Route path="/register-customer" element={<RegisterCustomer />} />
-      {/* Trang đăng ký dành cho Shop */}
       <Route path="/registershop" element={<RegisterShop />} />
 
       {/* --------- Route cho người dùng chưa đăng nhập (Guest Layout) --------- */}
       <Route path="/guest/*" element={<AppLayoutForGuest />}>
-        {/* Mặc định chuyển hướng tới trang Home */}
         <Route path="home" element={<HomePage />} />
+        <Route path="services" element={<ServicesPage />} />{" "}
+        {/* ✅ Thêm cho guest */}
         <Route index element={<Navigate to="home" replace />} />
       </Route>
 
@@ -56,15 +53,13 @@ const AppRoutes = () => {
         path="/app/*"
         element={
           <ProtectedRoute>
-            {" "}
-            {/* Chặn truy cập nếu chưa đăng nhập */}
             <AppLayoutForUser />
           </ProtectedRoute>
         }
       >
-        {/* Trang home sau khi đăng nhập */}
         <Route path="home" element={<HomePage />} />
-        {/* ✅ Trang thông tin cá nhân cho user */}
+        <Route path="services" element={<ServicesPage />} />{" "}
+        {/* ✅ Thêm cho user */}
         <Route path="profile" element={<ProfilePage />} />
         <Route index element={<Navigate to="home" replace />} />
       </Route>
@@ -73,35 +68,26 @@ const AppRoutes = () => {
       <Route
         path="/shop/*"
         element={
-          // TODO: Đang bỏ qua việc bảo vệ route, nên thêm lại ProtectedRoute nếu cần
           <ProtectedRoute>
             <AppLayoutForShop />
           </ProtectedRoute>
         }
       >
-        {/* Dashboard chính của Shop */}
         <Route path="dashboard" element={<ShopDashboard />} />
         <Route path="orders" element={<OrderManagement />} />
         <Route path="services" element={<ServiceManagement />} />
-        {/* ✅ Thêm route cho ServiceDetail với dynamic parameter :id */}
         <Route path="services/:id" element={<ServiceDetail />} />
         <Route path="hotels" element={<HotelRoomManagement />} />
-
-        {/* ✅ Nested Routes cho Shop Profile */}
         <Route path="shop-profile" element={<ShopProfileLayout />}>
           <Route path="info" element={<ShopInfo />} />
           <Route path="security" element={<ShopSecurity />} />
           <Route path="branches" element={<ShopBranches />} />
-          {/* Redirect mặc định từ /shop/shop-profile về /shop/shop-profile/info */}
           <Route index element={<Navigate to="info" replace />} />
         </Route>
-
-        {/* ✅ Trang thông tin cá nhân cho shop owner (nếu muốn tách riêng) */}
         <Route path="profile" element={<ProfilePage />} />
         <Route index element={<Navigate to="dashboard" replace />} />
       </Route>
 
-      {/* --------- Trang gốc ("/") sẽ redirect thông minh theo trạng thái đăng nhập --------- */}
       <Route path="/" element={<SmartRedirect />} />
     </Routes>
   );

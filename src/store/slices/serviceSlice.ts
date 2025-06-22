@@ -32,7 +32,7 @@ interface ServiceState {
   } | null;
 }
 
-interface ServiceData {
+export interface ServiceData {
   id: string;
   name: string;
   is_active: boolean;

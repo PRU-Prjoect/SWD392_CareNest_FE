@@ -56,7 +56,11 @@ const SearchBar: React.FC<SearchBarProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    navigate("/services");
+    // ✅ Sửa navigation path tùy theo user role
+    const isAuthenticated = true; // Lấy từ auth state
+    const targetPath = isAuthenticated ? "/app/services" : "/guest/services";
+
+    navigate(targetPath);
     onSearch(values);
   };
 
