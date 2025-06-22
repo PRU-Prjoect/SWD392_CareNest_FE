@@ -26,6 +26,7 @@ import ShopProfileLayout from "@/pages/Shop/components/ShopProfileLayout";
 import ShopInfo from "@/pages/Shop/ShopProfile/ShopInfo";
 import ShopSecurity from "@/pages/Shop/ShopProfile/ShopSecurity";
 import ShopBranches from "@/pages/Shop/ShopProfile/ShopBranches";
+import ServiceDetail from "@/pages/Shop/ServiceDetail";
 
 // Component chứa toàn bộ định nghĩa các route
 const AppRoutes = () => {
@@ -82,6 +83,8 @@ const AppRoutes = () => {
         <Route path="dashboard" element={<ShopDashboard />} />
         <Route path="orders" element={<OrderManagement />} />
         <Route path="services" element={<ServiceManagement />} />
+        {/* ✅ Thêm route cho ServiceDetail với dynamic parameter :id */}
+        <Route path="services/:id" element={<ServiceDetail />} />
         <Route path="hotels" element={<HotelRoomManagement />} />
 
         {/* ✅ Nested Routes cho Shop Profile */}

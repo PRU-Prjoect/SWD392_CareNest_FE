@@ -680,7 +680,3 @@ export const {
 } = serviceTypeShopSlice.actions;
 
 export default serviceTypeShopSlice.reducer;
-///số lượng người đặt cuộc hẹn = purchase
-// hôm nay đẫ fetch được những api liên quan đến thông tin của shop
-// cũng như là điều chỉnh lại side bar cho đẹp
-// ĐANG BỊ TRỄ

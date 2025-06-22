@@ -1,46 +1,84 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import type { RootState, AppDispatch } from "@/store/store";
+import {
+  getAllServices,
+  createService,
+  clearAllServiceErrors,
+  clearCreateError,
+} from "@/store/slices/serviceSlice";
+import AddServiceModal from "@/components/modals/AddServiceModal";
 
-interface Service {
-  id: number;
+// ✅ Sử dụng interface từ serviceSlice.ts
+interface ServiceData {
+  id: string;
   name: string;
+  is_active: boolean;
+  shop_id: string;
   description: string;
+  discount_percent: number;
   price: number;
-  duration: number; // phút
-  category: string;
-  status: 'active' | 'inactive';
-  image: string;
-  createdAt: string;
+  limit_per_hour: number;
+  duration_type: number;
+  star: number;
+  purchases: number;
+  service_type_id: string;
 }
 
 interface ServiceModalProps {
   isOpen: boolean;
   onClose: () => void;
-  service: Service | null;
-  onSave: (service: Omit<Service, 'id' | 'createdAt'>) => void;
+  onSave: (service: Omit<ServiceData, "id">) => void;
+  isLoading?: boolean;
 }
 
-const ServiceModal: React.FC<ServiceModalProps> = ({ isOpen, onClose, service, onSave }) => {
+const ServiceModal: React.FC<ServiceModalProps> = ({
+  isOpen,
+  onClose,
+  onSave,
+  isLoading = false,
+}) => {
   const [formData, setFormData] = useState({
-    name: service?.name || '',
-    description: service?.description || '',
-    price: service?.price || 0,
-    duration: service?.duration || 60,
-    category: service?.category || '',
-    status: service?.status || 'active' as 'active' | 'inactive',
-    image: service?.image || ''
+    name: "",
+    description: "",
+    price: 0,
+    limit_per_hour: 1,
+    duration_type: 60,
+    is_active: true,
+    shop_id: "",
+    discount_percent: 0,
+    star: 0,
+    purchases: 0,
+    service_type_id: "",
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSave(formData);
-    onClose();
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
+  const handleChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
+  ) => {
+    const { name, value, type } = e.target;
+    setFormData((prev) => ({
       ...prev,
-      [name]: name === 'price' || name === 'duration' ? Number(value) : value
+      [name]:
+        type === "checkbox"
+          ? (e.target as HTMLInputElement).checked
+          : [
+              "price",
+              "limit_per_hour",
+              "duration_type",
+              "discount_percent",
+              "star",
+              "purchases",
+            ].includes(name)
+          ? Number(value)
+          : value,
     }));
   };
 
@@ -48,49 +86,86 @@ const ServiceModal: React.FC<ServiceModalProps> = ({ isOpen, onClose, service, o
 
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
-      <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto shadow-2xl">
+      <div className="bg-white rounded-xl p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto shadow-2xl">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-bold text-gray-800">
-            {service ? 'Chỉnh sửa dịch vụ' : 'Thêm dịch vụ mới'}
-          </h2>
+          <h2 className="text-xl font-bold text-gray-800">Thêm dịch vụ mới</h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-full hover:bg-gray-100"
+            disabled={isLoading}
+            className="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-full hover:bg-gray-100 disabled:opacity-50"
           >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Tên dịch vụ</label>
-            <input
-              type="text"
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
-              required
-            />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Tên dịch vụ *
+              </label>
+              <input
+                type="text"
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                required
+                disabled={isLoading}
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Loại dịch vụ *
+              </label>
+              <select
+                name="service_type_id"
+                value={formData.service_type_id}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                required
+                disabled={isLoading}
+              >
+                <option value="">Chọn loại dịch vụ</option>
+                <option value="f11909c0-89c2-4c5a-8fd9-21511a619e2c">
+                  Chăm sóc thú cưng
+                </option>
+              </select>
+            </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Mô tả</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Mô tả
+            </label>
             <textarea
               name="description"
               value={formData.description}
               onChange={handleChange}
               rows={3}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
-              required
+              disabled={isLoading}
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Giá (VNĐ)</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Giá (VNĐ) *
+              </label>
               <input
                 type="number"
                 name="price"
@@ -98,78 +173,117 @@ const ServiceModal: React.FC<ServiceModalProps> = ({ isOpen, onClose, service, o
                 onChange={handleChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
                 required
+                min="0"
+                disabled={isLoading}
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Thời gian (phút)</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Giảm giá (%)
+              </label>
               <input
                 type="number"
-                name="duration"
-                value={formData.duration}
+                name="discount_percent"
+                value={formData.discount_percent}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                min="0"
+                max="100"
+                disabled={isLoading}
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Giới hạn/giờ *
+              </label>
+              <input
+                type="number"
+                name="limit_per_hour"
+                value={formData.limit_per_hour}
                 onChange={handleChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
                 required
+                min="1"
+                disabled={isLoading}
               />
             </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Danh mục</label>
-            <select
-              name="category"
-              value={formData.category}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
-              required
-            >
-              <option value="">Chọn danh mục</option>
-              <option value="grooming">Chăm sóc lông</option>
-              <option value="bathing">Tắm rửa</option>
-              <option value="healthcare">Chăm sóc sức khỏe</option>
-              <option value="training">Huấn luyện</option>
-              <option value="boarding">Lưu trú</option>
-            </select>
-          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Thời gian (phút)
+              </label>
+              <input
+                type="number"
+                name="duration_type"
+                value={formData.duration_type}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                min="0"
+                disabled={isLoading}
+              />
+            </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Trạng thái</label>
-            <select
-              name="status"
-              value={formData.status}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
-            >
-              <option value="active">Hoạt động</option>
-              <option value="inactive">Tạm dừng</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Hình ảnh (URL)</label>
-            <input
-              type="url"
-              name="image"
-              value={formData.image}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
-              placeholder="https://example.com/image.jpg"
-            />
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Trạng thái
+              </label>
+              <div className="flex items-center mt-2">
+                <input
+                  type="checkbox"
+                  name="is_active"
+                  checked={formData.is_active}
+                  onChange={handleChange}
+                  className="w-4 h-4 text-teal-600 focus:ring-teal-500 border-gray-300 rounded"
+                  disabled={isLoading}
+                />
+                <label className="ml-2 text-sm text-gray-700">
+                  Kích hoạt dịch vụ
+                </label>
+              </div>
+            </div>
           </div>
 
           <div className="flex justify-end space-x-3 mt-6">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+              disabled={isLoading}
+              className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors disabled:opacity-50"
             >
               Hủy
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors"
+              disabled={isLoading}
+              className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors disabled:opacity-50 flex items-center space-x-2"
             >
-              {service ? 'Cập nhật' : 'Thêm mới'}
+              {isLoading && (
+                <svg
+                  className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
+                </svg>
+              )}
+              <span>Thêm mới</span>
             </button>
           </div>
         </form>
@@ -179,112 +293,73 @@ const ServiceModal: React.FC<ServiceModalProps> = ({ isOpen, onClose, service, o
 };
 
 const ServiceManagement = () => {
-  const [services, setServices] = useState<Service[]>([
-    {
-      id: 1,
-      name: 'Tắm rửa cho chó',
-      description: 'Dịch vụ tắm rửa chuyên nghiệp cho chó với sản phẩm cao cấp',
-      price: 200000,
-      duration: 60,
-      category: 'bathing',
-      status: 'active',
-      image: 'https://images.unsplash.com/photo-1583337130417-3346a1be7dee?w=300',
-      createdAt: '2024-12-01'
-    },
-    {
-      id: 2,
-      name: 'Cắt tỉa lông',
-      description: 'Dịch vụ cắt tỉa lông theo yêu cầu, tạo kiểu cho thú cưng',
-      price: 300000,
-      duration: 90,
-      category: 'grooming',
-      status: 'active',
-      image: 'https://images.unsplash.com/photo-1601758228041-f3b2795255f1?w=300',
-      createdAt: '2024-12-02'
-    },
-    {
-      id: 3,
-      name: 'Khám sức khỏe tổng quát',
-      description: 'Kiểm tra sức khỏe định kỳ cho thú cưng',
-      price: 500000,
-      duration: 45,
-      category: 'healthcare',
-      status: 'active',
-      image: 'https://images.unsplash.com/photo-1576201836106-db1758fd1c97?w=300',
-      createdAt: '2024-12-03'
-    }
-  ]);
+  const navigate = useNavigate();
+  const dispatch = useDispatch<AppDispatch>();
 
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('');
-  const [selectedStatus, setSelectedStatus] = useState('');
-  const [modal, setModal] = useState<{ isOpen: boolean; service: Service | null }>({
-    isOpen: false,
-    service: null
-  });
+  // ✅ Redux selectors
+  const { services, searching, searchError } = useSelector(
+    (state: RootState) => state.service
+  );
 
-  // Filter services
-  const filteredServices = services.filter(service => {
-    const matchesSearch = service.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         service.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = !selectedCategory || service.category === selectedCategory;
-    const matchesStatus = !selectedStatus || service.status === selectedStatus;
-    
-    return matchesSearch && matchesCategory && matchesStatus;
+  // ✅ Local state cho filters và modal
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedStatus, setSelectedStatus] = useState("");
+
+  useEffect(() => {
+    dispatch(getAllServices({}));
+  }, [dispatch]);
+
+  useEffect(() => {
+    return () => {
+      dispatch(clearAllServiceErrors());
+    };
+  }, [dispatch]);
+
+  const filteredServices = services.filter((service) => {
+    const matchesSearch =
+      service.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      service.description.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus =
+      !selectedStatus ||
+      (selectedStatus === "active" ? service.is_active : !service.is_active);
+
+    return matchesSearch && matchesStatus;
   });
 
   const handleAddService = () => {
-    setModal({ isOpen: true, service: null });
+    setShowAddModal(true);
   };
 
-  const handleEditService = (service: Service) => {
-    setModal({ isOpen: true, service });
+  const handleViewDetail = (serviceId: string) => {
+    navigate(`/shop/services/${serviceId}`);
   };
 
-  const handleDeleteService = (id: number) => {
-    if (window.confirm('Bạn có chắc chắn muốn xóa dịch vụ này?')) {
-      setServices(prev => prev.filter(service => service.id !== id));
+  const handleSaveService = async (serviceData: Omit<ServiceData, "id">) => {
+    try {
+      await dispatch(
+        createService({
+          id: crypto.randomUUID(),
+          ...serviceData,
+          shop_id: "01978c76-3adc-77ca-9806-eee9893aef4a", // Lấy từ user context
+        })
+      ).unwrap();
+    } catch (error) {
+      console.error("Create failed:", error);
     }
   };
 
-  const handleSaveService = (serviceData: Omit<Service, 'id' | 'createdAt'>) => {
-    if (modal.service) {
-      // Update existing service
-      setServices(prev => prev.map(service => 
-        service.id === modal.service!.id 
-          ? { ...service, ...serviceData }
-          : service
-      ));
-    } else {
-      // Add new service
-      const newService: Service = {
-        ...serviceData,
-        id: Math.max(...services.map(s => s.id)) + 1,
-        createdAt: new Date().toISOString().split('T')[0]
-      };
-      setServices(prev => [...prev, newService]);
-    }
+  const handleRefresh = () => {
+    dispatch(getAllServices({}));
   };
 
-  const getCategoryName = (category: string) => {
-    const categories = {
-      grooming: 'Chăm sóc lông',
-      bathing: 'Tắm rửa',
-      healthcare: 'Chăm sóc sức khỏe',
-      training: 'Huấn luyện',
-      boarding: 'Lưu trú'
-    };
-    return categories[category as keyof typeof categories] || category;
+  const getStatusColor = (isActive: boolean) => {
+    return isActive
+      ? "bg-green-100 text-green-800 border-green-200"
+      : "bg-red-100 text-red-800 border-red-200";
   };
-
-  const getStatusColor = (status: string) => {
-    return status === 'active' 
-      ? 'bg-green-100 text-green-800 border-green-200'
-      : 'bg-red-100 text-red-800 border-red-200';
-  };
-
-  const getStatusText = (status: string) => {
-    return status === 'active' ? 'Hoạt động' : 'Tạm dừng';
+  const getStatusText = (isActive: boolean) => {
+    return isActive ? "Hoạt động" : "Tạm dừng";
   };
 
   return (
@@ -302,26 +377,66 @@ const ServiceManagement = () => {
               Dịch vụ của tôi
             </h1>
             <p className="text-lg text-gray-600">
-              Quản lý các dịch vụ của cửa hàng
+              Quản lý các dịch vụ của cửa hàng ({services.length} dịch vụ)
             </p>
           </div>
         </div>
-        <button
-          onClick={handleAddService}
-          className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors flex items-center space-x-2"
-        >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
-          <span>Thêm dịch vụ</span>
-        </button>
+        <div className="flex space-x-3">
+          <button
+            onClick={handleRefresh}
+            disabled={searching}
+            className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors disabled:opacity-50 flex items-center space-x-2"
+          >
+            <svg
+              className={`w-5 h-5 ${searching ? "animate-spin" : ""}`}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+              />
+            </svg>
+            <span>Làm mới</span>
+          </button>
+          <button
+            onClick={handleAddService}
+            className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors flex items-center space-x-2"
+          >
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 4v16m8-8H4"
+              />
+            </svg>
+            <span>Thêm dịch vụ</span>
+          </button>
+        </div>
       </div>
+
+      {/* Error Messages */}
+      {searchError && (
+        <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+          <p className="font-medium">Lỗi khi tải dữ liệu:</p>
+          <p>{searchError.message}</p>
+        </div>
+      )}
 
       {/* Search and Filters */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {/* Search */}
-          <div className="md:col-span-2">
+          <div>
             <div className="relative">
               <input
                 type="text"
@@ -330,26 +445,20 @@ const ServiceManagement = () => {
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
               />
-              <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              <svg
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
               </svg>
             </div>
-          </div>
-
-          {/* Category Filter */}
-          <div>
-            <select
-              value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
-            >
-              <option value="">Tất cả danh mục</option>
-              <option value="grooming">Chăm sóc lông</option>
-              <option value="bathing">Tắm rửa</option>
-              <option value="healthcare">Chăm sóc sức khỏe</option>
-              <option value="training">Huấn luyện</option>
-              <option value="boarding">Lưu trú</option>
-            </select>
           </div>
 
           {/* Status Filter */}
@@ -364,99 +473,216 @@ const ServiceManagement = () => {
               <option value="inactive">Tạm dừng</option>
             </select>
           </div>
+
+          {/* Results count */}
+          <div className="flex items-center justify-end">
+            <span className="text-sm text-gray-600">
+              {searching ? "Đang tải..." : `${filteredServices.length} kết quả`}
+            </span>
+          </div>
         </div>
       </div>
 
-      {/* Services Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredServices.map((service) => (
-          <div key={service.id} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-            {/* Service Image */}
-            <div className="h-48 bg-gray-200">
-              {service.image ? (
-                <img
-                  src={service.image}
-                  alt={service.name}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-gray-400">
-                  <svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                </div>
-              )}
-            </div>
-
-            {/* Service Info */}
-            <div className="p-4">
-              <div className="flex justify-between items-start mb-2">
-                <h3 className="text-lg font-semibold text-gray-800">{service.name}</h3>
-                <span className={`px-2 py-1 text-xs rounded-full border ${getStatusColor(service.status)}`}>
-                  {getStatusText(service.status)}
-                </span>
-              </div>
-
-              <p className="text-gray-600 text-sm mb-3 line-clamp-2">{service.description}</p>
-
-              <div className="space-y-2 mb-4">
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">Danh mục:</span>
-                  <span className="text-gray-800">{getCategoryName(service.category)}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">Giá:</span>
-                  <span className="text-gray-800 font-medium">{service.price.toLocaleString('vi-VN')} VNĐ</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">Thời gian:</span>
-                  <span className="text-gray-800">{service.duration} phút</span>
-                </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex space-x-2">
-                <button
-                  onClick={() => handleEditService(service)}
-                  className="flex-1 px-3 py-2 bg-blue-500 text-white text-sm rounded-lg hover:bg-blue-600 transition-colors flex items-center justify-center space-x-1"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                  </svg>
-                  <span>Sửa</span>
-                </button>
-                <button
-                  onClick={() => handleDeleteService(service.id)}
-                  className="flex-1 px-3 py-2 bg-red-500 text-white text-sm rounded-lg hover:bg-red-600 transition-colors flex items-center justify-center space-x-1"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                  </svg>
-                  <span>Xóa</span>
-                </button>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Empty State */}
-      {filteredServices.length === 0 && (
+      {/* ✅ Loading State */}
+      {searching && services.length === 0 && (
         <div className="text-center py-12">
-          <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-          </svg>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">Không tìm thấy dịch vụ</h3>
-          <p className="text-gray-500">Thử thay đổi bộ lọc hoặc thêm dịch vụ mới</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Đang tải dịch vụ...</p>
         </div>
       )}
 
-      {/* Service Modal */}
-      <ServiceModal
-        isOpen={modal.isOpen}
-        onClose={() => setModal({ isOpen: false, service: null })}
-        service={modal.service}
-        onSave={handleSaveService}
+      {/* Services Grid */}
+      {!searching || services.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredServices.map((service) => (
+            <div
+              key={service.id}
+              className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden"
+            >
+              <div className="h-48 bg-gradient-to-r from-teal-100 to-blue-100 flex items-center justify-center">
+                <div className="text-center">
+                  <svg
+                    className="w-16 h-16 text-teal-600 mx-auto mb-2"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H9m0 0H5m0 0h2M7 7h10M7 11h4M7 15h10"
+                    />
+                  </svg>
+                  <p className="text-teal-600 font-medium">{service.name}</p>
+                </div>
+              </div>
+
+              {/* Service Info */}
+              <div className="p-4">
+                <div className="flex justify-between items-start mb-2">
+                  <h3 className="text-lg font-semibold text-gray-800 truncate pr-2">
+                    {service.name}
+                  </h3>
+                  <span
+                    className={`px-2 py-1 text-xs rounded-full border ${getStatusColor(
+                      service.is_active
+                    )}`}
+                  >
+                    {getStatusText(service.is_active)}
+                  </span>
+                </div>
+
+                <p className="text-gray-600 text-sm mb-3 line-clamp-2">
+                  {service.description || "Không có mô tả"}
+                </p>
+
+                <div className="space-y-2 mb-4">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-500">Giá:</span>
+                    <span className="text-gray-800 font-medium">
+                      {service.discount_percent > 0 ? (
+                        <>
+                          <span className="line-through text-gray-400 mr-1">
+                            {service.price.toLocaleString("vi-VN")} VNĐ
+                          </span>
+                          <span className="text-red-600">
+                            {(
+                              (service.price *
+                                (100 - service.discount_percent)) /
+                              100
+                            ).toLocaleString("vi-VN")}{" "}
+                            VNĐ
+                          </span>
+                        </>
+                      ) : (
+                        `${service.price.toLocaleString("vi-VN")} VNĐ`
+                      )}
+                    </span>
+                  </div>
+                  {service.discount_percent > 0 && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-500">Giảm giá:</span>
+                      <span className="text-red-600">
+                        {service.discount_percent}%
+                      </span>
+                    </div>
+                  )}
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-500">Thời gian:</span>
+                    <span className="text-gray-800">
+                      {service.duration_type} phút
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-500">Giới hạn/giờ:</span>
+                    <span className="text-gray-800">
+                      {service.limit_per_hour}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-500">Đã bán:</span>
+                    <span className="text-gray-800">{service.purchases}</span>
+                  </div>
+                  {service.star > 0 && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-500">Đánh giá:</span>
+                      <span className="text-yellow-600">
+                        ⭐ {service.star}/5
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                <button
+                  onClick={() => handleViewDetail(service.id)}
+                  className="w-full px-4 py-2 bg-teal-600 text-white text-sm rounded-lg hover:bg-teal-700 transition-colors flex items-center justify-center space-x-2"
+                >
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                    />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                    />
+                  </svg>
+                  <span>Xem chi tiết</span>
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : null}
+
+      {/* Empty State */}
+      {!searching && filteredServices.length === 0 && services.length > 0 && (
+        <div className="text-center py-12">
+          <svg
+            className="w-16 h-16 text-gray-400 mx-auto mb-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+            />
+          </svg>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">
+            Không tìm thấy dịch vụ
+          </h3>
+          <p className="text-gray-500">Thử thay đổi bộ lọc tìm kiếm</p>
+        </div>
+      )}
+
+      {/* No Services State */}
+      {!searching && services.length === 0 && (
+        <div className="text-center py-12">
+          <svg
+            className="w-16 h-16 text-gray-400 mx-auto mb-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+            />
+          </svg>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">
+            Chưa có dịch vụ nào
+          </h3>
+          <p className="text-gray-500 mb-4">
+            Bắt đầu bằng cách thêm dịch vụ đầu tiên của bạn
+          </p>
+          <button
+            onClick={handleAddService}
+            className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors"
+          >
+            Thêm dịch vụ đầu tiên
+          </button>
+        </div>
+      )}
+
+      {/* ✅ Add Service Modal */}
+      <AddServiceModal
+        isOpen={showAddModal}
+        onClose={() => setShowAddModal(false)}
       />
     </div>
   );

@@ -10,12 +10,14 @@ import customerReducer from "./slices/customerSlice";
 import shopReducer from "./slices/shopSlice";
 import accountReducer from "./slices/AccountSlice";
 import subAddressSliceReducer from "./slices/subAddressSlice";
-import serviceShopReducer from "./slices/serviceTypeShopSlice";
+import serviceTypeShopReducer from "./slices/serviceTypeShopSlice";
+import serviceReducer from "./slices/serviceSlice";
+import appointmentReducer from "./slices/AppointmentSlice";
 
 const persistConfig = {
   key: "root",
   storage,
-  whitelist: ["auth"], // chỉ persist auth slice
+  whitelist: ["auth", "service"], // chỉ persist auth slice
 };
 
 const rootReducer = combineReducers({
@@ -27,7 +29,9 @@ const rootReducer = combineReducers({
   shop: shopReducer,
   account: accountReducer,
   subAddress: subAddressSliceReducer,
-  serviceShop: serviceShopReducer,
+  serviceTypeShop: serviceTypeShopReducer,
+  service: serviceReducer,
+  appointment: appointmentReducer,
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);
