@@ -16,6 +16,7 @@ import ServiceManagement from "@/pages/Shop/ServiceManagement";
 import HotelRoomManagement from "@/pages/Shop/Order/HotelRoomManagement";
 import ProfilePage from "../pages/Profile"; // ✅ Import ProfilePage
 import ServicesPage from "@/pages/Services/Service"; // ✅ Thêm import
+import ServiceDetailForUser from "@/pages/ServiceDetail/ServiceDetailForUser";
 
 import RegisterCustomer from "@/pages/RegisterCustomer"; // Trang đăng ký cho khách hàng
 import AppLayoutForShop from "../layout/AppLayoutForShop"; // Layout cho Shop/Admin
@@ -43,7 +44,8 @@ const AppRoutes = () => {
       {/* --------- Route cho người dùng chưa đăng nhập (Guest Layout) --------- */}
       <Route path="/guest/*" element={<AppLayoutForGuest />}>
         <Route path="home" element={<HomePage />} />
-        <Route path="services" element={<ServicesPage />} />{" "}
+        <Route path="services" element={<ServicesPage />} />
+        <Route path="service-detail/:id" element={<ServiceDetailForUser />} />
         {/* ✅ Thêm cho guest */}
         <Route index element={<Navigate to="home" replace />} />
       </Route>

@@ -4,7 +4,7 @@ import AppHeaderForUser from "./AppHeaderForUser";
 import Footer from "../components/layout/Footer";
 import type { ReactNode } from "react";
 
-// ✅ Định nghĩa interface cho props
+// ✅ Interface để support children nếu cần
 interface AppLayoutProps {
   children?: ReactNode;
 }
@@ -13,7 +13,10 @@ const AppLayoutForUser: React.FC<AppLayoutProps> = ({ children }) => {
   return (
     <div className="min-h-screen">
       <AppHeaderForUser />
-      <main className="w-full p-4 md:p-6">{children || <Outlet />} </main>
+      <main className="w-full p-4 md:p-6">
+        {children || <Outlet />}{" "}
+        {/* Use children if provided, otherwise use Outlet */}
+      </main>
       <Footer />
     </div>
   );
