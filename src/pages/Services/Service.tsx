@@ -85,8 +85,9 @@ const ServicesPage: React.FC = () => {
 
   // ✅ Handle service detail view
   const handleServiceDetail = (id: string, e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent parent onClick
-    navigate(`/app/service-detail/${id}`);
+    e.stopPropagation();
+    console.log("🔗 Navigate to service detail:", id);
+    navigate(`/app/service-detail/${id}`); // ✅ Path đúng theo route mới
   };
 
   // ✅ Handle book now

@@ -16,7 +16,6 @@ import ServiceManagement from "@/pages/Shop/ServiceManagement";
 import HotelRoomManagement from "@/pages/Shop/Order/HotelRoomManagement";
 import ProfilePage from "../pages/Profile"; // ✅ Import ProfilePage
 import ServicesPage from "@/pages/Services/Service"; // ✅ Thêm import
-import ServiceDetailForUser from "@/pages/ServiceDetail/ServiceDetailForUser";
 
 import RegisterCustomer from "@/pages/RegisterCustomer"; // Trang đăng ký cho khách hàng
 import AppLayoutForShop from "../layout/AppLayoutForShop"; // Layout cho Shop/Admin
@@ -27,6 +26,7 @@ import RegisterShop from "@/pages/RegisterShop"; // Trang đăng ký cho Shop
 import ShopProfileLayout from "@/pages/Shop/components/ShopProfileLayout";
 import ShopInfo from "@/pages/Shop/ShopProfile/ShopInfo";
 import ShopSecurity from "@/pages/Shop/ShopProfile/ShopSecurity";
+import ServiceDetailPage from "@/pages/ServiceDetail/components/ServiceDetailPage";
 import ShopBranches from "@/pages/Shop/ShopProfile/ShopBranches";
 import ServiceDetail from "@/pages/Shop/ServiceDetail";
 
@@ -45,8 +45,7 @@ const AppRoutes = () => {
       <Route path="/guest/*" element={<AppLayoutForGuest />}>
         <Route path="home" element={<HomePage />} />
         <Route path="services" element={<ServicesPage />} />
-        <Route path="service-detail/:id" element={<ServiceDetailForUser />} />
-        {/* ✅ Thêm cho guest */}
+        <Route path="service-detail/:id" element={<ServiceDetailPage />} />
         <Route index element={<Navigate to="home" replace />} />
       </Route>
 
@@ -60,8 +59,8 @@ const AppRoutes = () => {
         }
       >
         <Route path="home" element={<HomePage />} />
-        <Route path="services" element={<ServicesPage />} />{" "}
-        {/* ✅ Thêm cho user */}
+        <Route path="services" element={<ServicesPage />} />
+        <Route path="service-detail/:id" element={<ServiceDetailPage />} />
         <Route path="profile" element={<ProfilePage />} />
         <Route index element={<Navigate to="home" replace />} />
       </Route>

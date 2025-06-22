@@ -14,7 +14,6 @@ export const setLogoutCallback = (callback: () => void) => {
 };
 export const updateStateToken = (token: string | null) => {
   currentToken = token;
-  console.log("🔧 Token updated:", token ? "✅ Token set" : "❌ Token cleared");
 };
 
 // ✅ Get current token helper
