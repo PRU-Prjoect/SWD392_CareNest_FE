@@ -255,7 +255,7 @@ const ServicesPage: React.FC = () => {
                 <button
                   onClick={(e) => handleBookNow(service.id, e)}
                   disabled={!service.is_active}
-                  className="w-full px-3 py-2 bg-[#2A9D8F] text-white text-sm rounded-lg hover:bg-[#238276] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-1"
+                  className="w-full px-3 py-2 bg-orange-500 text-white text-sm rounded-lg hover:bg-orange-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-1"
                 >
                   <svg
                     className="w-4 h-4"

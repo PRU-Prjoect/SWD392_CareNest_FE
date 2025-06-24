@@ -16,6 +16,8 @@ import ServiceManagement from "@/pages/Shop/ServiceManagement";
 import HotelRoomManagement from "@/pages/Shop/Order/HotelRoomManagement";
 import ProfilePage from "../pages/Profile"; // ✅ Import ProfilePage
 import ServicesPage from "@/pages/Services/Service"; // ✅ Thêm import
+import BookingPage from "@/pages/Booking/BookingPage";
+import ThankYouPage from "@/pages/ThankYou/ThankYouPage";
 
 import RegisterCustomer from "@/pages/RegisterCustomer"; // Trang đăng ký cho khách hàng
 import AppLayoutForShop from "../layout/AppLayoutForShop"; // Layout cho Shop/Admin
@@ -46,6 +48,7 @@ const AppRoutes = () => {
         <Route path="home" element={<HomePage />} />
         <Route path="services" element={<ServicesPage />} />
         <Route path="service-detail/:id" element={<ServiceDetailPage />} />
+        <Route path="booking/:serviceId" element={<BookingPage />} />
         <Route index element={<Navigate to="home" replace />} />
       </Route>
 
@@ -61,6 +64,8 @@ const AppRoutes = () => {
         <Route path="home" element={<HomePage />} />
         <Route path="services" element={<ServicesPage />} />
         <Route path="service-detail/:id" element={<ServiceDetailPage />} />
+        <Route path="booking/:serviceId" element={<BookingPage />} />
+        <Route path="thank-you" element={<ThankYouPage />} />
         <Route path="profile" element={<ProfilePage />} />
         <Route index element={<Navigate to="home" replace />} />
       </Route>

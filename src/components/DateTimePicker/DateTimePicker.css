@@ -1,0 +1,76 @@
+/* components/DateTimePicker/DateTimePicker.css */
+.datetime-picker-container {
+  position: relative;
+}
+
+.rdp-custom {
+  margin: 0;
+}
+
+.rdp-custom .rdp-day-selected {
+  background-color: #0d9488 !important;
+  color: white !important;
+}
+
+.rdp-custom .rdp-day-today {
+  background-color: #f0fdfa;
+  color: #0d9488;
+  font-weight: 600;
+}
+
+.rdp-custom .rdp-day-disabled {
+  color: #d1d5db;
+  background-color: transparent;
+}
+
+.rdp-custom .rdp-day:hover:not(.rdp-day-selected):not(.rdp-day-disabled) {
+  background-color: #f0fdfa;
+  color: #0d9488;
+}
+
+.rdp-custom .rdp-head_cell {
+  color: #6b7280;
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.rdp-custom .rdp-caption {
+  color: #374151;
+  font-weight: 600;
+}
+
+.rdp-custom .rdp-nav_button {
+  color: #6b7280;
+}
+
+.rdp-custom .rdp-nav_button:hover {
+  color: #0d9488;
+  background-color: #f0fdfa;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .datetime-picker-container .absolute.z-50 {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 90vw;
+    max-width: 500px;
+    max-height: 80vh;
+    overflow-y: auto;
+  }
+
+  .datetime-picker-container .flex {
+    flex-direction: column;
+  }
+
+  .datetime-picker-container .border-r {
+    border-right: none;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  .datetime-picker-container .w-48 {
+    width: 100%;
+  }
+}

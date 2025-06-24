@@ -3,6 +3,7 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
 import api from "@/config/axios";
+import type { AppointmentStatus } from "@/types/enums";
 
 // Interfaces
 
@@ -12,7 +13,7 @@ interface AppointmentState {
   searching: boolean;
   deleting: boolean;
   creating: boolean;
-  loadingReport: boolean; // ✅ Thêm loading cho report
+  loadingReport: boolean;
   appointments: AppointmentData[];
   currentAppointment: AppointmentData | null;
   reportData: AppointmentReportData | null;
@@ -37,7 +38,6 @@ interface AppointmentState {
     message: string;
   } | null;
   reportError: {
-    // ✅ Thêm report error
     code: number;
     message: string;
   } | null;
@@ -46,14 +46,13 @@ interface AppointmentState {
 interface AppointmentData {
   id: string;
   customer_id: string;
-  location_type: string;
-  status: string;
+  location_type?: string; // ✅ Optional vì response POST không có field này
+  status: AppointmentStatus;
   notes: string;
   start_time: string;
-  end_time: string;
+  end_time?: string; // ✅ Optional vì response POST không có field này
 }
 
-// ✅ Thêm interface cho Report Data
 interface AppointmentReportData {
   total: number;
   finish: number;
@@ -69,7 +68,7 @@ interface AppointmentReportData {
 // Request interfaces
 interface SearchAppointmentsRequest {
   customerId?: string;
-  status?: string;
+  status?: AppointmentStatus;
   startTime?: string;
   endTime?: string;
   locationTy?: string;
@@ -80,18 +79,16 @@ interface SearchAppointmentsRequest {
 interface CreateAppointmentRequest {
   id: string;
   customer_id: string;
-  location_type: string;
-  status: string;
+  status: AppointmentStatus;
   notes: string;
   start_time: string;
-  end_time: string;
 }
 
 interface UpdateAppointmentRequest {
   id: string;
   customer_id: string;
   location_type: string;
-  status: string;
+  status: AppointmentStatus;
   notes: string;
   start_time: string;
   end_time: string;
@@ -106,7 +103,15 @@ interface AppointmentsListResponse {
   data: AppointmentData[];
 }
 
-// ✅ Thêm interface cho Report Response
+// ✅ Interface mới cho Create Appointment Response (trả về trực tiếp object)
+interface CreateAppointmentResponse {
+  id: string;
+  customer_id: string;
+  status: AppointmentStatus;
+  notes: string;
+  start_time: string;
+}
+
 interface AppointmentReportResponse {
   message: string;
   data: AppointmentReportData;
@@ -128,22 +133,22 @@ const initialState: AppointmentState = {
   searching: false,
   deleting: false,
   creating: false,
-  loadingReport: false, // ✅ Thêm vào initial state
+  loadingReport: false,
   appointments: [],
   currentAppointment: null,
-  reportData: null, // ✅ Thêm vào initial state
+  reportData: null,
   error: null,
   searchError: null,
   updateError: null,
   deleteError: null,
   createError: null,
-  reportError: null, // ✅ Thêm vào initial state
+  reportError: null,
 };
 
-// ✅ 1. Get all appointments (sửa lỗi đã biết)
+// ✅ 1. Get all appointments
 export const getAllAppointments = createAsyncThunk<
   AppointmentsListResponse,
-  SearchAppointmentsRequest, // ✅ Bỏ | void để tránh lỗi
+  SearchAppointmentsRequest,
   { rejectValue: ErrorResponse }
 >("appointment/getAll", async (params = {}, { rejectWithValue }) => {
   try {
@@ -277,9 +282,9 @@ export const getAppointmentById = createAsyncThunk<
   }
 });
 
-// ✅ 3. Create appointment
+// ✅ 3. Create appointment (Updated return type)
 export const createAppointment = createAsyncThunk<
-  SimpleResponse,
+  CreateAppointmentResponse, // ✅ Đổi từ SimpleResponse thành CreateAppointmentResponse
   CreateAppointmentRequest,
   { rejectValue: ErrorResponse }
 >("appointment/create", async (data, { rejectWithValue }) => {
@@ -293,9 +298,16 @@ export const createAppointment = createAsyncThunk<
 
     console.log("✅ Create Appointment Response:", response.data);
 
-    return {
-      message: response.data || "Appointment created successfully",
-    };
+    // ✅ Kiểm tra response có đúng format không
+    if (!response.data || !response.data.id) {
+      return rejectWithValue({
+        error: 1,
+        message: "Phản hồi từ server không hợp lệ",
+      });
+    }
+
+    // ✅ Trả về trực tiếp object appointment
+    return response.data;
   } catch (err: any) {
     console.error("❌ Create Appointment Error:", err.response?.data);
     if (err.response) {
@@ -446,7 +458,7 @@ export const deleteAppointment = createAsyncThunk<
   }
 });
 
-// ✅ 6. Get appointment report (API mới)
+// ✅ 6. Get appointment report
 export const getAppointmentReport = createAsyncThunk<
   AppointmentReportResponse,
   void,
@@ -468,7 +480,7 @@ export const getAppointmentReport = createAsyncThunk<
       });
     }
 
-    return response.data; // Trả về cả message và data
+    return response.data;
   } catch (err: any) {
     console.error("❌ Get Appointment Report Error:", err.response?.data);
     if (err.response) {
@@ -526,7 +538,6 @@ const appointmentSlice = createSlice({
       state.createError = null;
     },
     clearReportError: (state) => {
-      // ✅ Thêm clear report error
       state.reportError = null;
     },
     clearAllAppointmentErrors: (state) => {
@@ -535,7 +546,7 @@ const appointmentSlice = createSlice({
       state.updateError = null;
       state.deleteError = null;
       state.createError = null;
-      state.reportError = null; // ✅ Thêm vào clear all
+      state.reportError = null;
     },
     resetAppointmentState: (state) => {
       Object.assign(state, initialState);
@@ -544,7 +555,6 @@ const appointmentSlice = createSlice({
       state.appointments = [];
     },
     clearReportData: (state) => {
-      // ✅ Thêm clear report data
       state.reportData = null;
     },
     setCurrentAppointment: (state, action: PayloadAction<AppointmentData>) => {
@@ -613,20 +623,26 @@ const appointmentSlice = createSlice({
         }
       })
 
-      // ✅ Create appointment cases
+      // ✅ Create appointment cases (Updated)
       .addCase(createAppointment.pending, (state) => {
         state.creating = true;
         state.createError = null;
       })
       .addCase(
         createAppointment.fulfilled,
-        (state, action: PayloadAction<SimpleResponse>) => {
+        (state, action: PayloadAction<CreateAppointmentResponse>) => {
+          // ✅ Đổi type
           state.creating = false;
           state.createError = null;
-          console.log(
-            "✅ Create appointment successful:",
-            action.payload.message
-          );
+          // ✅ Set current appointment với data mới tạo
+          state.currentAppointment = {
+            ...action.payload,
+            location_type: "", // Default value
+            end_time: "", // Default value
+          };
+          // ✅ Thêm vào danh sách appointments nếu cần
+          state.appointments.unshift(state.currentAppointment);
+          console.log("✅ Create appointment successful:", action.payload.id);
         }
       )
       .addCase(createAppointment.rejected, (state, action) => {
@@ -675,13 +691,12 @@ const appointmentSlice = createSlice({
         }
       })
 
-      // ✅ Delete appointment cases (sửa lỗi meta)
+      // ✅ Delete appointment cases
       .addCase(deleteAppointment.pending, (state) => {
         state.deleting = true;
         state.deleteError = null;
       })
       .addCase(deleteAppointment.fulfilled, (state, { payload, meta }) => {
-        // ✅ Destructure để tránh lỗi meta
         state.deleting = false;
         state.deleteError = null;
         // Reset currentAppointment nếu đã bị xóa
@@ -712,7 +727,7 @@ const appointmentSlice = createSlice({
         }
       })
 
-      // ✅ Get appointment report cases (API mới)
+      // ✅ Get appointment report cases
       .addCase(getAppointmentReport.pending, (state) => {
         state.loadingReport = true;
         state.reportError = null;
@@ -753,11 +768,11 @@ export const {
   clearUpdateError,
   clearDeleteError,
   clearCreateError,
-  clearReportError, // ✅ Export action mới
+  clearReportError,
   clearAllAppointmentErrors,
   resetAppointmentState,
   clearAppointmentsList,
-  clearReportData, // ✅ Export action mới
+  clearReportData,
   setCurrentAppointment,
 } = appointmentSlice.actions;
 
