@@ -4,7 +4,6 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import type { AppDispatch, RootState } from "@/store/store";
 import { getAllServices, clearSearchError } from "@/store/slices/serviceSlice";
-import FilterBar from "@/components/common/FilterBar";
 
 const ServicesPage: React.FC = () => {
   const navigate = useNavigate();
@@ -45,43 +44,7 @@ const ServicesPage: React.FC = () => {
     };
   }, [dispatch]);
 
-  // ✅ Xử lý filter từ FilterBar (nếu có)
-  const handleFilter = async (filters: Record<string, string>) => {
-    setCurrentFilters(filters);
-
-    try {
-      // Map filters to API parameters
-      const searchParams: any = {};
-
-      if (filters.sortBy) {
-        switch (filters.sortBy) {
-          case "price_asc":
-            searchParams.sortBy = "price";
-            break;
-          case "price_desc":
-            searchParams.sortBy = "price_desc";
-            break;
-          case "rating":
-            searchParams.sortBy = "star";
-            break;
-          case "newest":
-            searchParams.sortBy = "createdAt";
-            break;
-          default:
-            searchParams.sortBy = "createdAt";
-        }
-      }
-
-      // Add more filter mappings as needed
-      if (filters.petType) {
-        searchParams.serviceTypeId = "f11909c0-89c2-4c5a-8fd9-21511a619e2c";
-      }
-
-      await dispatch(getAllServices(searchParams));
-    } catch (error) {
-      console.error("Filter error:", error);
-    }
-  };
+  // ❌ Xóa hàm handleFilter vì không còn sử dụng FilterBar
 
   // ✅ Handle service detail view
   const handleServiceDetail = (id: string, e: React.MouseEvent) => {
@@ -116,19 +79,11 @@ const ServicesPage: React.FC = () => {
       {/* ✅ Show current filters */}
       {Object.keys(currentFilters).length > 0 && (
         <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
-          <p className="text-green-800">
-            Đang áp dụng bộ lọc:{" "}
-            {Object.entries(currentFilters)
-              .filter(([_, value]) => value)
-              .map(([key, value]) => `${key}: ${value}`)
-              .join(", ")}
-          </p>
+          <p className="text-green-800">Áp dụng bộ lọc thành công ✅✨</p>
         </div>
       )}
 
-      {/* Filter Bar */}
-      <FilterBar onFilter={handleFilter} />
-
+      {/* ❌ Xóa FilterBar component */}
       {/* ✅ Error State */}
       {searchError && (
         <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
@@ -146,7 +101,6 @@ const ServicesPage: React.FC = () => {
           </div>
         </div>
       )}
-
       {/* ✅ Loading State */}
       {searching && (
         <div className="flex flex-col items-center justify-center py-12">
@@ -154,7 +108,6 @@ const ServicesPage: React.FC = () => {
           <p className="mt-4 text-gray-600">Đang tìm kiếm dịch vụ...</p>
         </div>
       )}
-
       {/* ✅ Services Grid - Cập nhật với 2 nút */}
       {!searching && services.length > 0 && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
@@ -277,7 +230,6 @@ const ServicesPage: React.FC = () => {
           ))}
         </div>
       )}
-
       {/* Empty State */}
       {!searching && services.length === 0 && !searchError && (
         <div className="flex flex-col items-center justify-center py-12">

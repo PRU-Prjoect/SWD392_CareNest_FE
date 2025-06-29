@@ -56,9 +56,9 @@ const AppRoutes = () => {
       <Route
         path="/app/*"
         element={
-          <ProtectedRoute>
+          // <ProtectedRoute>
             <AppLayoutForUser />
-          </ProtectedRoute>
+          // </ProtectedRoute>
         }
       >
         <Route path="home" element={<HomePage />} />
@@ -74,9 +74,9 @@ const AppRoutes = () => {
       <Route
         path="/shop/*"
         element={
-          <ProtectedRoute>
+          // <ProtectedRoute>
             <AppLayoutForShop />
-          </ProtectedRoute>
+          // </ProtectedRoute>
         }
       >
         <Route path="dashboard" element={<ShopDashboard />} />

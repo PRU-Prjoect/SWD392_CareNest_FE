@@ -317,12 +317,12 @@ const AppHeaderForUser: React.FC<HeaderProps> = () => {
         </div>
       </header>
 
-      {/* Thanh Filter */}
-      <div className="bg-[#2A9D8F] border-t border-white/10">
+      {/* Thanh Filter - Sticky dính theo header */}
+      <div className="sticky top-16 lg:top-20 bg-[#2A9D8F] border-t border-white/10 z-40">
         <div className="w-full max-w-8xl mx-auto px-6 lg:px-8 p-2">
           <SearchBar
             fields={filterFields}
-            onSearch={handleSearch} // ✅ Sử dụng function đã cập nhật
+            onSearch={handleSearch}
             buttonLabel="Lọc kết quả"
           />
         </div>

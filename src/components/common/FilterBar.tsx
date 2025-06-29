@@ -141,7 +141,7 @@ const FilterBar: React.FC<FilterBarProps> = ({ onFilter }) => {
             <button
               onClick={() => toggleDropdown(config.name)}
               className={`
-                flex items-center gap-2 px-4 py-2 bg-white rounded-lg border 
+                flex items-center gap-2 px-4 py-2 bg-white rounded-lg border
                 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-white/50
                 transition-all duration-200 min-w-[160px] justify-between
                 ${
