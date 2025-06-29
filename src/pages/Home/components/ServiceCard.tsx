@@ -66,7 +66,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
 
         {/* Price and Reviews */}
         <div className="flex items-center justify-between mb-3">
-          <span className="text-lg font-bold text-[#2A9D8F]">
+          <span className="text-lg font-bold text-[#87A96B]">
             {service.price}
           </span>
           {service.reviews && (

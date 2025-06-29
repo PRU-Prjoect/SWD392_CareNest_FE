@@ -1,4 +1,4 @@
-// pages/Home/components/LatestServices.tsx
+// pages/Home/components/HighestRating.tsx
 import React from "react";
 import Card from "../../../components/ui/Card";
 import Button from "../../../components/ui/Button";
@@ -70,12 +70,11 @@ const HighestRating: React.FC = () => {
         {/* Header */}
         <div className="text-center mb-8">
           <div className="relative pb-3 w-full">
-            {" "}
-            {/* Changed to full width and added padding bottom */}
             <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
               ĐÁNH GIÁ CAO NHẤT 💯
             </h2>
-            <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-400 h-3 bg-[#2A9D8F] rounded"></div>
+            {/* ✅ Thay đổi màu underline sang Sage Green */}
+            <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-400 h-3 bg-[#87A96B] rounded"></div>
           </div>
         </div>
 
@@ -88,10 +87,11 @@ const HighestRating: React.FC = () => {
 
         {/* View More Button */}
         <div className="text-center mt-8">
+          {/* ✅ Thay đổi màu button sang Sage Green */}
           <Button
             variant="outline"
             size="md"
-            className="border-[#2A9D8F] text-[#2A9D8F] hover:bg-[#2A9D8F] hover:text-white"
+            className="border-[#87A96B] text-[#87A96B] hover:bg-[#87A96B] hover:text-white"
           >
             Xem thêm dịch vụ
           </Button>
@@ -131,11 +131,13 @@ const ServiceCard: React.FC<ServiceCardProps> = ({ service }) => {
 
       {/* Content */}
       <div className="p-4">
-        <h3 className="font-semibold text-gray-900 mb-2 group-hover:text-[#2A9D8F] transition-colors duration-200">
+        {/* ✅ Thay đổi màu title hover sang Sage Green */}
+        <h3 className="font-semibold text-gray-900 mb-2 group-hover:text-[#87A96B] transition-colors duration-200">
           {service.title}
         </h3>
         <div className="flex items-center justify-between">
-          <span className="text-lg font-bold text-[#2A9D8F]">
+          {/* ✅ Thay đổi màu giá sang Sage Green */}
+          <span className="text-lg font-bold text-[#87A96B]">
             {service.price}
           </span>
           {service.reviews && (
@@ -144,11 +146,8 @@ const ServiceCard: React.FC<ServiceCardProps> = ({ service }) => {
             </span>
           )}
         </div>
-        <Button
-          variant="primary"
-          size="sm"
-          className="w-full mt-3 bg-[#2A9D8F] hover:bg-[#238276]"
-        >
+        {/* ✅ Button sẽ sử dụng màu từ Button component */}
+        <Button variant="primary" size="sm" className="w-full mt-3">
           Đặt ngay
         </Button>
       </div>

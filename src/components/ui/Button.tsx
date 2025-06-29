@@ -27,10 +27,10 @@ const Button: React.FC<ButtonProps> = ({
     md: "px-5 py-3.5 text-sm",
   };
 
-  // Variant Classes
+  // ✅ Thay đổi variant primary sang Sage Green
   const variantClasses = {
     primary:
-      "bg-orange-500 text-white shadow-theme-xs hover:bg-brand-600 disabled:bg-brand-300",
+      "bg-[#87A96B] text-white shadow-xl hover:bg-[#759157] hover:shadow-2xl transform hover:scale-105 transition-all duration-300 disabled:bg-gray-300 disabled:hover:scale-100",
     outline:
       "bg-white text-gray-700 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-400 dark:ring-gray-700 dark:hover:bg-white/[0.03] dark:hover:text-gray-300",
   };

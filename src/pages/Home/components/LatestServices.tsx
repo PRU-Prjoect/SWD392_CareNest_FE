@@ -68,13 +68,14 @@ const LatestServices: React.FC = () => {
     <section className="py-12 bg-gray-50">
       <div className="container mx-auto px-4">
         {/* Header */}
+        {/* Header */}
         <div className="text-center mb-8">
           <div className="relative pb-3 w-full">
-            {/* Changed to full width and added padding bottom */}
             <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
               DỊCH VỤ MỚI NHẤT 📰
             </h2>
-            <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-400 h-3 bg-[#2A9D8F] rounded"></div>
+            {/* ✅ Thay đổi màu underline sang Sage Green */}
+            <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-400 h-3 bg-[#87A96B] rounded"></div>
           </div>
         </div>
 
@@ -134,7 +135,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({ service }) => {
           {service.title}
         </h3>
         <div className="flex items-center justify-between">
-          <span className="text-lg font-bold text-[#2A9D8F]">
+          <span className="text-lg font-bold text-[#87A96B]">
             {service.price}
           </span>
           {service.reviews && (
