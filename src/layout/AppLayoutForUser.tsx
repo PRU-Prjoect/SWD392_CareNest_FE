@@ -13,9 +13,8 @@ const AppLayoutForUser: React.FC<AppLayoutProps> = ({ children }) => {
   return (
     <div className="min-h-screen">
       <AppHeaderForUser />
-      <main className="w-full p-4 md:p-6">
-        {children || <Outlet />}{" "}
-        {/* Use children if provided, otherwise use Outlet */}
+      <main className="w-full p-4 md:p-6 pb-32 md:pb-36">
+        {children || <Outlet />}
       </main>
       <Footer />
     </div>

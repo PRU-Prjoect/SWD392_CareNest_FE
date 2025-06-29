@@ -139,7 +139,7 @@ const ServicesPage: React.FC = () => {
                   {service.name}
                 </div>
 
-                <div className="text-orange-600 font-semibold mt-1">
+                <div className="text-[#87A96B] font-semibold mt-1">
                   {service.discount_percent > 0 ? (
                     <>
                       <span className="line-through text-gray-400 text-sm mr-1">
@@ -208,7 +208,7 @@ const ServicesPage: React.FC = () => {
                 <button
                   onClick={(e) => handleBookNow(service.id, e)}
                   disabled={!service.is_active}
-                  className="w-full px-3 py-2 bg-orange-500 text-white text-sm rounded-lg hover:bg-orange-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-1"
+                  className="inline-flex items-center justify-center gap-2 rounded-lg transition w-full mt-3 bg-[#2A9D8F] hover:bg-[#238276] px-4 py-3 text-sm bg-[#87A96B] text-white shadow-xl hover:bg-[#759157] hover:shadow-2xl transform hover:scale-105 transition-all duration-300 disabled:bg-gray-300 disabled:hover:scale-100"
                 >
                   <svg
                     className="w-4 h-4"
