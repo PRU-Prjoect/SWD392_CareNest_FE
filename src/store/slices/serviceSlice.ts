@@ -48,12 +48,13 @@ export interface ServiceData {
 }
 
 // Request interfaces
-interface SearchServicesRequest {
+interface SearchServiceRequest {
   name?: string;
   serviceTypeId?: string;
   sortBy?: string;
   limit?: number;
   offset?: number;
+  shopId?: string; // ✅ Thêm trường shopId
 }
 
 interface CreateServiceRequest {
@@ -123,7 +124,7 @@ const initialState: ServiceState = {
 // ✅ 1. Get all services (with optional search parameters)
 export const getAllServices = createAsyncThunk<
   ServicesListResponse,
-  SearchServicesRequest, // ✅ Bỏ | void
+  SearchServiceRequest, // ✅ Đã đổi tên từ SearchServicesRequest
   { rejectValue: ErrorResponse }
 >("service/getAll", async (params = {}, { rejectWithValue }) => {
   try {
@@ -134,6 +135,7 @@ export const getAllServices = createAsyncThunk<
     if (params.sortBy) queryParams.append("sortBy", params.sortBy);
     if (params.limit) queryParams.append("limit", params.limit.toString());
     if (params.offset) queryParams.append("offset", params.offset.toString());
+    if (params.shopId) queryParams.append("shopId", params.shopId); // ✅ Thêm shopId vào query params
 
     const queryString = queryParams.toString();
     const endpoint = queryString ? `Service?${queryString}` : "Service";
@@ -192,6 +194,7 @@ export const getAllServices = createAsyncThunk<
     });
   }
 });
+
 // ✅ 2. Get service by ID
 export const getServiceById = createAsyncThunk<
   ServiceResponse,

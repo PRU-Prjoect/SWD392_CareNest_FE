@@ -367,11 +367,6 @@ const ServiceManagement = () => {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center space-x-4">
-          <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center">
-            <div className="w-12 h-12 bg-orange-200 rounded-full flex items-center justify-center">
-              <span className="text-orange-600 font-bold text-lg">P</span>
-            </div>
-          </div>
           <div>
             <h1 className="text-2xl font-bold text-gray-800">
               Dịch vụ của tôi

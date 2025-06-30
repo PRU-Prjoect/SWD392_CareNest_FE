@@ -1,638 +1,652 @@
-import React, { useState } from 'react';
+import { useState, useEffect, useMemo } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import type { AppDispatch, RootState } from "@/store/store";
+import { getAllServices } from "@/store/slices/serviceSlice";
+import { getAllServiceAppointments } from "@/store/slices/serviceAppointmentSlice";
+import {
+  getAllAppointments,
+  getAppointmentById, // ✅ Thêm import
+  updateAppointment,
+} from "@/store/slices/appointmentSlice";
+import { getShopById } from "@/store/slices/shopSlice";
+import { AppointmentStatus } from "@/types/enums";
+
+interface Pet {
+  name: string;
+  type: string;
+  age: number;
+}
 
 interface ServiceOrder {
-  id: number;
-  customerName: string;
+  id: string; // appointment_id
+  customerName: string; // Sẽ cần API customer hoặc mock
+  customerPhone: string; // Sẽ cần API customer hoặc mock
+  pet: Pet; // Sẽ cần API pet hoặc mock
   services: {
-    id: number;
-    name: string;
-    note: string;
-    price: number;
+    id: string; // service_id (đổi từ number thành string)
+    name: string; // service name
+    note: string; // appointment notes
+    price: number; // service price
   }[];
-  startTime: string;
-  endTime: string;
-  status: 'pending' | 'processing' | 'in-progress' | 'completed' | 'cancelled';
-  totalAmount: number;
-  branch: string;
-  review?: {
-    rating: number;
-    comment: string;
-    reviewDate: string;
+  scheduledTime: string; // Parsed từ start_time
+  scheduledDate: string; // Parsed từ start_time
+  status: "pending" | "in-progress" | "completed" | "cancelled"; // ✅ Bỏ "confirmed"
+  totalAmount: number; // Tính từ service prices
+  branch: string; // Mock hoặc lấy từ shop info
+  createdAt: string; // appointment start_time
+  specialNote?: string; // appointment notes
+  // ✅ Thêm field mới
+  originalAppointment?: {
+    id: string;
+    customer_id: string;
+    status: AppointmentStatus;
+    notes: string;
+    start_time: string;
   };
 }
 
-interface ReviewModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  order: ServiceOrder | null;
-}
-
-const ReviewModal: React.FC<ReviewModalProps> = ({ isOpen, onClose, order }) => {
-  if (!isOpen || !order || !order.review) return null;
-
-  const renderStars = (rating: number) => {
-    return Array.from({ length: 5 }, (_, index) => (
-      <svg
-        key={index}
-        className={`w-5 h-5 ${
-          index < rating ? 'text-yellow-400' : 'text-gray-300'
-        }`}
-        fill="currentColor"
-        viewBox="0 0 20 20"
-      >
-        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-      </svg>
-    ));
-  };
-
-  return (
-    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
-      <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto shadow-2xl">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-bold text-gray-800">
-            Đánh giá của khách hàng
-          </h2>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-full hover:bg-gray-100"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-        
-        <div className="space-y-5">
-          <div className="bg-gray-50 rounded-lg p-4">
-            <label className="text-sm font-medium text-gray-600 block mb-1">Khách hàng:</label>
-            <p className="text-gray-900 font-medium">{order.customerName}</p>
-          </div>
-          
-          <div className="bg-gray-50 rounded-lg p-4">
-            <label className="text-sm font-medium text-gray-600 block mb-1">Đơn hàng:</label>
-            <p className="text-gray-900 font-medium">#{order.id}</p>
-          </div>
-          
-          <div className="bg-gray-50 rounded-lg p-4">
-            <label className="text-sm font-medium text-gray-600 block mb-2">Đánh giá:</label>
-            <div className="flex items-center space-x-1">
-              {renderStars(order.review.rating)}
-              <span className="ml-2 text-sm text-gray-600 font-medium">
-                ({order.review.rating}/5 sao)
-              </span>
-            </div>
-          </div>
-          
-          <div className="bg-gray-50 rounded-lg p-4">
-            <label className="text-sm font-medium text-gray-600 block mb-2">Nhận xét:</label>
-            <div className="bg-white rounded-lg p-3 border border-gray-200">
-              <p className="text-gray-800 leading-relaxed">
-                {order.review.comment}
-              </p>
-            </div>
-          </div>
-          
-          <div className="bg-gray-50 rounded-lg p-4">
-            <label className="text-sm font-medium text-gray-600 block mb-1">Ngày đánh giá:</label>
-            <p className="text-gray-900 font-medium">{order.review.reviewDate}</p>
-          </div>
-        </div>
-        
-        <div className="flex justify-end mt-6">
-          <button
-            onClick={onClose}
-            className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-all duration-200 font-medium"
-          >
-            Đóng
-          </button>
-        </div>
-      </div>
-    </div>
-  );
+// Mapping function cho status
+const mapAppointmentStatus = (
+  status: AppointmentStatus
+): ServiceOrder["status"] => {
+  switch (status) {
+    case AppointmentStatus.NoProgress:
+      return "pending";
+    case AppointmentStatus.InProgress:
+      return "in-progress";
+    case AppointmentStatus.Finish:
+      return "completed";
+    case AppointmentStatus.Cancel:
+      return "cancelled";
+    default:
+      return "pending";
+  }
 };
 
 const OrderManagement = () => {
-  const [activeTab, setActiveTab] = useState<'pending' | 'processing' | 'completed' | 'cancelled' | 'all'>('pending');
-  const [selectedDate, setSelectedDate] = useState('');
-  const [selectedBranch, setSelectedBranch] = useState('');
-  const [showDatePicker, setShowDatePicker] = useState(false);
-  const [reviewModal, setReviewModal] = useState<{ isOpen: boolean; order: ServiceOrder | null }>({
-    isOpen: false,
-    order: null
-  });
+  const dispatch = useDispatch<AppDispatch>();
 
-  // Dữ liệu mẫu
-  const orders: ServiceOrder[] = [
-    {
-      id: 1,
-      customerName: 'Nguyễn Văn A',
-      services: [
-        { id: 1, name: 'Dịch vụ tắm cho cún', note: 'Cún bị dị ứng nước', price: 200000 },
-        { id: 2, name: 'Cắt tỉa lông', note: 'Cún bị dị ứng nước', price: 200000 },
-        { id: 3, name: 'Cắt tỉa lông', note: 'Cún bị dị ứng nước', price: 200000 }
-      ],
-      startTime: '2025-01-01 9:00',
-      endTime: '2025-01-01 12:00',
-      status: 'pending',
-      totalAmount: 600000,
-      branch: 'Chi nhánh Vinhome: VinhomeGrandPark, quận 9, Thủ Đức'
-    },
-    {
-      id: 2,
-      customerName: 'Nguyễn Văn B',
-      services: [
-        { id: 1, name: 'Dịch vụ tắm cho cún', note: 'Cún bị dị ứng nước', price: 200000 },
-        { id: 2, name: 'Cắt tỉa lông', note: 'Cún bị dị ứng nước', price: 200000 }
-      ],
-      startTime: '2025-01-01 9:00',
-      endTime: '2025-01-01 12:00',
-      status: 'processing',
-      totalAmount: 400000,
-      branch: 'Chi nhánh Vinhome: VinhomeGrandPark, quận 9, Thủ Đức'
-    },
-    {
-      id: 3,
-      customerName: 'Nguyễn Văn C',
-      services: [
-        { id: 1, name: 'Dịch vụ tắm cho cún', note: 'Cún bị dị ứng nước', price: 200000 }
-      ],
-      startTime: '2025-01-01 9:00',
-      endTime: '2025-01-01 12:00',
-      status: 'in-progress',
-      totalAmount: 200000,
-      branch: 'Chi nhánh Vinhome: VinhomeGrandPark, quận 9, Thủ Đức'
-    },
-    // Đơn hàng hoàn thành
-    {
-      id: 4,
-      customerName: 'Trần Thị D',
-      services: [
-        { id: 1, name: 'Dịch vụ tắm cho cún', note: 'Dịch vụ tốt', price: 200000 },
-        { id: 2, name: 'Cắt tỉa lông', note: 'Rất hài lòng', price: 150000 }
-      ],
-      startTime: '2024-12-28 10:00',
-      endTime: '2024-12-28 13:00',
-      status: 'completed',
-      totalAmount: 350000,
-      branch: 'Chi nhánh Vinhome: VinhomeGrandPark, quận 9, Thủ Đức',
-      review: {
-        rating: 5,
-        comment: 'Dịch vụ rất tốt, nhân viên thân thiện và chuyên nghiệp. Cún cưng của tôi rất thích và sạch sẽ sau khi tắm.',
-        reviewDate: '2024-12-28 14:30'
+  // ✅ Lấy user info từ auth state
+  const { user } = useSelector((state: RootState) => state.auth);
+
+  // Redux state
+  const { services, loading: servicesLoading } = useSelector(
+    (state: RootState) => state.service
+  );
+  const { serviceAppointments, loading: serviceAppointmentsLoading } =
+    useSelector((state: RootState) => state.service_appointment);
+  const { appointments, loading: appointmentsLoading } = useSelector(
+    (state: RootState) => state.appointment
+  );
+  const { currentShop, loading: shopLoading } = useSelector(
+    (state: RootState) => state.shop
+  );
+
+  // ✅ Cập nhật activeTab type
+  const [activeTab, setActiveTab] = useState<
+    "pending" | "in-progress" | "today" | "completed" | "cancelled" | "all"
+  >("pending");
+
+  const [orders, setOrders] = useState<ServiceOrder[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // ✅ Fetch dữ liệu đã được cập nhật
+  useEffect(() => {
+    const fetchInitialData = async () => {
+      if (!user?.id) {
+        console.log("❌ No user ID found, skipping data fetch");
+        setOrders([]);
+        setLoading(false);
+        return;
       }
-    },
-    {
-      id: 5,
-      customerName: 'Lê Văn E',
-      services: [
-        { id: 1, name: 'Dịch vụ spa cho mèo', note: 'Mèo hiền lành', price: 300000 }
-      ],
-      startTime: '2024-12-27 14:00',
-      endTime: '2024-12-27 16:00',
-      status: 'completed',
-      totalAmount: 300000,
-      branch: 'Chi nhánh Vinhome: VinhomeGrandPark, quận 9, Thủ Đức',
-      review: {
-        rating: 4,
-        comment: 'Dịch vụ khá ổn, tuy nhiên thời gian chờ hơi lâu. Mèo của tôi được chăm sóc tốt.',
-        reviewDate: '2024-12-27 17:15'
+
+      const shopId = user.id;
+      setLoading(true);
+
+      try {
+        console.log("🚀 Fetching data for shop:", shopId);
+
+        // ✅ Fetch shop info trước tiên
+        await dispatch(getShopById(shopId));
+
+        // ✅ Fetch services của shop hiện tại
+        const servicesResult = await dispatch(
+          getAllServices({ shopId })
+        ).unwrap();
+
+        const shopServices = servicesResult.data;
+
+        if (shopServices.length === 0) {
+          console.log("ℹ️ No services found for shop:", shopId);
+          setOrders([]);
+          return;
+        }
+
+        // ✅ Lấy service appointments cho tất cả services
+        const serviceIds = shopServices.map((service) => service.id);
+        const serviceAppointmentPromises = serviceIds.map((serviceId) =>
+          dispatch(getAllServiceAppointments({ serviceId })).unwrap()
+        );
+
+        const serviceAppointmentResults = await Promise.allSettled(
+          serviceAppointmentPromises
+        );
+        const allServiceAppointments = serviceAppointmentResults
+          .filter((result) => result.status === "fulfilled")
+          .flatMap((result) => (result as any).value.data);
+
+        if (allServiceAppointments.length === 0) {
+          console.log("ℹ️ No service appointments found for shop:", shopId);
+          setOrders([]);
+          return;
+        }
+
+        // ✅ Thay đổi: Lấy appointments chi tiết bằng getAppointmentById
+        const appointmentIds = [
+          ...new Set(allServiceAppointments.map((sa) => sa.appointment_id)),
+        ];
+
+        const appointmentPromises = appointmentIds.map(
+          (appointmentId) =>
+            dispatch(getAppointmentById(appointmentId)).unwrap() // ✅ Đổi từ getAllAppointments
+        );
+
+        const appointmentResults = await Promise.allSettled(
+          appointmentPromises
+        );
+        const allAppointments = appointmentResults
+          .filter((result) => result.status === "fulfilled")
+          .map((result) => (result as any).value.data); // ✅ Đổi từ flatMap thành map
+
+        // ✅ Transform data thành ServiceOrder format
+        const transformedOrders = allAppointments.map((appointment) => {
+          const relatedServiceAppointments = allServiceAppointments.filter(
+            (sa) => sa.appointment_id === appointment.id
+          );
+
+          const relatedServices = relatedServiceAppointments
+            .map((sa) => {
+              const service = shopServices.find((s) => s.id === sa.service_id);
+              return service
+                ? {
+                    id: service.id,
+                    name: service.name,
+                    note: appointment.notes || "",
+                    price: service.price,
+                  }
+                : null;
+            })
+            .filter(Boolean);
+
+          // Parse thời gian
+          const startTime = new Date(appointment.start_time);
+          const scheduledDate = startTime.toLocaleDateString("vi-VN");
+          const scheduledTime = startTime.toLocaleTimeString("vi-VN", {
+            hour: "2-digit",
+            minute: "2-digit",
+          });
+
+          return {
+            id: appointment.id,
+            customerName: `Khách hàng ${appointment.customer_id.slice(-4)}`,
+            customerPhone: "0900000000",
+            pet: {
+              name: "Pet",
+              type: "Chó/Mèo",
+              age: 1,
+            },
+            services: relatedServices,
+            scheduledTime,
+            scheduledDate,
+            status: mapAppointmentStatus(appointment.status),
+            totalAmount: relatedServices.reduce(
+              (sum, service) => sum + service.price,
+              0
+            ),
+            branch: currentShop?.name || "Chi nhánh Vinhome Grand Park",
+            createdAt: appointment.start_time,
+            specialNote: appointment.notes,
+            // ✅ Thêm thông tin từ API để debug
+            originalAppointment: {
+              id: appointment.id,
+              customer_id: appointment.customer_id,
+              status: appointment.status,
+              notes: appointment.notes,
+              start_time: appointment.start_time,
+            },
+          } as ServiceOrder;
+        });
+
+        setOrders(transformedOrders);
+        console.log(
+          `✅ Successfully loaded ${transformedOrders.length} orders for shop:`,
+          shopId
+        );
+      } catch (error) {
+        console.error("❌ Error fetching data for shop:", shopId, error);
+        setOrders([]);
+      } finally {
+        setLoading(false);
       }
-    },
-    // Đơn hàng bị hủy
-    {
-      id: 6,
-      customerName: 'Phạm Thị F',
-      services: [
-        { id: 1, name: 'Dịch vụ tắm cho cún', note: 'Khách hủy do bận việc', price: 200000 }
-      ],
-      startTime: '2024-12-26 9:00',
-      endTime: '2024-12-26 11:00',
-      status: 'cancelled',
-      totalAmount: 200000,
-      branch: 'Chi nhánh Vinhome: VinhomeGrandPark, quận 9, Thủ Đức'
-    },
-    {
-      id: 7,
-      customerName: 'Hoàng Văn G',
-      services: [
-        { id: 1, name: 'Cắt tỉa lông', note: 'Cún không hợp tác', price: 180000 },
-        { id: 2, name: 'Vệ sinh tai', note: 'Cún sợ hãi', price: 100000 }
-      ],
-      startTime: '2024-12-25 15:00',
-      endTime: '2024-12-25 17:00',
-      status: 'cancelled',
-      totalAmount: 280000,
-      branch: 'Chi nhánh Vinhome: VinhomeGrandPark, quận 9, Thủ Đức'
-    }
-  ];
-
-  // Custom Date Picker Component
-  const CustomDatePicker = () => {
-    const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
-    const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
-
-    const months = [
-      'Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6',
-      'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12'
-    ];
-
-    const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
-    const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay();
-    const adjustedFirstDay = firstDayOfMonth === 0 ? 6 : firstDayOfMonth - 1;
-
-    const days = [];
-    for (let i = 0; i < adjustedFirstDay; i++) {
-      days.push(null);
-    }
-    for (let i = 1; i <= daysInMonth; i++) {
-      days.push(i);
-    }
-
-    const handleDateSelect = (day: number) => {
-      const formattedDate = `${String(day).padStart(2, '0')}/${String(currentMonth + 1).padStart(2, '0')}/${currentYear}`;
-      setSelectedDate(formattedDate);
-      setShowDatePicker(false);
     };
 
-    const nextMonth = () => {
-      if (currentMonth === 11) {
-        setCurrentMonth(0);
-        setCurrentYear(currentYear + 1);
-      } else {
-        setCurrentMonth(currentMonth + 1);
-      }
-    };
+    fetchInitialData();
+  }, [dispatch, user?.id]);
 
-    const prevMonth = () => {
-      if (currentMonth === 0) {
-        setCurrentMonth(11);
-        setCurrentYear(currentYear - 1);
-      } else {
-        setCurrentMonth(currentMonth - 1);
-      }
-    };
+  // ✅ Auto-refresh mỗi 30 giây chỉ khi có user.id
+  useEffect(() => {
+    if (!user?.id) return;
 
+    const interval = setInterval(() => {
+      if (!loading) {
+        console.log("🔄 Auto-refreshing order data...");
+      }
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, [loading, user?.id]);
+
+  // ✅ Sửa lại filteredOrders để khớp với enum thực tế
+  const filteredOrders = useMemo(() => {
+    const today = new Date().toLocaleDateString("vi-VN");
+
+    switch (activeTab) {
+      case "pending":
+        return orders.filter((order) => order.status === "pending");
+      case "in-progress":
+        return orders.filter((order) => order.status === "in-progress");
+      case "today":
+        return orders.filter((order) => order.scheduledDate === today);
+      case "completed":
+        return orders.filter((order) => order.status === "completed");
+      case "cancelled":
+        return orders.filter((order) => order.status === "cancelled");
+      default:
+        return orders;
+    }
+  }, [orders, activeTab]);
+
+  // ✅ Loading state kiểm tra cả user
+  const isLoading = loading || shopLoading || !user?.id;
+
+  // ✅ Kiểm tra user login
+  if (!user?.id) {
     return (
-      <div className="absolute top-full left-0 mt-2 bg-white border border-gray-300 rounded-lg shadow-lg z-50 p-4 w-80">
-        {/* Time Period Header */}
-        <div className="mb-4">
-          <div className="bg-teal-500 text-white rounded-lg p-3 text-center">
-            <div className="text-lg font-semibold">Thời gian</div>
+      <div className="p-4 md:p-6 bg-gray-50 min-h-screen">
+        <div className="flex items-center justify-center py-12">
+          <div className="text-red-500">
+            Vui lòng đăng nhập để xem quản lý đơn hàng
           </div>
-        </div>
-
-        {/* Month Navigation */}
-        <div className="flex items-center justify-between mb-4 bg-gray-100 rounded-lg p-2">
-          <button onClick={prevMonth} className="p-1 hover:bg-gray-200 rounded">
-            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
-            </svg>
-          </button>
-          <div className="text-lg font-semibold">{months[currentMonth]} {currentYear}</div>
-          <button onClick={nextMonth} className="p-1 hover:bg-gray-200 rounded">
-            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
-            </svg>
-          </button>
-        </div>
-
-        {/* Days of Week */}
-        <div className="grid grid-cols-7 gap-1 mb-2">
-          {['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'].map((day) => (
-            <div key={day} className="text-center text-sm font-medium text-gray-600 p-2">
-              {day}
-            </div>
-          ))}
-        </div>
-
-        {/* Calendar Days */}
-        <div className="grid grid-cols-7 gap-1">
-          {days.map((day, index) => (
-            <div key={index} className="aspect-square">
-              {day && (
-                <button
-                  onClick={() => handleDateSelect(day)}
-                  className="w-full h-full flex items-center justify-center text-sm hover:bg-teal-100 hover:text-teal-700 rounded transition-colors"
-                >
-                  {day}
-                </button>
-              )}
-            </div>
-          ))}
         </div>
       </div>
     );
-  };
+  }
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'pending':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'processing':
-        return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'in-progress':
-        return 'bg-purple-100 text-purple-800 border-purple-200';
-      case 'completed':
-        return 'bg-green-100 text-green-800 border-green-200';
-      case 'cancelled':
-        return 'bg-red-100 text-red-800 border-red-200';
-      default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
-    }
-  };
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="p-4 md:p-6 bg-gray-50 min-h-screen">
+        <div className="flex items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+          <span className="ml-2 text-gray-600">Đang tải dữ liệu...</span>
+        </div>
+      </div>
+    );
+  }
 
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'pending':
-        return 'Chưa xử lý';
-      case 'processing':
-        return 'Chưa thực hiện';
-      case 'in-progress':
-        return 'Đang thực hiện';
-      case 'completed':
-        return 'Hoàn thành';
-      case 'cancelled':
-        return 'Đơn Hủy';
-      default:
-        return status;
-    }
-  };
-
-  const getTabColor = (tab: string) => {
-    switch (tab) {
-      case 'pending':
-        return 'bg-yellow-500 text-white';
-      case 'processing':
-        return 'bg-blue-500 text-white';
-      case 'completed':
-        return 'bg-green-500 text-white';
-      case 'cancelled':
-        return 'bg-red-500 text-white';
-      case 'all':
-        return 'bg-gray-500 text-white';
-      default:
-        return 'bg-gray-200 text-gray-600';
-    }
-  };
-
-  // Lọc đơn hàng theo tab
-  const filteredOrders = () => {
-    if (activeTab === 'all') return orders;
-    if (activeTab === 'processing') {
-      return orders.filter(order => order.status === 'processing' || order.status === 'in-progress');
-    }
-    return orders.filter(order => order.status === activeTab);
-  };
-
-  const handleStatusChange = (orderId: number, newStatus: 'processing' | 'in-progress' | 'completed' | 'cancelled') => {
-    console.log(`Changing order ${orderId} status to ${newStatus}`);
-  };
-
-  const openReviewModal = (order: ServiceOrder) => {
-    setReviewModal({ isOpen: true, order });
-  };
-
-  const closeReviewModal = () => {
-    setReviewModal({ isOpen: false, order: null });
-  };
-
-  return (
-    <div className="p-6 bg-gray-50 min-h-screen">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center space-x-4">
-          <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center">
-            <div className="w-12 h-12 bg-orange-200 rounded-full flex items-center justify-center">
-              <span className="text-orange-600 font-bold text-lg">P</span>
-            </div>
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold text-gray-800 flex items-center">
-              Chào mừng quay trở lại, ✨
-            </h1>
-            <p className="text-lg text-gray-600">
-              Cửa hàng chăm sóc sức khỏe thú cưng Pettiny
-            </p>
+  // ✅ Xử lý khi không có shop data sau khi đã fetch
+  if (!currentShop) {
+    return (
+      <div className="p-4 md:p-6 bg-gray-50 min-h-screen">
+        <div className="flex justify-center items-center h-64">
+          <div className="text-red-500">
+            Không tìm thấy thông tin cửa hàng cho user: {user.id}
           </div>
         </div>
       </div>
+    );
+  }
 
-      {/* Status Tabs */}
-      <div className="flex space-x-2 mb-6">
+  // Get relative time
+  const getRelativeTime = (dateString: string) => {
+    const now = new Date();
+    const orderTime = new Date(dateString);
+    const diffInHours = Math.floor(
+      (now.getTime() - orderTime.getTime()) / (1000 * 60 * 60)
+    );
+
+    if (diffInHours < 1) return "Vừa mới";
+    if (diffInHours < 24) return `${diffInHours} giờ trước`;
+    return `${Math.floor(diffInHours / 24)} ngày trước`;
+  };
+
+  // ✅ Cập nhật getStatusConfig
+  const getStatusConfig = (status: string) => {
+    switch (status) {
+      case "pending":
+        return {
+          color: "bg-orange-100 text-orange-800 border-orange-200", // ✅ Đổi màu
+          text: "Chờ xử lý", // ✅ Đổi text
+          icon: "⏳",
+        };
+      case "in-progress":
+        return {
+          color: "bg-blue-100 text-blue-800 border-blue-200",
+          text: "Đang thực hiện",
+          icon: "🔄",
+        };
+      case "completed":
+        return {
+          color: "bg-green-100 text-green-800 border-green-200",
+          text: "Hoàn thành",
+          icon: "✨",
+        };
+      case "cancelled":
+        return {
+          color: "bg-red-100 text-red-800 border-red-200",
+          text: "Đã hủy",
+          icon: "❌",
+        };
+      default:
+        return {
+          color: "bg-gray-100 text-gray-800 border-gray-200",
+          text: status,
+          icon: "❓",
+        };
+    }
+  };
+
+  // ✅ Cập nhật handleConfirmOrder
+  const handleConfirmOrder = async (orderId: string) => {
+    try {
+      const appointment = appointments.find((apt) => apt.id === orderId);
+      if (appointment) {
+        await dispatch(
+          updateAppointment({
+            ...appointment,
+            status: AppointmentStatus.InProgress, // ✅ Đổi từ CONFIRMED
+            location_type: appointment.location_type || "",
+            end_time: appointment.end_time || "",
+          })
+        ).unwrap();
+
+        setOrders((prev) =>
+          prev.map((order) =>
+            order.id === orderId
+              ? { ...order, status: "in-progress" as const } // ✅ Đổi thành in-progress
+              : order
+          )
+        );
+
+        alert(
+          `Đã chuyển đơn hàng ${orderId} sang trạng thái "Đang thực hiện". Thông báo đã được gửi cho khách hàng.`
+        );
+      }
+    } catch (error) {
+      console.error("Error updating appointment:", error);
+      alert("Có lỗi xảy ra khi cập nhật đơn hàng");
+    }
+  };
+
+  const handleCallCustomer = (phone: string, customerName: string) => {
+    if (window.confirm(`Gọi cho ${customerName} (${phone})?`)) {
+      window.open(`tel:${phone}`);
+    }
+  };
+
+  const handleMessageCustomer = (phone: string, customerName: string) => {
+    const message = prompt(
+      `Gửi tin nhắn cho ${customerName}:`,
+      "Xin chào! Chúng tôi xác nhận lịch hẹn của bạn..."
+    );
+    if (message) {
+      alert(`Đã gửi tin nhắn cho ${customerName}: "${message}"`);
+    }
+  };
+
+  const handleViewDetail = (order: ServiceOrder) => {
+    alert(`Chi tiết đơn hàng ${order.id} - Sẽ mở modal/page chi tiết`);
+  };
+
+  return (
+    <div className="p-4 md:p-6 bg-gray-50 min-h-screen">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center space-x-4">
+          <div>
+            <h1 className="text-xl md:text-2xl font-bold text-gray-800">
+              Quản lý đơn hàng
+            </h1>
+            <p className="text-sm md:text-base text-gray-600">
+              {currentShop?.name || "Cửa hàng chăm sóc thú cưng Pettiny"}
+            </p>
+            <p className="text-sm text-gray-500">
+              Tổng số đơn: {orders.length} | Đang hiển thị:{" "}
+              {filteredOrders.length}
+            </p>
+          </div>
+        </div>
+
+        {/* Auto-refresh indicator */}
+        <div className="flex items-center text-sm text-gray-500">
+          <div className="animate-pulse w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+          <span className="hidden md:inline">Tự động cập nhật</span>
+        </div>
+      </div>
+
+      {/* ✅ Cập nhật Quick Filters */}
+      <div className="grid grid-cols-2 md:flex md:space-x-2 gap-2 mb-6">
         {[
-          { key: 'pending', label: 'Chưa xử lý' },
-          { key: 'processing', label: 'Đang xử lý' },
-          { key: 'completed', label: 'Hoàn thành' },
-          { key: 'cancelled', label: 'Đơn Hủy' },
-          { key: 'all', label: 'Tất Cả' }
+          {
+            key: "pending",
+            label: "Chờ xử lý", // ✅ Đổi text
+            color: "bg-orange-500", // ✅ Đổi màu
+            count: orders.filter((o) => o.status === "pending").length,
+          },
+          {
+            key: "today",
+            label: "Hôm nay",
+            color: "bg-blue-500",
+            count: orders.filter(
+              (o) => o.scheduledDate === new Date().toLocaleDateString("vi-VN")
+            ).length,
+          },
+          {
+            key: "in-progress",
+            label: "Đang thực hiện",
+            color: "bg-yellow-500",
+            count: orders.filter((o) => o.status === "in-progress").length,
+          },
+          {
+            key: "completed",
+            label: "Hoàn thành",
+            color: "bg-green-500",
+            count: orders.filter((o) => o.status === "completed").length,
+          },
+          {
+            key: "cancelled", // ✅ Thêm cancelled tab
+            label: "Đã hủy",
+            color: "bg-red-500",
+            count: orders.filter((o) => o.status === "cancelled").length,
+          },
+          {
+            key: "all",
+            label: "Tất cả",
+            color: "bg-gray-500",
+            count: orders.length,
+          },
         ].map((tab) => (
           <button
             key={tab.key}
             onClick={() => setActiveTab(tab.key as any)}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+            className={`relative px-3 py-2 md:px-4 md:py-2 rounded-lg font-medium transition-all duration-200 text-sm md:text-base ${
               activeTab === tab.key
-                ? getTabColor(tab.key)
-                : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+                ? `${tab.color} text-white shadow-lg scale-105`
+                : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-50 hover:shadow-md"
             }`}
           >
             {tab.label}
+            {tab.count > 0 && (
+              <span
+                className={`absolute -top-2 -right-2 w-5 h-5 text-xs rounded-full flex items-center justify-center ${
+                  activeTab === tab.key
+                    ? "bg-white text-gray-800"
+                    : "bg-red-500 text-white"
+                }`}
+              >
+                {tab.count}
+              </span>
+            )}
           </button>
         ))}
       </div>
 
-      {/* Filters */}
-      <div className="flex items-center space-x-4 mb-6">
-        <div className="flex items-center space-x-2">
-          <svg className="w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-            <path fillRule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" clipRule="evenodd" />
-          </svg>
-        </div>
-        
-        {/* Custom Date Picker */}
-        <div className="relative">
-          <button
-            onClick={() => setShowDatePicker(!showDatePicker)}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-700 min-w-[160px] flex items-center justify-between"
-          >
-            <span>{selectedDate || 'dd/mm/yyyy'}</span>
-            <svg className="w-4 h-4 ml-2" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-            </svg>
-          </button>
-          
-          {showDatePicker && <CustomDatePicker />}
-        </div>
-        
-        <select 
-          className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white min-w-[300px]"
-          value={selectedBranch}
-          onChange={(e) => setSelectedBranch(e.target.value)}
-        >
-          <option value="">Chi nhánh</option>
-          <option value="vinhome">Chi nhánh 1: Vinhome Grand Park, Quận 9, Thành Phố Hồ Chí Minh</option>
-          <option value="branch2">Chi nhánh 2</option>
-        </select>
+      {/* Orders Cards */}
+      <div className="space-y-4">
+        {filteredOrders.length === 0 ? (
+          <div className="text-center py-12">
+            <div className="w-24 h-24 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+              <span className="text-4xl">📝</span>
+            </div>
+            <h3 className="text-lg font-medium text-gray-600 mb-2">
+              Không có đơn hàng
+            </h3>
+            <p className="text-gray-500">Chưa có đơn hàng nào trong mục này</p>
+          </div>
+        ) : (
+          filteredOrders.map((order) => {
+            const statusConfig = getStatusConfig(order.status);
+            return (
+              <div
+                key={order.id}
+                className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 md:p-6 hover:shadow-md transition-all duration-200"
+              >
+                {/* Card Header */}
+                <div className="flex flex-col md:flex-row md:items-center justify-between mb-4">
+                  <div className="flex items-center space-x-3 mb-2 md:mb-0">
+                    <h3 className="text-lg font-bold text-gray-800">
+                      #{order.id}
+                    </h3>
+                    <span
+                      className={`px-3 py-1 text-xs font-medium rounded-full border ${statusConfig.color}`}
+                    >
+                      {statusConfig.icon} {statusConfig.text}
+                    </span>
+                  </div>
+                  <div className="text-sm text-gray-500">
+                    {getRelativeTime(order.createdAt)}
+                  </div>
+                </div>
 
-        {/* Clear filter button */}
-        {selectedDate && (
-          <button
-            onClick={() => setSelectedDate('')}
-            className="px-3 py-2 bg-gray-200 text-gray-600 rounded-lg hover:bg-gray-300 transition-colors"
-            title="Xóa bộ lọc ngày"
-          >
-            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-            </svg>
-          </button>
+                {/* ✅ Customer & Appointment Info - Đơn giản hóa */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                  <div className="space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <span className="text-gray-500">👤</span>
+                      <span className="font-medium text-gray-800">
+                        ID: {order.originalAppointment?.customer_id.slice(-8)}
+                      </span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-gray-500">📅</span>
+                      <span className="text-gray-600">
+                        {order.scheduledTime}, {order.scheduledDate}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <span className="text-gray-500">📋</span>
+                      <span className="text-gray-800">
+                        Trạng thái: {order.originalAppointment?.status}
+                      </span>
+                    </div>
+                    {order.originalAppointment?.notes && (
+                      <div className="flex items-start space-x-2 text-sm">
+                        <span className="text-gray-500 mt-0.5">💬</span>
+                        <span className="text-gray-700 italic">
+                          "{order.originalAppointment.notes}"
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Service Details */}
+                <div className="bg-gray-50 rounded-lg p-3 md:p-4 mb-4">
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-start">
+                      <span className="font-medium text-gray-800">
+                        {order.services[0]?.name}
+                      </span>
+                      <span className="font-bold text-teal-600">
+                        {order.totalAmount.toLocaleString("vi-VN")}đ
+                      </span>
+                    </div>
+                    <div className="flex items-center space-x-2 text-sm text-gray-600">
+                      <span>🕐</span>
+                      <span>
+                        {order.scheduledTime}, {order.scheduledDate}
+                      </span>
+                    </div>
+                    {order.specialNote && (
+                      <div className="flex items-start space-x-2 text-sm">
+                        <span className="text-gray-500 mt-0.5">💬</span>
+                        <span className="text-gray-700 italic">
+                          "{order.specialNote}"
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex flex-wrap gap-2">
+                  {order.status === "pending" && (
+                    <button
+                      onClick={() => handleConfirmOrder(order.id)}
+                      className="flex-1 md:flex-none px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors font-medium text-sm"
+                    >
+                      ✅ Xác nhận
+                    </button>
+                  )}
+
+                  <button
+                    onClick={() =>
+                      handleCallCustomer(
+                        order.customerPhone,
+                        order.customerName
+                      )
+                    }
+                    className="flex-1 md:flex-none px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium text-sm"
+                  >
+                    📞 Gọi
+                  </button>
+
+                  <button
+                    onClick={() =>
+                      handleMessageCustomer(
+                        order.customerPhone,
+                        order.customerName
+                      )
+                    }
+                    className="flex-1 md:flex-none px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors font-medium text-sm"
+                  >
+                    💬 Nhắn tin
+                  </button>
+
+                  <button
+                    onClick={() => handleViewDetail(order)}
+                    className="flex-1 md:flex-none px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors font-medium text-sm"
+                  >
+                    👁️ Chi tiết
+                  </button>
+                </div>
+              </div>
+            );
+          })
         )}
       </div>
-
-      {/* Orders Table */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50 border-b border-gray-200">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">STT</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tên khách hàng</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dịch vụ</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Giờ bắt đầu</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Giờ kết thúc</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ghi chú</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Đơn giá</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trạng thái</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {filteredOrders().map((order, orderIndex) => (
-                <React.Fragment key={order.id}>
-                  {/* Branch Header */}
-                  <tr className="bg-gray-100">
-                    <td colSpan={8} className="px-6 py-3 text-sm font-medium text-gray-700">
-                      {order.branch}
-                    </td>
-                  </tr>
-                  
-                  {/* Customer Row */}
-                  <tr className="border-b border-gray-100">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {orderIndex + 1}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {order.customerName}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-900">
-                      {/* Để trống cho dịch vụ sẽ hiển thị ở dưới */}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-900">
-                      {order.startTime}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-900">
-                      {order.endTime}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-900">
-                      {/* Để trống cho ghi chú sẽ hiển thị ở dưới */}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-900">
-                      {/* Để trống cho đơn giá sẽ hiển thị ở dưới */}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex space-x-2">
-                        {order.status === 'pending' && (
-                          <>
-                            <button
-                              onClick={() => handleStatusChange(order.id, 'processing')}
-                              className="px-3 py-1 bg-blue-500 text-white text-xs rounded-full hover:bg-blue-600"
-                            >
-                              Xử lý
-                            </button>
-                            <button
-                              onClick={() => handleStatusChange(order.id, 'cancelled')}
-                              className="px-3 py-1 bg-red-500 text-white text-xs rounded-full hover:bg-red-600"
-                            >
-                              Hủy
-                            </button>
-                          </>
-                        )}
-                        {(order.status === 'processing' || order.status === 'in-progress') && (
-                          <span className={`px-3 py-1 text-xs rounded-full border ${getStatusColor(order.status)}`}>
-                            {getStatusText(order.status)}
-                          </span>
-                        )}
-                        {order.status === 'completed' && (
-                          <div className="flex space-x-2">
-                            <span className={`px-3 py-1 text-xs rounded-full border ${getStatusColor(order.status)}`}>
-                              {getStatusText(order.status)}
-                            </span>
-                            <button
-                              onClick={() => openReviewModal(order)}
-                              className="px-3 py-1 bg-blue-500 text-white text-xs rounded-full hover:bg-blue-600"
-                            >
-                              Chi tiết
-                            </button>
-                          </div>
-                        )}
-                        {order.status === 'cancelled' && (
-                          <span className={`px-3 py-1 text-xs rounded-full border ${getStatusColor(order.status)}`}>
-                            {getStatusText(order.status)}
-                          </span>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-
-                  {/* Services Rows */}
-                  {order.services.map((service, serviceIndex) => (
-                    <tr key={service.id} className="bg-white">
-                      <td className="px-6 py-3"></td>
-                      <td className="px-6 py-3 text-sm text-gray-900">{serviceIndex + 1}</td>
-                      <td className="px-6 py-3 text-sm text-gray-900">{service.name}</td>
-                      <td className="px-6 py-3"></td>
-                      <td className="px-6 py-3"></td>
-                      <td className="px-6 py-3 text-sm text-gray-900">{service.note}</td>
-                      <td className="px-6 py-3 text-sm text-gray-900">
-                        {service.price.toLocaleString('vi-VN')}
-                      </td>
-                      <td className="px-6 py-3"></td>
-                    </tr>
-                  ))}
-
-                  {/* Total Row */}
-                  <tr className="bg-gray-50 border-b-2 border-gray-200">
-                    <td className="px-6 py-3"></td>
-                    <td className="px-6 py-3 text-sm font-medium text-gray-900">
-                      Tổng : {order.services.length} dịch vụ
-                    </td>
-                    <td className="px-6 py-3"></td>
-                    <td className="px-6 py-3"></td>
-                    <td className="px-6 py-3"></td>
-                    <td className="px-6 py-3 text-sm font-medium text-gray-900">Thành tiền:</td>
-                    <td className="px-6 py-3 text-sm font-medium text-gray-900">
-                      {order.totalAmount.toLocaleString('vi-VN')}
-                    </td>
-                    <td className="px-6 py-3"></td>
-                  </tr>
-                </React.Fragment>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* Review Modal */}
-      <ReviewModal
-        isOpen={reviewModal.isOpen}
-        onClose={closeReviewModal}
-        order={reviewModal.order}
-      />
-
-      {/* Click outside to close date picker */}
-      {showDatePicker && (
-        <div 
-          className="fixed inset-0 z-40" 
-          onClick={() => setShowDatePicker(false)}
-        />
-      )}
     </div>
   );
 };

@@ -18,6 +18,7 @@ import ProfilePage from "../pages/Profile"; // ✅ Import ProfilePage
 import ServicesPage from "@/pages/Services/Service"; // ✅ Thêm import
 import BookingPage from "@/pages/Booking/BookingPage";
 import ThankYouPage from "@/pages/ThankYou/ThankYouPage";
+import OrderHotelRoomManagement from "@/pages/Shop/Order/OrderHotelRoomManagement"; // ✅ Import quản lý đơn hàng khách sạn
 
 import RegisterCustomer from "@/pages/RegisterCustomer"; // Trang đăng ký cho khách hàng
 import AppLayoutForShop from "../layout/AppLayoutForShop"; // Layout cho Shop/Admin
@@ -56,9 +57,9 @@ const AppRoutes = () => {
       <Route
         path="/app/*"
         element={
-          // <ProtectedRoute>
+          <ProtectedRoute>
             <AppLayoutForUser />
-          // </ProtectedRoute>
+          </ProtectedRoute>
         }
       >
         <Route path="home" element={<HomePage />} />
@@ -74,13 +75,17 @@ const AppRoutes = () => {
       <Route
         path="/shop/*"
         element={
-          // <ProtectedRoute>
+          <ProtectedRoute>
             <AppLayoutForShop />
-          // </ProtectedRoute>
+          </ProtectedRoute>
         }
       >
         <Route path="dashboard" element={<ShopDashboard />} />
-        <Route path="orders" element={<OrderManagement />} />
+
+        {/* ✅ Thêm các route cho đơn hàng */}
+        <Route path="orders/services" element={<OrderManagement />} />
+        <Route path="orders/hotels" element={<OrderHotelRoomManagement />} />
+
         <Route path="services" element={<ServiceManagement />} />
         <Route path="services/:id" element={<ServiceDetail />} />
         <Route path="hotels" element={<HotelRoomManagement />} />
@@ -90,6 +95,7 @@ const AppRoutes = () => {
           <Route path="branches" element={<ShopBranches />} />
           <Route index element={<Navigate to="info" replace />} />
         </Route>
+
         <Route path="profile" element={<ProfilePage />} />
         <Route index element={<Navigate to="dashboard" replace />} />
       </Route>
