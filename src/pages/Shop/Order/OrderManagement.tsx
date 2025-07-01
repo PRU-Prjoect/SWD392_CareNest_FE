@@ -4,7 +4,6 @@ import type { AppDispatch, RootState } from "@/store/store";
 import { getAllServices } from "@/store/slices/serviceSlice";
 import { getAllServiceAppointments } from "@/store/slices/serviceAppointmentSlice";
 import {
-  getAllAppointments,
   getAppointmentById, // ✅ Thêm import
   updateAppointment,
 } from "@/store/slices/appointmentSlice";
@@ -427,10 +426,14 @@ const OrderManagement = () => {
           </div>
         </div>
 
-        {/* Auto-refresh indicator */}
-        <div className="flex items-center text-sm text-gray-500">
-          <div className="animate-pulse w-2 h-2 bg-green-500 rounded-full mr-2"></div>
-          <span className="hidden md:inline">Tự động cập nhật</span>
+        {/* Simple reload button */}
+        <div className="flex items-center text-sm">
+          <button
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-[#91C8E4] text-white rounded-lg hover:bg-[#4682A9] transition-colors font-medium"
+          >
+            🔄 Reload
+          </button>
         </div>
       </div>
 
