@@ -163,7 +163,7 @@ const handleResponseError = (error: AxiosError) => {
     case 502:
     case 503:
     case 504:
-      toast.error("Lỗi máy chủ. Vui lòng thử lại sau!");
+      toast.error("Lỗi mạng. Vui lòng thử lại!");
       break;
 
     default:
