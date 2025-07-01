@@ -413,15 +413,19 @@ const OrderManagement = () => {
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center space-x-4">
           <div>
-            <h1 className="text-xl md:text-2xl font-bold text-gray-800">
-              Quản lý đơn hàng
+            <h1 className="text-xl md:text-3xl font-bold text-gray-800">
+              Quản lý đơn hàng dịch vụ
             </h1>
-            <p className="text-sm md:text-base text-gray-600">
+            <p className="text-sm md:text-2xl text-[#00809D] font-bold">
               {currentShop?.name || "Cửa hàng chăm sóc thú cưng Pettiny"}
             </p>
             <p className="text-sm text-gray-500">
-              Tổng số đơn: {orders.length} | Đang hiển thị:{" "}
-              {filteredOrders.length}
+              Tổng số đơn:{" "}
+              <span className="font-bold text-2xl">{orders.length}</span> | Đang
+              hiển thị:{" "}
+              <span className="font-bold text-2xl">
+                {filteredOrders.length}
+              </span>
             </p>
           </div>
         </div>
