@@ -532,7 +532,7 @@ const OrderManagement = () => {
                 <div className="flex flex-col md:flex-row md:items-center justify-between mb-4">
                   <div className="flex items-center space-x-3 mb-2 md:mb-0">
                     <h3 className="text-lg font-bold text-gray-800">
-                      Mã: <span className="text-red-500">#{order.id}</span>
+                      Mã: <span className="text-[#06d5c4]">#{order.id}</span>
                     </h3>
                     <span
                       className={`px-3 py-1 text-xs font-medium rounded-full border ${statusConfig.color}`}
