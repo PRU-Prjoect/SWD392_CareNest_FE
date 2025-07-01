@@ -72,7 +72,7 @@ interface CustomerResponse {
 }
 
 interface CustomersListResponse {
-  // For GET /Customer - returns array directly  
+  // For GET /Customer - returns array directly
   data: CustomerWithAccount[];
 }
 
@@ -101,13 +101,13 @@ const initialState: CustomerState = {
 // ✅ 1. Get all customers (with optional search parameters)
 export const getAllCustomers = createAsyncThunk<
   CustomersListResponse,
-  SearchCustomersRequest | void,
+  SearchCustomersRequest | undefined,
   { rejectValue: ErrorResponse }
 >("customer/getAll", async (params = {}, { rejectWithValue }) => {
   try {
     // Build query string from parameters
     const queryParams = new URLSearchParams();
-    
+
     if (params.name) queryParams.append("name", params.name);
     if (params.gender) queryParams.append("gender", params.gender);
     if (params.email) queryParams.append("email", params.email);
@@ -296,7 +296,8 @@ export const updateCustomer = createAsyncThunk<
         default:
           return rejectWithValue({
             error: status,
-            message: errorData?.message || "Cập nhật thông tin khách hàng thất bại",
+            message:
+              errorData?.message || "Cập nhật thông tin khách hàng thất bại",
           });
       }
     }
@@ -333,7 +334,10 @@ const customerSlice = createSlice({
     clearCustomersList: (state) => {
       state.customers = [];
     },
-    setCurrentCustomer: (state, action: PayloadAction<CustomerProfile | null>) => {
+    setCurrentCustomer: (
+      state,
+      action: PayloadAction<CustomerProfile | null>
+    ) => {
       state.currentCustomer = action.payload;
     },
   },
@@ -363,11 +367,12 @@ const customerSlice = createSlice({
         } else {
           state.searchError = {
             code: 1,
-            message: action.error.message || "Lấy danh sách khách hàng thất bại",
+            message:
+              action.error.message || "Lấy danh sách khách hàng thất bại",
           };
         }
       })
-      
+
       // ✅ Get customer by ID cases
       .addCase(getCustomerById.pending, (state) => {
         state.loading = true;
@@ -392,11 +397,12 @@ const customerSlice = createSlice({
         } else {
           state.error = {
             code: 1,
-            message: action.error.message || "Lấy thông tin khách hàng thất bại",
+            message:
+              action.error.message || "Lấy thông tin khách hàng thất bại",
           };
         }
       })
-      
+
       // ✅ Update customer cases
       .addCase(updateCustomer.pending, (state) => {
         state.updating = true;
@@ -407,9 +413,9 @@ const customerSlice = createSlice({
         (state, action: PayloadAction<UpdateCustomerResponse>) => {
           state.updating = false;
           state.updateError = null;
-          
+
           console.log("✅ Update customer successful:", action.payload.message);
-          
+
           // ✅ Sau khi update thành công, cần fetch lại data mới
           // Component sẽ handle việc này bằng cách gọi getCustomerById
         }
@@ -424,7 +430,8 @@ const customerSlice = createSlice({
         } else {
           state.updateError = {
             code: 1,
-            message: action.error.message || "Cập nhật thông tin khách hàng thất bại",
+            message:
+              action.error.message || "Cập nhật thông tin khách hàng thất bại",
           };
         }
       });

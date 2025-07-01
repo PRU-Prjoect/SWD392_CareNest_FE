@@ -9,6 +9,7 @@ import {
 } from "@/store/slices/appointmentSlice";
 import { getShopById } from "@/store/slices/shopSlice";
 import { AppointmentStatus } from "@/types/enums";
+import { getCustomerById } from "@/store/slices/customerSlice";
 
 interface Pet {
   name: string;
@@ -62,21 +63,33 @@ const mapAppointmentStatus = (
   }
 };
 
+// ✅ THÊM: Function chuyển đổi enum sang tiếng Việt
+const translateAppointmentStatus = (
+  status: AppointmentStatus | undefined
+): string => {
+  if (!status) {
+    return "Không xác định";
+  }
+
+  switch (status) {
+    case AppointmentStatus.Finish:
+      return "Hoàn thành";
+    case AppointmentStatus.Cancel:
+      return "Đã hủy";
+    case AppointmentStatus.InProgress:
+      return "Đang thực hiện";
+    case AppointmentStatus.NoProgress:
+      return "Chưa xác nhận";
+    default:
+      return status;
+  }
+};
 const OrderManagement = () => {
   const dispatch = useDispatch<AppDispatch>();
 
   // ✅ Lấy user info từ auth state
   const { user } = useSelector((state: RootState) => state.auth);
 
-  // Redux state
-  const { services, loading: servicesLoading } = useSelector(
-    (state: RootState) => state.service
-  );
-  const { serviceAppointments, loading: serviceAppointmentsLoading } =
-    useSelector((state: RootState) => state.service_appointment);
-  const { appointments, loading: appointmentsLoading } = useSelector(
-    (state: RootState) => state.appointment
-  );
   const { currentShop, loading: shopLoading } = useSelector(
     (state: RootState) => state.shop
   );
@@ -88,8 +101,72 @@ const OrderManagement = () => {
 
   const [orders, setOrders] = useState<ServiceOrder[]>([]);
   const [loading, setLoading] = useState(true);
+  const [customerNames, setCustomerNames] = useState<{ [key: string]: string }>(
+    {}
+  );
 
-  // ✅ Fetch dữ liệu đã được cập nhật
+  const fetchCustomerName = async (customerId: string) => {
+    if (customerNames[customerId]) return customerNames[customerId];
+
+    try {
+      const result = await dispatch(getCustomerById(customerId)).unwrap();
+      const customerName = result.data.full_name;
+
+      setCustomerNames((prev) => ({
+        ...prev,
+        [customerId]: customerName,
+      }));
+
+      return customerName;
+    } catch (error) {
+      console.error(`Failed to fetch customer ${customerId}:`, error);
+      return `Khách hàng ${customerId.slice(-4)}`;
+    }
+  };
+
+  const CustomerName: React.FC<{ customerId: string }> = ({ customerId }) => {
+    const [name, setName] = useState<string>(
+      `Khách hàng ${customerId.slice(-4)}`
+    );
+    const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+      const loadCustomerName = async () => {
+        if (customerNames[customerId]) {
+          setName(customerNames[customerId]);
+          return;
+        }
+
+        setLoading(true);
+        try {
+          const result = await dispatch(getCustomerById(customerId)).unwrap();
+          const customerName = result.data.full_name;
+
+          setCustomerNames((prev) => ({
+            ...prev,
+            [customerId]: customerName,
+          }));
+
+          setName(customerName);
+        } catch (error) {
+          console.error(`Failed to fetch customer ${customerId}:`, error);
+          setName(`Khách hàng ${customerId.slice(-4)}`);
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      loadCustomerName();
+    }, [customerId]);
+
+    if (loading) {
+      return <span className="animate-pulse">Đang tải...</span>;
+    }
+
+    return <span>{name}</span>;
+  };
+
+  // ✅ Fetch dữ liệu đã được cập nhật (bỏ function fetchCustomerName ở đây)
   useEffect(() => {
     const fetchInitialData = async () => {
       if (!user?.id) {
@@ -104,7 +181,6 @@ const OrderManagement = () => {
 
       try {
         console.log("🚀 Fetching data for shop:", shopId);
-
         // ✅ Fetch shop info trước tiên
         await dispatch(getShopById(shopId));
 
@@ -232,6 +308,28 @@ const OrderManagement = () => {
     fetchInitialData();
   }, [dispatch, user?.id]);
 
+  useEffect(() => {
+    const fetchAllCustomerNames = async () => {
+      const uniqueCustomerIds = [
+        ...new Set(
+          orders
+            .map((order) => order.originalAppointment?.customer_id)
+            .filter(Boolean)
+        ),
+      ];
+
+      const promises = uniqueCustomerIds.map((customerId) =>
+        fetchCustomerName(customerId)
+      );
+
+      await Promise.allSettled(promises);
+    };
+
+    if (orders.length > 0) {
+      fetchAllCustomerNames();
+    }
+  }, [orders]);
+
   // ✅ Auto-refresh mỗi 30 giây chỉ khi có user.id
   useEffect(() => {
     if (!user?.id) return;
@@ -248,7 +346,6 @@ const OrderManagement = () => {
   // ✅ Sửa lại filteredOrders để khớp với enum thực tế
   const filteredOrders = useMemo(() => {
     const today = new Date().toLocaleDateString("vi-VN");
-
     switch (activeTab) {
       case "pending":
         return orders.filter((order) => order.status === "pending");
@@ -356,50 +453,54 @@ const OrderManagement = () => {
   };
 
   // ✅ Cập nhật handleConfirmOrder
+  // ✅ THAY ĐỔI: Sử dụng data từ orders thay vì appointments
   const handleConfirmOrder = async (orderId: string) => {
     try {
-      const appointment = appointments.find((apt) => apt.id === orderId);
-      if (appointment) {
-        await dispatch(
-          updateAppointment({
-            ...appointment,
-            status: AppointmentStatus.InProgress, // ✅ Đổi từ CONFIRMED
-            location_type: appointment.location_type || "",
-            end_time: appointment.end_time || "",
-          })
-        ).unwrap();
-
-        setOrders((prev) =>
-          prev.map((order) =>
-            order.id === orderId
-              ? { ...order, status: "in-progress" as const } // ✅ Đổi thành in-progress
-              : order
-          )
-        );
-
-        alert(
-          `Đã chuyển đơn hàng ${orderId} sang trạng thái "Đang thực hiện". Thông báo đã được gửi cho khách hàng.`
-        );
+      // ✅ Tìm order từ orders array
+      const order = orders.find((o) => o.id === orderId);
+      if (!order || !order.originalAppointment) {
+        alert("Không tìm thấy thông tin đơn hàng");
+        return;
       }
+
+      // ✅ Sử dụng originalAppointment data
+      const appointmentData = order.originalAppointment;
+
+      await dispatch(
+        updateAppointment({
+          id: appointmentData.id,
+          customer_id: appointmentData.customer_id,
+          status: AppointmentStatus.InProgress,
+          notes: appointmentData.notes,
+          start_time: appointmentData.start_time,
+          location_type: "", // ✅ Default value
+          end_time: "", // ✅ Default value
+        })
+      ).unwrap();
+
+      // ✅ Update local state
+      setOrders((prev) =>
+        prev.map((o) =>
+          o.id === orderId
+            ? {
+                ...o,
+                status: "in-progress" as const,
+                // ✅ Update originalAppointment status too
+                originalAppointment: {
+                  ...o.originalAppointment!,
+                  status: AppointmentStatus.InProgress,
+                },
+              }
+            : o
+        )
+      );
+
+      alert(
+        `Đã chuyển đơn hàng ${orderId} sang trạng thái "Đang thực hiện". Thông báo đã được gửi cho khách hàng.`
+      );
     } catch (error) {
       console.error("Error updating appointment:", error);
       alert("Có lỗi xảy ra khi cập nhật đơn hàng");
-    }
-  };
-
-  const handleCallCustomer = (phone: string, customerName: string) => {
-    if (window.confirm(`Gọi cho ${customerName} (${phone})?`)) {
-      window.open(`tel:${phone}`);
-    }
-  };
-
-  const handleMessageCustomer = (phone: string, customerName: string) => {
-    const message = prompt(
-      `Gửi tin nhắn cho ${customerName}:`,
-      "Xin chào! Chúng tôi xác nhận lịch hẹn của bạn..."
-    );
-    if (message) {
-      alert(`Đã gửi tin nhắn cho ${customerName}: "${message}"`);
     }
   };
 
@@ -414,7 +515,7 @@ const OrderManagement = () => {
         <div className="flex items-center space-x-4">
           <div>
             <h1 className="text-xl md:text-3xl font-bold text-gray-800">
-              Quản lý đơn hàng dịch vụ
+              Quản lý đơn hàng dịch vụ
             </h1>
             <p className="text-sm md:text-2xl text-[#00809D] font-bold">
               {currentShop?.name || "Cửa hàng chăm sóc thú cưng Pettiny"}
@@ -460,14 +561,7 @@ const OrderManagement = () => {
             color: "bg-orange-500", // ✅ Đổi màu
             count: orders.filter((o) => o.status === "pending").length,
           },
-          {
-            key: "today",
-            label: "Hôm nay",
-            color: "bg-blue-500",
-            count: orders.filter(
-              (o) => o.scheduledDate === new Date().toLocaleDateString("vi-VN")
-            ).length,
-          },
+
           {
             key: "in-progress",
             label: "Đang thực hiện",
@@ -555,13 +649,17 @@ const OrderManagement = () => {
                   </div>
                 </div>
 
-                {/* ✅ Customer & Appointment Info - Đơn giản hóa */}
+                {/* ✅ Customer & Appointment Info - THAY ĐỔI: Cập nhật hiển thị status */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                   <div className="space-y-2">
                     <div className="flex items-center space-x-2">
                       <span className="text-gray-500">👤</span>
                       <span className="font-medium text-gray-800">
-                        ID: {order.originalAppointment?.customer_id.slice(-8)}
+                        <CustomerName
+                          customerId={
+                            order.originalAppointment?.customer_id || ""
+                          }
+                        />
                       </span>
                     </div>
                     <div className="flex items-center space-x-2">
@@ -575,7 +673,12 @@ const OrderManagement = () => {
                     <div className="flex items-center space-x-2">
                       <span className="text-gray-500">📋</span>
                       <span className="text-gray-800">
-                        Trạng thái: {order.originalAppointment?.status}
+                        Trạng thái:{" "}
+                        <span className="font-bold">
+                          {translateAppointmentStatus(
+                            order.originalAppointment?.status
+                          )}
+                        </span>
                       </span>
                     </div>
                     {order.originalAppointment?.notes && (
