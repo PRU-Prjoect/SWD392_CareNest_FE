@@ -3,12 +3,14 @@ import { useState } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import type { AppDispatch } from "@/store/store";
-import { getAllServices } from "@/store/slices/serviceSlice"; // ✅ Import action
+import { getAllServices } from "@/store/slices/serviceSlice";
 import NotificationDropdown from "../components/header/NotificationDropdown";
 import UserDropdown from "../components/header/UserDropdown";
 import SearchBar from "../components/common/SearchBar";
 import { Link } from "react-router-dom";
 import type { SearchField } from "../components/common/SearchBar";
+// ✅ THÊM: Import custom hook
+import { usePendingOrdersCount } from "@/hooks/usePendingOrdersCount";
 
 interface HeaderProps {
   onClick?: () => void;
@@ -17,22 +19,23 @@ interface HeaderProps {
 
 const AppHeaderForUser: React.FC<HeaderProps> = () => {
   const [isApplicationMenuOpen, setApplicationMenuOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState(""); // ✅ State cho search term
-  const dispatch = useDispatch<AppDispatch>(); // ✅ Redux dispatch
-  const navigate = useNavigate(); // ✅ Navigation
+  const [searchTerm, setSearchTerm] = useState("");
+  const dispatch = useDispatch<AppDispatch>();
+  const navigate = useNavigate();
+
+  // ✅ THÊM: Sử dụng custom hook để lấy số lượng pending orders
+  const { pendingCount, loading: pendingLoading } = usePendingOrdersCount();
 
   const toggleApplicationMenu = () => {
     setApplicationMenuOpen(!isApplicationMenuOpen);
   };
 
-  // ✅ Handle search submit
   const handleSearchSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!searchTerm.trim()) return;
 
     try {
-      // Dispatch search action với parameters
       await dispatch(
         getAllServices({
           name: searchTerm,
@@ -40,7 +43,6 @@ const AppHeaderForUser: React.FC<HeaderProps> = () => {
         })
       );
 
-      // Navigate to services page
       navigate("/app/services", {
         state: { searchTerm: searchTerm.trim() },
       });
@@ -49,12 +51,10 @@ const AppHeaderForUser: React.FC<HeaderProps> = () => {
     }
   };
 
-  // ✅ Handle filter search (từ SearchBar component)
   const handleSearch = async (values: Record<string, string>) => {
     console.log("Filter values:", values);
 
     try {
-      // Tạo search parameters từ filter
       const searchParams: any = {};
 
       if (values.sortBy) {
@@ -76,16 +76,12 @@ const AppHeaderForUser: React.FC<HeaderProps> = () => {
         }
       }
 
-      // Thêm service type mapping nếu cần
       if (values.petType) {
-        // Map pet type to service_type_id nếu có mapping
         searchParams.serviceTypeId = "f11909c0-89c2-4c5a-8fd9-21511a619e2c";
       }
 
-      // Dispatch search với filters
       await dispatch(getAllServices(searchParams));
 
-      // Navigate to services page với filter state
       navigate("/app/services", {
         state: {
           filters: values,
@@ -97,7 +93,6 @@ const AppHeaderForUser: React.FC<HeaderProps> = () => {
     }
   };
 
-  // Định nghĩa các trường filter
   const filterFields: SearchField[] = [
     {
       name: "location",
@@ -180,7 +175,7 @@ const AppHeaderForUser: React.FC<HeaderProps> = () => {
               </Link>
             </div>
 
-            {/* ✅ Search bar cập nhật - Ở giữa, chỉ hiện trên desktop */}
+            {/* Search bar cập nhật - Ở giữa, chỉ hiện trên desktop */}
             <div className="hidden lg:flex flex-1 justify-center max-w-2xl mx-8">
               <form onSubmit={handleSearchSubmit} className="w-full">
                 <div className="relative">
@@ -237,8 +232,10 @@ const AppHeaderForUser: React.FC<HeaderProps> = () => {
             <div className="hidden lg:flex items-center gap-4 flex-shrink-0">
               <NotificationDropdown />
               <UserDropdown />
+
+              {/* ✅ CART ICON với Dynamic Badge */}
               <Link
-                to="/cart"
+                to="/app/current-order"
                 className="relative flex items-center justify-center w-11 h-11 text-white rounded-full hover:bg-white/10 transition-colors duration-200"
               >
                 <svg
@@ -256,14 +253,25 @@ const AppHeaderForUser: React.FC<HeaderProps> = () => {
                     strokeLinejoin="round"
                   />
                 </svg>
-                <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center text-[10px] font-medium">
-                  3
-                </span>
+
+                {/* ✅ DYNAMIC BADGE - Chỉ hiển thị khi pendingCount > 0 */}
+                {pendingCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center text-[10px] font-medium animate-pulse">
+                    {pendingCount > 99 ? "99+" : pendingCount}
+                  </span>
+                )}
+
+                {/* ✅ Loading indicator (optional) */}
+                {pendingLoading && (
+                  <span className="absolute -top-1 -right-1 bg-gray-400 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                    <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                  </span>
+                )}
               </Link>
             </div>
           </div>
 
-          {/* ✅ Mobile search và menu cập nhật */}
+          {/* Mobile search và menu cập nhật */}
           {isApplicationMenuOpen && (
             <div className="lg:hidden pb-4">
               <form onSubmit={handleSearchSubmit}>
@@ -288,9 +296,11 @@ const AppHeaderForUser: React.FC<HeaderProps> = () => {
               <div className="flex items-center justify-between mt-4 pt-4 border-t border-white/20">
                 <NotificationDropdown />
                 <UserDropdown />
+
+                {/* ✅ MOBILE CART ICON với Dynamic Badge */}
                 <Link
-                  to="/cart"
-                  className="relative flex items-center justify-center w-10 h-10 text-white rounded-full hover:bg-white/10"
+                  to="/app/current-order"
+                  className="relative flex items-center justify-center w-11 h-11 text-white rounded-full hover:bg-white/10 transition-colors duration-200"
                 >
                   <svg
                     width="20"
@@ -307,9 +317,13 @@ const AppHeaderForUser: React.FC<HeaderProps> = () => {
                       strokeLinejoin="round"
                     />
                   </svg>
-                  <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center text-[9px] font-medium">
-                    3
-                  </span>
+
+                  {/* ✅ MOBILE DYNAMIC BADGE */}
+                  {pendingCount > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center text-[9px] font-medium animate-pulse">
+                      {pendingCount > 99 ? "99+" : pendingCount}
+                    </span>
+                  )}
                 </Link>
               </div>
             </div>
