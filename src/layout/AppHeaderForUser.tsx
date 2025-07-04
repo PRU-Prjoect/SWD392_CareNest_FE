@@ -23,7 +23,6 @@ const AppHeaderForUser: React.FC<HeaderProps> = () => {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
 
-  // ✅ THÊM: Sử dụng custom hook để lấy số lượng pending orders
   const { pendingCount, loading: pendingLoading } = usePendingOrdersCount();
 
   const toggleApplicationMenu = () => {
