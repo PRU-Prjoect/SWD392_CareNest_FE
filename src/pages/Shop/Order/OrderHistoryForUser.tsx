@@ -320,7 +320,7 @@ const OrderHistoryForUser = () => {
         <div className="flex items-center space-x-4">
           <div>
             <h1 className="text-xl md:text-3xl font-bold text-gray-800">
-              Lịch sử đơn hàng
+              Lịch sử đơn hàng thành công
             </h1>
 
             <p className="text-sm text-gray-500">

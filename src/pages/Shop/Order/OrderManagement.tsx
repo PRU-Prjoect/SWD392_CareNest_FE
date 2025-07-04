@@ -504,6 +504,58 @@ const OrderManagement = () => {
     }
   };
 
+  // Thêm hàm này bên cạnh handleConfirmOrder
+  const handleCancelOrder = async (orderId: string) => {
+    // Hỏi xác nhận trước khi hủy
+    if (!window.confirm("Bạn có chắc chắn muốn hủy đơn hàng này không?")) {
+      return;
+    }
+
+    try {
+      const order = orders.find((o) => o.id === orderId);
+      if (!order || !order.originalAppointment) {
+        alert("Không tìm thấy thông tin đơn hàng để hủy.");
+        return;
+      }
+
+      const appointmentData = order.originalAppointment;
+
+      // ✅ Gọi API để cập nhật trạng thái thành Cancel
+      await dispatch(
+        updateAppointment({
+          id: appointmentData.id,
+          customer_id: appointmentData.customer_id,
+          status: AppointmentStatus.Cancel, // <-- Thay đổi trạng thái
+          notes: appointmentData.notes,
+          start_time: appointmentData.start_time,
+          location_type: "",
+          end_time: "",
+        })
+      ).unwrap();
+
+      // ✅ Cập nhật lại state của component để UI thay đổi ngay lập tức
+      setOrders((prev) =>
+        prev.map((o) =>
+          o.id === orderId
+            ? {
+                ...o,
+                status: "cancelled" as const, // <-- Cập nhật status local
+                originalAppointment: {
+                  ...o.originalAppointment!,
+                  status: AppointmentStatus.Cancel,
+                },
+              }
+            : o
+        )
+      );
+
+      alert(`Đã hủy thành công đơn hàng ${orderId}.`);
+    } catch (error) {
+      console.error("Lỗi khi hủy đơn hàng:", error);
+      alert("Có lỗi xảy ra khi hủy đơn hàng. Vui lòng thử lại.");
+    }
+  };
+
   const handleViewDetail = (order: ServiceOrder) => {
     alert(`Chi tiết đơn hàng ${order.id} - Sẽ mở modal/page chi tiết`);
   };
@@ -721,7 +773,8 @@ const OrderManagement = () => {
                 </div>
 
                 {/* Action Buttons */}
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  {/* Nút Xác nhận */}
                   {order.status === "pending" && (
                     <button
                       onClick={() => handleConfirmOrder(order.id)}
@@ -733,7 +786,7 @@ const OrderManagement = () => {
                         viewBox="0 0 24 24"
                         fill="none"
                         xmlns="http://www.w3.org/2000/svg"
-                        className="inline mr-2"
+                        className="inline mr-2 w-4 h-4"
                       >
                         <path
                           d="M7.29417 12.9577L10.5048 16.1681L17.6729 9"
@@ -753,6 +806,50 @@ const OrderManagement = () => {
                       Xác nhận
                     </button>
                   )}
+
+                  {/* ✅ NÚT HỦY ĐƠN MỚI */}
+                  {/* Chỉ hiển thị khi đơn hàng đang chờ hoặc đang thực hiện */}
+                  {(order.status === "pending" ||
+                    order.status === "in-progress") && (
+                    <button
+                      onClick={() => handleCancelOrder(order.id)}
+                      className="flex-1 md:flex-none px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-medium text-sm"
+                    >
+                      <svg
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="inline mr-2 w-4 h-4"
+                      >
+                        <path
+                          d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                        <path
+                          d="M15 9L9 15"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                        <path
+                          d="M9 9L15 15"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                      Hủy đơn
+                    </button>
+                  )}
+
+                  {/* Nút Chi tiết */}
                   <button
                     onClick={() => handleViewDetail(order)}
                     className="flex-1 md:flex-none px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors font-medium text-sm"
@@ -763,8 +860,9 @@ const OrderManagement = () => {
                       viewBox="0 0 24 24"
                       fill="none"
                       xmlns="http://www.w3.org/2000/svg"
-                      className="inline mr-2"
+                      className="inline mr-2 w-4 h-4"
                     >
+                      {/* ... path svg chi tiết ... */}
                       <path
                         fillRule="evenodd"
                         clipRule="evenodd"
