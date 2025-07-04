@@ -109,6 +109,12 @@ const UserDropdown: React.FC = () => {
         >
           Thông tin cá nhân
         </Link>
+        <Link
+          to="/app/order-history"
+          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+        >
+          Lịch sử đơn hàng
+        </Link>
         <button
           onClick={handleLogout}
           className="w-full text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
