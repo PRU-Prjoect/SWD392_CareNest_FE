@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import type { AppDispatch, RootState } from "@/store/store";
-import { Login, LoginNoRemember } from "@/store/slices/authSlice";
+import { Login, LoginNoRemember, logout } from "@/store/slices/authSlice";
 import { toast } from "react-toastify";
 
 interface FormData {
@@ -36,6 +36,27 @@ export const useLoginForm = () => {
   const { loading, error, isAuthenticated, user } = useSelector(
     (state: RootState) => state.auth
   );
+
+  // Đảm bảo trạng thái xác thực được xóa sạch khi trang Login được mở
+  useEffect(() => {
+    // Kiểm tra nếu đang ở trang login mà vẫn còn dữ liệu xác thực (có thể do logout không hoàn toàn)
+    // thì sẽ thực hiện logout lại để đảm bảo xóa sạch dữ liệu
+    if (isAuthenticated || localStorage.getItem('authToken')) {
+      console.log("⚠️ Phát hiện dữ liệu xác thực còn sót lại, thực hiện logout lại");
+      dispatch(logout());
+      
+      // Đợi một chút để đảm bảo dữ liệu được xóa hoàn toàn
+      setTimeout(() => {
+        // Double-check và xóa thủ công nếu cần
+        if (localStorage.getItem('authToken')) {
+          localStorage.removeItem('authToken');
+        }
+        if (localStorage.getItem('user')) {
+          localStorage.removeItem('user');
+        }
+      }, 100);
+    }
+  }, [dispatch]);
 
   // ✅ Sửa useEffect với proper conditions
   useEffect(() => {

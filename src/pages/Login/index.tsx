@@ -24,7 +24,7 @@ export default function LoginPage() {
     <>
       <div className="flex h-screen relative">
         <button
-          onClick={() => navigate("/")}
+          onClick={() => navigate("/guest/home")}
           className="absolute top-6 right-6 p-2 rounded hover:bg-gray-200 hover:scale-110 transition-all duration-200 ease-in-out"
           aria-label="Trang chủ"
         >

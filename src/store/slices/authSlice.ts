@@ -17,7 +17,7 @@ export interface User {
 
 interface UserState {
   isAuthenticated: boolean;
-  user: any | null;
+  user: User | null;
   token: string | null;
   loading: boolean;
   error: {
@@ -72,6 +72,11 @@ const clearAuthData = () => {
   localStorage.removeItem("user");
   sessionStorage.removeItem("authToken");
   sessionStorage.removeItem("user");
+  
+  // Xóa bất kỳ cookie liên quan đến xác thực nào
+  document.cookie.split(";").forEach(function(c) {
+    document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+  });
 };
 
 // ✅ Fixed createUserFromToken function
@@ -151,20 +156,20 @@ export const Login = createAsyncThunk<
     const user = createUserFromToken(token); // ✅ Sẽ lấy đúng ID từ nameidentifier
 
     return { user, token };
-  } catch (err: any) {
-    console.error("❌ Error status:", err.response?.status);
-    console.error("❌ Error data:", err.response?.data);
+  } catch (err: unknown) {
+    console.error("❌ Error status:", (err as any).response?.status);
+    console.error("❌ Error data:", (err as any).response?.data);
 
-    if (err.response && err.response.data) {
+    if ((err as any).response && (err as any).response.data) {
       return rejectWithValue({
         error: 1,
-        message: err.response.data.message || "Đăng nhập thất bại",
+        message: (err as any).response.data.message || "Đăng nhập thất bại",
       });
     }
 
     return rejectWithValue({
       error: 1,
-      message: err.message || "Không thể kết nối đến máy chủ",
+      message: (err as Error).message || "Không thể kết nối đến máy chủ",
     });
   }
 });
@@ -204,20 +209,20 @@ export const LoginNoRemember = createAsyncThunk<
     const user = createUserFromToken(token); // ✅ Sẽ lấy đúng ID từ nameidentifier
 
     return { user, token };
-  } catch (err: any) {
-    console.error("❌ LoginNoRemember Error status:", err.response?.status);
-    console.error("❌ LoginNoRemember Error data:", err.response?.data);
+  } catch (err: unknown) {
+    console.error("❌ LoginNoRemember Error status:", (err as any).response?.status);
+    console.error("❌ LoginNoRemember Error data:", (err as any).response?.data);
 
-    if (err.response && err.response.data) {
+    if ((err as any).response && (err as any).response.data) {
       return rejectWithValue({
         error: 1,
-        message: err.response.data.message || "Đăng nhập thất bại",
+        message: (err as any).response.data.message || "Đăng nhập thất bại",
       });
     }
 
     return rejectWithValue({
       error: 1,
-      message: err.message || "Không thể kết nối đến máy chủ",
+      message: (err as Error).message || "Không thể kết nối đến máy chủ",
     });
   }
 });
@@ -228,8 +233,14 @@ const userSlice = createSlice({
   initialState,
   reducers: {
     logout(state) {
+      // Đặt tất cả các trường về giá trị ban đầu
       Object.assign(state, initialState);
+      
+      // Xóa dữ liệu xác thực
       clearAuthData();
+      
+      // Thêm log để debug
+      console.log("✅ Logged out - Auth state cleared");
     },
     restoreAuth(state) {
       const token = localStorage.getItem("authToken");
