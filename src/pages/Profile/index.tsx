@@ -77,15 +77,21 @@ export default function ProfilePage() {
   // ✅ Update auth state khi có account data mới
   useEffect(() => {
     if (currentAccount && user) {
-      // So sánh và update img_url nếu khác
-      if (currentAccount.img_url !== user.img_url) {
+      // Sử dụng phép so sánh chặt chẽ hơn để tránh lặp vô hạn
+      const accountImgUrl = currentAccount.img_url || null;
+      const userImgUrl = user.img_url || null;
+      const accountImgUrlId = currentAccount.img_url_id || null;
+      const userImgUrlId = user.img_url_id || null;
+      
+      // Chỉ update khi giá trị thực sự khác nhau
+      if (accountImgUrl !== userImgUrl || accountImgUrlId !== userImgUrlId) {
+        console.log("Updating auth user img_url from:", userImgUrl, "to:", accountImgUrl);
         dispatch(
           updateAuthUser({
             img_url: currentAccount.img_url ?? undefined,
             img_url_id: currentAccount.img_url_id ?? undefined,
           })
         );
-        console.log("✅ Updated auth user img_url:", currentAccount.img_url);
       }
     }
   }, [currentAccount, user, dispatch]);
