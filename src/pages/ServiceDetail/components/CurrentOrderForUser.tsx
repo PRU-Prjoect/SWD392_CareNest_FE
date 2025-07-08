@@ -597,7 +597,7 @@ const CurrentOrderForUser = () => {
                 </div>
 
                 {/* Action Button */}
-                <div className="flex justify-end">
+                {/* <div className="flex justify-end">
                   <button
                     onClick={() => alert(`Chi tiết đơn hàng ${order.id}`)}
                     className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors font-medium text-sm"
@@ -625,7 +625,7 @@ const CurrentOrderForUser = () => {
                     </svg>
                     Chi tiết
                   </button>
-                </div>
+                </div> */}
               </div>
             );
           })

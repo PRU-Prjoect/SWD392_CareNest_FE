@@ -96,12 +96,53 @@ export default function ProfilePage() {
     }
   }, [currentAccount, user, dispatch]);
 
+  // ✅ Hàm chuyển đổi giới tính từ mã sang hiển thị tiếng Việt
+  const getGenderDisplay = (genderCode: string) => {
+    switch (genderCode) {
+      case 'male':
+        return 'Nam';
+      case 'female':
+        return 'Nữ';
+      case 'other':
+        return 'Khác';
+      // Xử lý ngược lại cho những giá trị cũ có thể đã được lưu dưới dạng tiếng Việt
+      case 'Nam':
+        return 'Nam';
+      case 'Nữ':
+        return 'Nữ';
+      case 'Khác':
+        return 'Khác';
+      default:
+        return genderCode || 'Chưa cập nhật';
+    }
+  };
+  
+  // ✅ Hàm chuyển đổi giới tính từ hiển thị tiếng Việt sang mã
+  const normalizeGenderCode = (genderDisplay: string) => {
+    switch (genderDisplay) {
+      case 'Nam':
+        return 'male';
+      case 'Nữ':
+        return 'female';
+      case 'Khác':
+        return 'other';
+      // Giữ nguyên nếu đã là dạng mã
+      case 'male':
+      case 'female':
+      case 'other':
+        return genderDisplay;
+      default:
+        return genderDisplay || '';
+    }
+  };
+
   // Sync form data với customer profile từ API
   useEffect(() => {
     if (currentCustomer) {
       setCustomerFormData({
         full_name: currentCustomer.full_name || "",
-        gender: currentCustomer.gender || "",
+        // Chuẩn hóa giới tính để đảm bảo dùng đúng định dạng mã
+        gender: normalizeGenderCode(currentCustomer.gender || ""),
         birthday: currentCustomer.birthday
           ? currentCustomer.birthday.split("T")[0]
           : "",
@@ -310,10 +351,13 @@ export default function ProfilePage() {
     }
 
     try {
+      // Đảm bảo lưu giới tính ở dạng mã (male/female/other)
+      const gender = normalizeGenderCode(customerFormData.gender);
+      
       const updateData = {
         account_id: user.id,
         full_name: customerFormData.full_name.trim(),
-        gender: customerFormData.gender,
+        gender: gender,
         birthday: new Date(customerFormData.birthday).toISOString(),
       };
 
@@ -567,21 +611,31 @@ export default function ProfilePage() {
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Giới tính
                     </label>
-                    <select
-                      value={customerFormData.gender}
-                      onChange={(e) =>
-                        handleCustomerInputChange("gender", e.target.value)
-                      }
-                      disabled={!isEditingCustomer}
-                      className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2A9D8F] disabled:bg-gray-50 disabled:text-gray-500 ${
-                        errors.gender ? "border-red-500" : "border-gray-300"
-                      }`}
-                    >
-                      <option value="">Chọn giới tính</option>
-                      <option value="Nam">Nam</option>
-                      <option value="Nữ">Nữ</option>
-                      <option value="Khác">Khác</option>
-                    </select>
+                    {isEditingCustomer ? (
+                      // Chế độ chỉnh sửa - hiển thị dropdown
+                      <select
+                        value={customerFormData.gender}
+                        onChange={(e) =>
+                          handleCustomerInputChange("gender", e.target.value)
+                        }
+                        className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2A9D8F] ${
+                          errors.gender ? "border-red-500" : "border-gray-300"
+                        }`}
+                      >
+                        <option value="">Chọn giới tính</option>
+                        <option value="male">Nam</option>
+                        <option value="female">Nữ</option>
+                        <option value="other">Khác</option>
+                      </select>
+                    ) : (
+                      // Chế độ xem - hiển thị text
+                      <input
+                        type="text"
+                        value={getGenderDisplay(customerFormData.gender)}
+                        disabled
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-500"
+                      />
+                    )}
                     {errors.gender && (
                       <p className="text-red-500 text-sm mt-1">
                         {errors.gender}
