@@ -3,14 +3,13 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import type { AppDispatch, RootState } from '@/store/store';
 import { getShopById } from '@/store/slices/shopSlice';
-import ServiceCard from '@/pages/Home/components/ServiceCard';
 import { getAllServices } from '@/store/slices/serviceSlice';
 
 const ShopServicesPage: React.FC = () => {
   const { shopId } = useParams<{ shopId: string }>();
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Get shop information from redux store
   const { currentShop, loading: shopLoading, error: shopError } = useSelector(
@@ -46,14 +45,29 @@ const ShopServicesPage: React.FC = () => {
     navigate(-1);
   };
 
+  // Handle service detail navigation
+  const handleViewDetail = (serviceId: string) => {
+    navigate(`/services/${serviceId}`);
+  };
+
+  // ✅ Thêm helper functions giống ServiceManagement
+  const getStatusColor = (isActive: boolean) => {
+    return isActive
+      ? "bg-green-100 text-green-800 border-green-200"
+      : "bg-red-100 text-red-800 border-red-200";
+  };
+
+  const getStatusText = (isActive: boolean) => {
+    return isActive ? "Hoạt động" : "Tạm dừng";
+  };
+
   // Loading state
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-teal-600 mx-auto mb-4"></div>
-          <h2 className="text-xl font-semibold text-gray-700">Đang tải...</h2>
-          <p className="text-gray-500 mt-2">Vui lòng chờ trong giây lát</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Đang tải thông tin cửa hàng...</p>
         </div>
       </div>
     );
@@ -63,31 +77,19 @@ const ShopServicesPage: React.FC = () => {
   if (shopError || !currentShop) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center max-w-md mx-auto px-4">
-          <div className="bg-red-100 rounded-full p-4 mx-auto mb-4 w-16 h-16 flex items-center justify-center">
-            <svg
-              className="w-8 h-8 text-red-600"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
+        <div className="text-center max-w-md mx-auto p-6">
+          <div className="w-16 h-16 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center">
+            <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
             </svg>
           </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">
-            Không tìm thấy cửa hàng
-          </h2>
-          <p className="text-gray-600 mb-6">
+          <h2 className="text-xl font-bold text-gray-800 mb-2">Không tìm thấy cửa hàng</h2>
+          <p className="text-gray-600 mb-4">
             {shopError?.message || 'Cửa hàng bạn tìm kiếm không tồn tại hoặc đã bị xóa.'}
           </p>
           <button
             onClick={handleBack}
-            className="w-full px-6 py-3 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors"
+            className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors"
           >
             Quay lại
           </button>
@@ -98,148 +100,220 @@ const ShopServicesPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header with back button */}
-      <div className="bg-white shadow-sm border-b">
+      {/* ✅ Improved Header */}
+      <div className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <button
-              onClick={handleBack}
-              className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors"
-            >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+            <div className="flex items-center space-x-4">
+              <button
+                onClick={handleBack}
+                className="p-2 rounded-full hover:bg-gray-100 transition-colors"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 19l-7-7 7-7"
-                />
-              </svg>
-              <span className="font-medium">Quay lại</span>
-            </button>
-            <h1 className="text-lg font-semibold text-gray-900">
-              Dịch vụ của {currentShop.name}
-            </h1>
-            <div className="w-20"></div> {/* Spacer for center alignment */}
-          </div>
-        </div>
-      </div>
-
-      {/* Shop info section */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className="bg-white rounded-lg shadow p-6 mb-8">
-          <div className="flex items-center">
-            <div className="bg-teal-100 rounded-full p-3 mr-4">
-              <svg
-                className="w-8 h-8 text-teal-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M7 7h10"
-                />
-              </svg>
-            </div>
-            <div>
-              <h2 className="text-2xl font-bold text-gray-800">{currentShop.name}</h2>
-              <p className="text-gray-600 mt-1">{currentShop.description}</p>
-              <div className="flex items-center space-x-4 mt-2">
-                <div className="flex items-center text-sm text-gray-500">
-                  <svg 
-                    className="w-4 h-4 mr-1" 
-                    fill="none" 
-                    stroke="currentColor" 
-                    viewBox="0 0 24 24"
-                  >
-                    <path 
-                      strokeLinecap="round" 
-                      strokeLinejoin="round" 
-                      strokeWidth={2} 
-                      d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" 
-                    />
-                  </svg>
-                  {currentShop.phone}
-                </div>
-                <div className="flex items-center text-sm text-gray-500">
-                  <svg 
-                    className="w-4 h-4 mr-1" 
-                    fill="none" 
-                    stroke="currentColor" 
-                    viewBox="0 0 24 24"
-                  >
-                    <path 
-                      strokeLinecap="round" 
-                      strokeLinejoin="round" 
-                      strokeWidth={2} 
-                      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" 
-                    />
-                  </svg>
-                  Ngày làm việc: {currentShop.working_day?.join(", ") || "Chưa cập nhật"}
-                </div>
+                <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+              <div>
+                <h1 className="text-xl font-bold text-gray-800">
+                  Dịch vụ của {currentShop.name}
+                </h1>
+                <p className="text-sm text-gray-600">
+                  {services.length} dịch vụ có sẵn
+                </p>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Services list */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
-        <h2 className="text-xl font-semibold text-gray-800 mb-6">Danh sách dịch vụ</h2>
-        
-        {servicesError && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-6">
-            {servicesError.message || "Không thể tải danh sách dịch vụ"}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* ✅ Shop Info Card */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
+          <div className="flex items-start space-x-4">
+            <div className="w-16 h-16 bg-gradient-to-r from-teal-100 to-blue-100 rounded-full flex items-center justify-center">
+              <svg className="w-8 h-8 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H9m0 0H5m0 0h2M7 7h10M7 11h4M7 15h10" />
+              </svg>
+            </div>
+            <div className="flex-1">
+              <h2 className="text-2xl font-bold text-gray-800 mb-2">{currentShop.name}</h2>
+              <p className="text-gray-600 mb-3">{currentShop.description}</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                <div className="flex items-center space-x-2">
+                  <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                  </svg>
+                  <span className="text-gray-600">{currentShop.phone}</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3a1 1 0 011-1h6a1 1 0 011 1v4h3a1 1 0 011 1v14a1 1 0 01-1 1H5a1 1 0 01-1-1V8a1 1 0 011-1h3z" />
+                  </svg>
+                  <span className="text-gray-600">
+                    {currentShop.working_day?.join(", ") || "Chưa cập nhật"}
+                  </span>
+                </div>
+              </div>
+            </div>
           </div>
-        )}
+        </div>
 
-        {services.length === 0 && !servicesLoading && !servicesError && (
-          <div className="bg-gray-50 rounded-lg p-8 text-center">
-            <svg 
-              className="w-16 h-16 text-gray-400 mx-auto mb-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path 
-                strokeLinecap="round" 
-                strokeLinejoin="round" 
-                strokeWidth={1.5} 
-                d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M9 16h6M21 12a9 9 0 11-18 0 9 9 0 0118 0z" 
-              />
-            </svg>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Chưa có dịch vụ</h3>
-            <p className="text-gray-600 max-w-md mx-auto">
-              Cửa hàng này chưa có dịch vụ nào được đăng ký. Vui lòng quay lại sau.
-            </p>
-          </div>
-        )}
+        {/* Services Section */}
+        <div className="mb-6">
+          <h2 className="text-xl font-bold text-gray-800 mb-4">Danh sách dịch vụ</h2>
+          
+          {/* Error State */}
+          {servicesError && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
+              <p className="font-medium">Lỗi khi tải dữ liệu:</p>
+              <p>{servicesError.message || "Không thể tải danh sách dịch vụ"}</p>
+            </div>
+          )}
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {services.map((service) => (
-            <ServiceCard 
-              key={service.id} 
-              service={{
-                id: Number(service.id), 
-                title: service.name,
-                price: service.price.toLocaleString() + ' đ',
-                image: "https://picsum.photos/200/300?random=" + service.id,
-                rating: service.star,
-                description: service.description
-              }}
-            />
-          ))}
+          {/* Empty State */}
+          {services.length === 0 && !servicesLoading && !servicesError && (
+            <div className="text-center py-12">
+              <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+                <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-medium text-gray-800 mb-2">Chưa có dịch vụ</h3>
+              <p className="text-gray-600">Cửa hàng này chưa có dịch vụ nào được đăng ký.</p>
+            </div>
+          )}
+
+          {/* ✅ Services Grid - Đồng bộ với ServiceManagement */}
+          {services.length > 0 && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {services.map((service) => (
+                <div
+                  key={service.id}
+                  className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-all duration-200"
+                >
+                  {/* Service Image/Icon */}
+                  <div className="h-48 bg-gradient-to-r from-teal-100 to-blue-100 flex items-center justify-center">
+                    <div className="text-center">
+                      <svg
+                        className="w-16 h-16 text-teal-600 mx-auto mb-2"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H9m0 0H5m0 0h2M7 7h10M7 11h4M7 15h10"
+                        />
+                      </svg>
+                      <p className="text-teal-600 font-medium text-sm truncate px-2">
+                        {service.name}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Service Info */}
+                  <div className="p-4">
+                    <div className="flex justify-between items-start mb-2">
+                      <h3 className="text-lg font-semibold text-gray-800 truncate pr-2">
+                        {service.name}
+                      </h3>
+                      <span
+                        className={`px-2 py-1 text-xs rounded-full border ${getStatusColor(
+                          service.is_active
+                        )}`}
+                      >
+                        {getStatusText(service.is_active)}
+                      </span>
+                    </div>
+
+                    <p className="text-gray-600 text-sm mb-3 line-clamp-2">
+                      {service.description || "Không có mô tả"}
+                    </p>
+
+                    <div className="space-y-2 mb-4">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-500">Giá:</span>
+                        <span className="text-gray-800 font-medium">
+                          {service.discount_percent > 0 ? (
+                            <>
+                              <span className="line-through text-gray-400 mr-1">
+                                {service.price.toLocaleString("vi-VN")} VNĐ
+                              </span>
+                              <span className="text-red-600">
+                                {(
+                                  (service.price * (100 - service.discount_percent)) / 100
+                                ).toLocaleString("vi-VN")}{" "}
+                                VNĐ
+                              </span>
+                            </>
+                          ) : (
+                            `${service.price.toLocaleString("vi-VN")} VNĐ`
+                          )}
+                        </span>
+                      </div>
+                      {service.discount_percent > 0 && (
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-500">Giảm giá:</span>
+                          <span className="text-red-600">{service.discount_percent}%</span>
+                        </div>
+                      )}
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-500">Thời gian:</span>
+                        <span className="text-gray-800">{service.duration_type} phút</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-500">Giới hạn/giờ:</span>
+                        <span className="text-gray-800">{service.limit_per_hour}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-500">Đã bán:</span>
+                        <span className="text-gray-800">{service.purchases}</span>
+                      </div>
+                      {service.star > 0 && (
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-500">Đánh giá:</span>
+                          <span className="text-yellow-600">⭐ {service.star}/5</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={() => handleViewDetail(service.id)}
+                        className="flex-1 px-4 py-2 bg-teal-600 text-white text-sm rounded-lg hover:bg-teal-700 transition-colors flex items-center justify-center space-x-2"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                        <span>Xem chi tiết</span>
+                      </button>
+                      
+                      {/* ✅ Thêm nút đặt lịch cho customer */}
+                      <button
+                        onClick={() => {
+                          // Navigate to booking page hoặc mở modal đặt lịch
+                          alert(`Đặt lịch cho dịch vụ: ${service.name}`);
+                        }}
+                        className="px-4 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3a1 1 0 011-1h6a1 1 0 011 1v4h3a1 1 0 011 1v14a1 1 0 01-1 1H5a1 1 0 01-1-1V8a1 1 0 011-1h3z" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>
   );
 };
 
-export default ShopServicesPage; 
+export default ShopServicesPage;
