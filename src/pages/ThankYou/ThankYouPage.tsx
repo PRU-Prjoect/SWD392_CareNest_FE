@@ -109,7 +109,7 @@ const ThankYouPage: React.FC = () => {
                 <span>Quay lại trang chủ</span>
               </button>
               <button
-                onClick={() => navigate("/app/appointments")}
+                onClick={() => navigate("/app/current-order")}
                 className="w-full px-4 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium flex items-center justify-center space-x-2 text-sm sm:text-base"
               >
                 <svg
