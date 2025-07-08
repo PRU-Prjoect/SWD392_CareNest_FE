@@ -14,6 +14,7 @@ import serviceTypeShopReducer from "./slices/serviceTypeShopSlice";
 import serviceReducer from "./slices/serviceSlice";
 import appointmentReducer from "./slices/appointmentSlice";
 import serviceAppointmentReducer from "./slices/serviceAppointmentSlice";
+import hotelReducer from "./slices/hotelSlice";
 
 const persistConfig = {
   key: "root",
@@ -34,6 +35,7 @@ const rootReducer = combineReducers({
   service: serviceReducer,
   appointment: appointmentReducer,
   service_appointment: serviceAppointmentReducer,
+  hotel: hotelReducer,
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);
