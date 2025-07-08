@@ -4,6 +4,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import type { AppDispatch, RootState } from "@/store/store";
 import { getServiceById, clearServiceError } from "@/store/slices/serviceSlice";
+import { getShopById } from "@/store/slices/shopSlice";
 
 const ServiceDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -14,6 +15,9 @@ const ServiceDetailPage: React.FC = () => {
   const { currentService, loading, error } = useSelector(
     (state: RootState) => state.service
   );
+  const { currentShop, loading: shopLoading } = useSelector(
+    (state: RootState) => state.shop
+  );
 
   // ✅ Debug logs
   console.log("ServiceDetailPage rendered");
@@ -21,6 +25,7 @@ const ServiceDetailPage: React.FC = () => {
   console.log("Current service:", currentService);
   console.log("Loading:", loading);
   console.log("Error:", error);
+  console.log("Shop:", currentShop);
 
   // ✅ Fetch service data
   useEffect(() => {
@@ -29,6 +34,14 @@ const ServiceDetailPage: React.FC = () => {
       dispatch(getServiceById(id));
     }
   }, [dispatch, id]);
+
+  // ✅ Fetch shop data when service is loaded
+  useEffect(() => {
+    if (currentService?.shop_id) {
+      console.log("Fetching shop with ID:", currentService.shop_id);
+      dispatch(getShopById(currentService.shop_id));
+    }
+  }, [dispatch, currentService?.shop_id]);
 
   // ✅ Cleanup on unmount
   useEffect(() => {
@@ -55,6 +68,13 @@ const ServiceDetailPage: React.FC = () => {
       console.log("Book now:", currentService.id);
       // Navigate to booking page
       navigate(`/app/booking/${currentService.id}`);
+    }
+  };
+
+  const handleViewShopServices = () => {
+    if (currentService?.shop_id) {
+      // Navigate to shop services page
+      navigate(`/app/shop/${currentService.shop_id}/services`);
     }
   };
 
@@ -220,6 +240,43 @@ const ServiceDetailPage: React.FC = () => {
                     </div>
                   )}
                 </div>
+                
+                {/* Shop information */}
+                {currentShop && (
+                  <div className="mt-2">
+                    <p className="text-sm text-gray-600">
+                      Cung cấp bởi:{" "}
+                      <button 
+                        onClick={handleViewShopServices}
+                        className="text-teal-600 hover:text-teal-800 font-medium"
+                      >
+                        {currentShop.name} 
+                        <svg 
+                          className="w-4 h-4 inline-block ml-1" 
+                          fill="none" 
+                          stroke="currentColor" 
+                          viewBox="0 0 24 24"
+                        >
+                          <path 
+                            strokeLinecap="round" 
+                            strokeLinejoin="round" 
+                            strokeWidth={2} 
+                            d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" 
+                          />
+                        </svg>
+                      </button>
+                    </p>
+                  </div>
+                )}
+                
+                {shopLoading && (
+                  <div className="mt-2">
+                    <p className="text-sm text-gray-500 flex items-center">
+                      <span className="inline-block w-3 h-3 border-2 border-teal-500 border-t-transparent rounded-full animate-spin mr-2"></span>
+                      Đang tải thông tin cửa hàng...
+                    </p>
+                  </div>
+                )}
               </div>
               <div className="text-right">
                 <div className="flex flex-col items-end">
@@ -367,6 +424,43 @@ const ServiceDetailPage: React.FC = () => {
               </div>
             )}
 
+            {/* Shop services button */}
+            {currentShop && (
+              <div className="bg-teal-50 border border-teal-200 rounded-lg p-4 mb-8">
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center">
+                    <svg
+                      className="w-6 h-6 text-teal-500 mr-3"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M7 7h10"
+                      />
+                    </svg>
+                    <div>
+                      <h4 className="text-sm font-medium text-teal-800">
+                        Dịch vụ khác từ {currentShop.name}
+                      </h4>
+                      <p className="text-sm text-teal-600 mt-0.5">
+                        Xem thêm các dịch vụ khác từ cửa hàng này
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={handleViewShopServices}
+                    className="px-4 py-2 bg-teal-600 text-white text-sm rounded hover:bg-teal-700 transition-colors"
+                  >
+                    Xem tất cả
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* Action buttons */}
             <div className="bg-gray-50 rounded-lg p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">
@@ -431,6 +525,11 @@ const ServiceDetailPage: React.FC = () => {
               <p className="text-xs text-gray-500">
                 ID dịch vụ: {currentService.id}
               </p>
+              {currentService.shop_id && (
+                <p className="text-xs text-gray-500">
+                  ID cửa hàng: {currentService.shop_id}
+                </p>
+              )}
             </div>
           </div>
         </div>
