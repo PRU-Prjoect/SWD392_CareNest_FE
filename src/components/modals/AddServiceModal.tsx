@@ -1,23 +1,31 @@
 // components/modals/AddServiceModal.tsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import type { AppDispatch, RootState } from "@/store/store";
 import { createService, clearCreateError } from "@/store/slices/serviceSlice";
+import { searchServiceTypes } from "@/store/slices/serviceTypeShopSlice";
 import { toast } from "react-toastify";
 
 interface AddServiceModalProps {
   isOpen: boolean;
   onClose: () => void;
+  shopId?: string; // Add shopId prop
 }
 
 const AddServiceModal: React.FC<AddServiceModalProps> = ({
   isOpen,
   onClose,
+  shopId, // Add shopId to destructuring
 }) => {
   const dispatch = useDispatch<AppDispatch>();
   const { creating, createError } = useSelector(
     (state: RootState) => state.service
   );
+  const { serviceTypes, searching } = useSelector(
+    (state: RootState) => state.serviceTypeShop
+  );
+  // Get user from auth state as fallback
+  const { user } = useSelector((state: RootState) => state.auth);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -29,6 +37,13 @@ const AddServiceModal: React.FC<AddServiceModalProps> = ({
     discount_percent: 0,
     service_type_id: "",
   });
+
+  // Fetch service types when component mounts
+  useEffect(() => {
+    if (isOpen) {
+      dispatch(searchServiceTypes());
+    }
+  }, [dispatch, isOpen]);
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -65,12 +80,20 @@ const AddServiceModal: React.FC<AddServiceModalProps> = ({
       return;
     }
 
+    // Determine which shop ID to use
+    const effectiveShopId = shopId || user?.id;
+    
+    if (!effectiveShopId) {
+      toast.error("Không tìm thấy thông tin cửa hàng!");
+      return;
+    }
+
     try {
       const result = await dispatch(
         createService({
           id: crypto.randomUUID(),
           ...formData,
-          shop_id: "01978c76-3adc-77ca-9806-eee9893aef4a", // Lấy từ user context
+          shop_id: effectiveShopId, // Use the passed shopId or user ID from auth state
           star: 0,
           purchases: 0,
         })
@@ -159,13 +182,20 @@ const AddServiceModal: React.FC<AddServiceModalProps> = ({
                 onChange={handleChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2A9D8F]"
                 required
-                disabled={creating}
+                disabled={creating || searching}
               >
                 <option value="">Chọn loại dịch vụ</option>
-                <option value="f11909c0-89c2-4c5a-8fd9-21511a619e2c">
-                  Chăm sóc thú cưng
-                </option>
+                {serviceTypes.map((serviceType) => (
+                  <option key={serviceType.id} value={serviceType.id}>
+                    {serviceType.name}
+                  </option>
+                ))}
               </select>
+              {searching && (
+                <div className="text-sm text-gray-500 mt-1">
+                  Đang tải loại dịch vụ...
+                </div>
+              )}
             </div>
           </div>
 
@@ -222,7 +252,7 @@ const AddServiceModal: React.FC<AddServiceModalProps> = ({
             {/* Giới hạn mỗi giờ */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Giới hạn/giờ *
+                Giới hạn khách/giờ *
               </label>
               <input
                 type="number"

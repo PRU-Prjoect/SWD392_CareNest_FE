@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import type { AppDispatch, RootState } from "@/store/store";
 import { updateService, clearUpdateError } from "@/store/slices/serviceSlice";
+import { searchServiceTypes } from "@/store/slices/serviceTypeShopSlice";
 import { toast } from "react-toastify";
 
 interface ServiceData {
@@ -24,17 +25,24 @@ interface EditServiceModalProps {
   isOpen: boolean;
   onClose: () => void;
   service: ServiceData | null;
+  shopId?: string; // Add shopId prop
 }
 
 const EditServiceModal: React.FC<EditServiceModalProps> = ({
   isOpen,
   onClose,
   service,
+  shopId, // Add shopId to destructuring
 }) => {
   const dispatch = useDispatch<AppDispatch>();
   const { updating, updateError } = useSelector(
     (state: RootState) => state.service
   );
+  const { serviceTypes, searching } = useSelector(
+    (state: RootState) => state.serviceTypeShop
+  );
+  // Get user from auth state as fallback
+  const { user } = useSelector((state: RootState) => state.auth);
 
   const [formData, setFormData] = useState({
     id: "",
@@ -56,6 +64,13 @@ const EditServiceModal: React.FC<EditServiceModalProps> = ({
       setFormData(service);
     }
   }, [service]);
+
+  // Fetch service types when component mounts
+  useEffect(() => {
+    if (isOpen) {
+      dispatch(searchServiceTypes());
+    }
+  }, [dispatch, isOpen]);
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -94,8 +109,22 @@ const EditServiceModal: React.FC<EditServiceModalProps> = ({
       return;
     }
 
+    // Determine which shop ID to use
+    const effectiveShopId = shopId || user?.id || formData.shop_id;
+    
+    if (!effectiveShopId) {
+      toast.error("Không tìm thấy thông tin cửa hàng!");
+      return;
+    }
+
     try {
-      const result = await dispatch(updateService(formData));
+      // Override the shop_id with the provided shopId or fall back to user.id
+      const dataToUpdate = {
+        ...formData,
+        shop_id: effectiveShopId
+      };
+      
+      const result = await dispatch(updateService(dataToUpdate));
 
       if (updateService.fulfilled.match(result)) {
         toast.success("Cập nhật dịch vụ thành công!");
@@ -169,13 +198,20 @@ const EditServiceModal: React.FC<EditServiceModalProps> = ({
                 onChange={handleChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2A9D8F]"
                 required
-                disabled={updating}
+                disabled={updating || searching}
               >
                 <option value="">Chọn loại dịch vụ</option>
-                <option value="f11909c0-89c2-4c5a-8fd9-21511a619e2c">
-                  Chăm sóc thú cưng
-                </option>
+                {serviceTypes.map((serviceType) => (
+                  <option key={serviceType.id} value={serviceType.id}>
+                    {serviceType.name}
+                  </option>
+                ))}
               </select>
+              {searching && (
+                <div className="text-sm text-gray-500 mt-1">
+                  Đang tải loại dịch vụ...
+                </div>
+              )}
             </div>
           </div>
 
@@ -232,7 +268,7 @@ const EditServiceModal: React.FC<EditServiceModalProps> = ({
             {/* Giới hạn mỗi giờ */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Giới hạn/giờ *
+                Giới hạn khách/giờ *
               </label>
               <input
                 type="number"

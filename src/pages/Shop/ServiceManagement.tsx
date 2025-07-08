@@ -181,7 +181,7 @@ const ServiceModal: React.FC<ServiceModalProps> = ({
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Giới hạn/giờ *
+                Giới hạn khách/giờ *
               </label>
               <input
                 type="number"
