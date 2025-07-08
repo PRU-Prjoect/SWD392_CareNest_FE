@@ -19,7 +19,7 @@ import hotelReducer from "./slices/hotelSlice";
 const persistConfig = {
   key: "root",
   storage,
-  whitelist: ["auth", "service", "appointment"],
+  whitelist: ["auth"],
 };
 
 const rootReducer = combineReducers({
