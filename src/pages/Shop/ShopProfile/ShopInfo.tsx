@@ -239,57 +239,107 @@ const ShopInfo: React.FC = () => {
           </div>
         </div>
 
-        {/* ✅ Ngày và giờ làm việc - UI được cập nhật */}
+        {/* ✅ Ngày và giờ làm việc - UI được cập nhật với thiết kế card */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-4">
-            <Clock className="w-5 h-5 inline mr-2" />
+          <label className="block text-lg font-medium text-gray-800 mb-4 flex items-center">
+            <Clock className="w-5 h-5 mr-2 text-teal-600" />
             Ngày và giờ làm việc
           </label>
-          <div className="space-y-4">
+          
+          {/* Grid Layout cho các ngày trong tuần */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {workingDays.map((day, index) => (
-              <div key={day.en} className="border rounded-lg p-4 transition-all hover:border-teal-200">
-                <div className="flex items-center justify-between">
-                  <label className="flex items-center space-x-2 cursor-pointer">
+              <div 
+                key={day.en} 
+                className={`rounded-xl shadow-sm border-2 transition-all duration-200 overflow-hidden
+                  ${day.selected 
+                    ? 'border-teal-400 bg-gradient-to-br from-teal-50 to-white' 
+                    : 'border-gray-200 bg-white opacity-75 hover:border-gray-300'
+                  }`}
+              >
+                {/* Header với tên ngày và checkbox */}
+                <div className="px-4 py-3 border-b flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <span className={`w-3 h-3 rounded-full ${day.selected ? 'bg-teal-500' : 'bg-gray-300'}`}></span>
+                    <h3 className="font-medium">{day.day}</h3>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
                     <input
                       type="checkbox"
                       checked={day.selected}
                       onChange={() => handleWorkingDayChange(index)}
-                      className="rounded border-gray-300 text-teal-500 focus:ring-teal-500"
+                      className="sr-only"
                       disabled={shopUpdating}
                     />
-                    <span className="text-sm font-medium">{day.day}</span>
-                    <span className="text-xs text-gray-500">({day.en})</span>
+                    <div className={`w-11 h-6 rounded-full transition-colors duration-200 ease-in-out
+                      ${day.selected ? 'bg-teal-500' : 'bg-gray-200'}`}>
+                      <div className={`w-5 h-5 rounded-full bg-white shadow-md transform transition-transform duration-200 ease-in-out
+                        ${day.selected ? 'translate-x-5' : 'translate-x-1'}`}>
+                      </div>
+                    </div>
                   </label>
                 </div>
                 
-                {day.selected && (
-                  <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs text-gray-500 mb-1">
-                        Giờ bắt đầu
-                      </label>
-                      <input
-                        type="time"
-                        value={day.startTime}
-                        onChange={(e) => handleTimeChange(index, 'startTime', e.target.value)}
-                        className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-teal-500 focus:border-teal-500"
-                        disabled={shopUpdating}
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs text-gray-500 mb-1">
-                        Giờ kết thúc
-                      </label>
-                      <input
-                        type="time"
-                        value={day.endTime}
-                        onChange={(e) => handleTimeChange(index, 'endTime', e.target.value)}
-                        className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-teal-500 focus:border-teal-500"
-                        disabled={shopUpdating}
-                      />
-                    </div>
+                {/* Body với giờ làm việc */}
+                <div className={`px-4 py-3 ${!day.selected && 'opacity-50'}`}>
+                  <div className="flex items-center mb-1">
+                    <span className="text-xs text-gray-500 uppercase tracking-wider">Trạng thái</span>
+                    <span className={`ml-auto text-sm font-medium ${day.selected ? 'text-green-600' : 'text-gray-500'}`}>
+                      {day.selected ? 'Mở cửa' : 'Đóng cửa'}
+                    </span>
                   </div>
-                )}
+                  
+                  {day.selected && (
+                    <>
+                      <div className="flex flex-col space-y-3 mt-3">
+                        <div>
+                          <label className="flex items-center text-xs text-gray-500 mb-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            Giờ bắt đầu
+                          </label>
+                          <input
+                            type="time"
+                            value={day.startTime}
+                            onChange={(e) => handleTimeChange(index, 'startTime', e.target.value)}
+                            className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-teal-500 focus:border-teal-500"
+                            disabled={shopUpdating}
+                          />
+                        </div>
+                        <div>
+                          <label className="flex items-center text-xs text-gray-500 mb-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            Giờ kết thúc
+                          </label>
+                          <input
+                            type="time"
+                            value={day.endTime}
+                            onChange={(e) => handleTimeChange(index, 'endTime', e.target.value)}
+                            className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-teal-500 focus:border-teal-500"
+                            disabled={shopUpdating}
+                          />
+                        </div>
+                      </div>
+                      
+                      {/* Summary/Preview */}
+                      <div className="mt-3 pt-3 border-t border-dashed border-gray-200">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-gray-500">Thời gian làm việc</span>
+                          <span className="text-sm font-medium text-teal-700">{day.startTime} - {day.endTime}</span>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                  
+                  {!day.selected && (
+                    <div className="text-center py-3 text-gray-400 italic text-sm">
+                      Ngày nghỉ
+                    </div>
+                  )}
+                </div>
               </div>
             ))}
           </div>
