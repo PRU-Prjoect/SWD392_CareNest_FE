@@ -8,23 +8,8 @@ import {
   clearAllServiceErrors,
   clearCreateError,
 } from "@/store/slices/serviceSlice";
+import type { ServiceData } from "@/store/slices/serviceSlice";
 import AddServiceModal from "@/components/modals/AddServiceModal";
-
-// ✅ Sử dụng interface từ serviceSlice.ts
-interface ServiceData {
-  id: string;
-  name: string;
-  is_active: boolean;
-  shop_id: string;
-  description: string;
-  discount_percent: number;
-  price: number;
-  limit_per_hour: number;
-  duration_type: number;
-  star: number;
-  purchases: number;
-  service_type_id: string;
-}
 
 interface ServiceModalProps {
   isOpen: boolean;
@@ -296,6 +281,9 @@ const ServiceManagement = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
 
+  // ✅ Thêm selector để lấy user info
+  const { user } = useSelector((state: RootState) => state.auth);
+
   // ✅ Redux selectors
   const { services, searching, searchError } = useSelector(
     (state: RootState) => state.service
@@ -306,15 +294,35 @@ const ServiceManagement = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("");
 
+  // ✅ useEffect cập nhật với user.id dependency
   useEffect(() => {
-    dispatch(getAllServices({}));
-  }, [dispatch]);
+    // ✅ Chỉ fetch khi có user.id (shopId)
+    if (user?.id) {
+      dispatch(getAllServices({ 
+        shopId: user.id,
+        sortBy: "createdAt" 
+      }));
+    }
+  }, [dispatch, user?.id]); // ✅ Thêm user?.id vào dependencies
 
   useEffect(() => {
     return () => {
       dispatch(clearAllServiceErrors());
     };
   }, [dispatch]);
+
+  // ✅ Kiểm tra user login trước khi render
+  if (!user?.id) {
+    return (
+      <div className="p-6 bg-gray-50 min-h-screen">
+        <div className="flex items-center justify-center py-12">
+          <div className="text-red-500">
+            Vui lòng đăng nhập để xem danh sách dịch vụ
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const filteredServices = services.filter((service) => {
     const matchesSearch =
@@ -336,21 +344,40 @@ const ServiceManagement = () => {
   };
 
   const handleSaveService = async (serviceData: Omit<ServiceData, "id">) => {
+    // ✅ Kiểm tra user.id trước khi tạo service
+    if (!user?.id) {
+      console.error("No user ID found");
+      return;
+    }
+
     try {
       await dispatch(
         createService({
           id: crypto.randomUUID(),
           ...serviceData,
-          shop_id: "01978c76-3adc-77ca-9806-eee9893aef4a", // Lấy từ user context
+          shop_id: user.id, // ✅ Sử dụng user.id thay vì hardcoded value
         })
       ).unwrap();
+      
+      // ✅ Refresh lại danh sách sau khi tạo thành công
+      dispatch(getAllServices({ 
+        shopId: user.id,
+        sortBy: "createdAt" 
+      }));
+      
+      setShowAddModal(false);
     } catch (error) {
       console.error("Create failed:", error);
     }
   };
 
   const handleRefresh = () => {
-    dispatch(getAllServices({}));
+    if (user?.id) {
+      dispatch(getAllServices({ 
+        shopId: user.id,
+        sortBy: "createdAt" 
+      }));
+    }
   };
 
   const getStatusColor = (isActive: boolean) => {
@@ -358,6 +385,7 @@ const ServiceManagement = () => {
       ? "bg-green-100 text-green-800 border-green-200"
       : "bg-red-100 text-red-800 border-red-200";
   };
+  
   const getStatusText = (isActive: boolean) => {
     return isActive ? "Hoạt động" : "Tạm dừng";
   };
@@ -373,6 +401,10 @@ const ServiceManagement = () => {
             </h1>
             <p className="text-lg text-gray-600">
               Quản lý các dịch vụ của cửa hàng ({services.length} dịch vụ)
+            </p>
+            {/* ✅ Thêm thông tin shop ID để debug */}
+            <p className="text-sm text-gray-500">
+              Shop ID: {user.id}
             </p>
           </div>
         </div>
