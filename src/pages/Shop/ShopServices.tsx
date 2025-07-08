@@ -65,6 +65,103 @@ const ShopServicesPage: React.FC = () => {
   const getStatusText = (isActive: boolean) => {
     return isActive ? "Hoạt động" : "Tạm dừng";
   };
+  
+  // Helper function to render working day schedule
+  const renderWorkingDays = () => {
+    if (!currentShop?.working_day || currentShop.working_day.length === 0) {
+      return (
+        <div className="text-gray-500 text-sm">
+          Chưa cập nhật lịch làm việc
+        </div>
+      );
+    }
+    
+    // Vietnamese day names
+    const dayNames = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"];
+    const viDayNames = ["Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy", "Chủ Nhật"];
+    
+    // Get current day (0 = Monday, 6 = Sunday in our array)
+    const today = new Date().getDay();
+    const todayIndex = today === 0 ? 6 : today - 1; // Convert to our array index (0=Monday, 6=Sunday)
+    
+    // English day names for mapping
+    const englishDays = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
+    
+    // Parse working days from shop data - handling both formats
+    const workingDaysInfo = englishDays.map(day => ({
+      day: day,
+      isWorkingDay: false,
+      hours: "8-17" // Default hours
+    }));
+    
+    // Process each working day entry
+    currentShop.working_day.forEach(dayString => {
+      // Format 1: "Thứ 2 (Monday): 08:00 - 17:00"
+      const regex = /^(.+) \((.+)\): (\d{2}:\d{2}) - (\d{2}:\d{2})$/;
+      const matches = dayString.match(regex);
+      
+      if (matches) {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const [_, viDay, enDay, startTime, endTime] = matches;
+        const dayIndex = englishDays.findIndex(d => d.toLowerCase() === enDay.toLowerCase());
+        
+        if (dayIndex !== -1) {
+          workingDaysInfo[dayIndex].isWorkingDay = true;
+          workingDaysInfo[dayIndex].hours = `${startTime.substring(0, 5)}-${endTime.substring(0, 5)}`;
+        }
+      } 
+      // Format 2: Just day name like "Monday"
+      else {
+        const dayLower = dayString.toLowerCase();
+        const dayIndex = englishDays.findIndex(d => d.toLowerCase() === dayLower);
+        
+        if (dayIndex !== -1) {
+          workingDaysInfo[dayIndex].isWorkingDay = true;
+        }
+      }
+    });
+    
+    // Check if shop is open today
+    const isOpenToday = workingDaysInfo[todayIndex]?.isWorkingDay || false;
+    const todayHours = workingDaysInfo[todayIndex]?.hours || "8-17";
+    
+    return (
+      <div className="mt-2">
+        <div className="bg-white rounded-lg border border-gray-200 p-3">
+          <div className="grid grid-cols-7 gap-1 text-center mb-2">
+            {dayNames.map((day, index) => (
+              <div key={day} className={`text-xs font-medium ${index === todayIndex ? "text-teal-700" : "text-gray-600"}`}>
+                {day}
+              </div>
+            ))}
+          </div>
+          
+          <div className="grid grid-cols-7 gap-1 text-center mb-2">
+            {workingDaysInfo.map((day, index) => (
+              <div key={index} className="flex justify-center">
+                <div className={`w-4 h-4 rounded-full ${day.isWorkingDay ? "bg-green-500" : "bg-red-500"}`}></div>
+              </div>
+            ))}
+          </div>
+          
+          <div className="grid grid-cols-7 gap-1 text-center text-xs">
+            {workingDaysInfo.map((day, index) => (
+              <div key={index} className="text-gray-600">
+                {day.isWorkingDay ? day.hours : "Nghỉ"}
+              </div>
+            ))}
+          </div>
+          
+          <div className="mt-3 pt-2 border-t border-gray-100 flex items-center">
+            <div className="w-2 h-2 rounded-full mr-2 animate-pulse bg-teal-500"></div>
+            <span className="text-xs text-gray-600">
+              Hôm nay: {viDayNames[todayIndex]} - {isOpenToday ? `Đang mở cửa (${todayHours})` : "Đã đóng cửa"}
+            </span>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   // Loading state
   if (isLoading) {
@@ -154,11 +251,12 @@ const ShopServicesPage: React.FC = () => {
                   <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3a1 1 0 011-1h6a1 1 0 011 1v4h3a1 1 0 011 1v14a1 1 0 01-1 1H5a1 1 0 01-1-1V8a1 1 0 011-1h3z" />
                   </svg>
-                  <span className="text-gray-600">
-                    {currentShop.working_day?.join(", ") || "Chưa cập nhật"}
-                  </span>
+                  <span className="text-gray-600">Ngày làm việc</span>
                 </div>
               </div>
+              
+              {/* ✅ New Working Days Interactive Display */}
+              {renderWorkingDays()}
             </div>
           </div>
         </div>
