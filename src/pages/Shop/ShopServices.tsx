@@ -49,6 +49,11 @@ const ShopServicesPage: React.FC = () => {
   const handleViewDetail = (serviceId: string) => {
     navigate(`/services/${serviceId}`);
   };
+  
+  // Handle booking navigation
+  const handleBookService = (serviceId: string) => {
+    navigate(`/app/booking/${serviceId}`);
+  };
 
   // ✅ Thêm helper functions giống ServiceManagement
   const getStatusColor = (isActive: boolean) => {
@@ -283,28 +288,44 @@ const ShopServicesPage: React.FC = () => {
                     <div className="flex space-x-2">
                       <button
                         onClick={() => handleViewDetail(service.id)}
-                        className="flex-1 px-4 py-2 bg-teal-600 text-white text-sm rounded-lg hover:bg-teal-700 transition-colors flex items-center justify-center space-x-2"
+                        className="flex-1 px-4 py-2 bg-white border border-gray-300 text-gray-700 text-sm rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-center space-x-2"
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                         </svg>
-                        <span>Xem chi tiết</span>
+                        <span>Chi tiết</span>
                       </button>
                       
-                      {/* ✅ Thêm nút đặt lịch cho customer */}
+                      {/* ✅ Đồng bộ với nút Đặt ngay trong ServiceDetailPage */}
                       <button
-                        onClick={() => {
-                          // Navigate to booking page hoặc mở modal đặt lịch
-                          alert(`Đặt lịch cho dịch vụ: ${service.name}`);
-                        }}
-                        className="px-4 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center"
+                        onClick={() => handleBookService(service.id)}
+                        disabled={!service.is_active}
+                        className="flex-1 px-4 py-2 bg-teal-600 text-white text-sm rounded-lg hover:bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center space-x-2"
                       >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3a1 1 0 011-1h6a1 1 0 011 1v4h3a1 1 0 011 1v14a1 1 0 01-1 1H5a1 1 0 01-1-1V8a1 1 0 011-1h3z" />
+                        <svg
+                          className="w-4 h-4"
+                          fill="white"
+                          viewBox="0 0 303.124 303.124"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path
+                            d="M290.245,85.686c-1.136-1.469-2.889-2.33-4.747-2.33h-67.717L163.252,2.642c-1.855-2.746-5.585-3.468-8.331-1.613
+                            c-2.746,1.855-3.468,5.584-1.613,8.33l49.991,73.997H87.169l49.99-73.997c1.855-2.746,1.133-6.475-1.613-8.33
+                            c-2.746-1.855-6.476-1.134-8.331,1.613L72.687,83.356H6c-1.857,0-3.61,0.86-4.747,2.33c-1.136,1.469-1.528,3.382-1.06,5.18
+                            l41.773,160.635c0.688,2.644,3.075,4.49,5.807,4.49h195.953c2.732,0,5.119-1.846,5.807-4.49l41.772-160.635
+                            C291.772,89.069,291.381,87.156,290.245,85.686z"
+                          />
                         </svg>
+                        <span>Đặt ngay</span>
                       </button>
                     </div>
+                    
+                    {!service.is_active && (
+                      <p className="text-sm text-red-600 mt-2 text-center">
+                        Dịch vụ đang tạm dừng, không thể đặt lịch
+                      </p>
+                    )}
                   </div>
                 </div>
               ))}
