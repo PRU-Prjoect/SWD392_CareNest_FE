@@ -304,16 +304,27 @@ const CurrentOrderForUser = () => {
 
   // ✅ Filtered orders theo trạng thái
   const filteredOrders = useMemo(() => {
+    let result;
     switch (activeTab) {
       case "pending":
-        return orders.filter((order) => order.status === "pending");
+        result = orders.filter((order) => order.status === "pending");
+        break;
       case "in-progress":
-        return orders.filter((order) => order.status === "in-progress");
+        result = orders.filter((order) => order.status === "in-progress");
+        break;
       case "cancelled":
-        return orders.filter((order) => order.status === "cancelled");
+        result = orders.filter((order) => order.status === "cancelled");
+        break;
       default:
-        return orders;
+        result = orders;
     }
+    
+    // Sắp xếp theo thời gian đặt (mới nhất lên đầu)
+    return result.sort((a, b) => {
+      const dateA = new Date(a.createdAt).getTime();
+      const dateB = new Date(b.createdAt).getTime();
+      return dateB - dateA; // Sắp xếp giảm dần (mới nhất lên đầu)
+    });
   }, [orders, activeTab]);
 
   // ✅ Kiểm tra user login
