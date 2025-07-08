@@ -19,6 +19,7 @@ interface RegisterShopRequest {
   description: string; // ✅ Đổi từ shop_description
   status: boolean; // ✅ Thêm mới
   working_day: string[]; // ✅ Thêm mới
+  phone: string; 
 }
 
 interface RegisterShopResponse {
@@ -58,6 +59,7 @@ export const registerShop = createAsyncThunk<
       {
         account_id: data.account_id,
         name: data.name, // ✅ Tên field đúng
+        phone: data.phone,
         description: data.description, // ✅ Tên field đúng
         status: data.status, // ✅ Thêm status
         working_day: data.working_day, // ✅ Thêm working_day

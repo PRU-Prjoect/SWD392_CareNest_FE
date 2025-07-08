@@ -1,4 +1,5 @@
 // store/slices/shopSlice.ts
+
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
 import api from "@/config/axios";
@@ -9,6 +10,7 @@ interface ShopState {
   updating: boolean;
   searching: boolean;
   deleting: boolean;
+  registering: boolean; 
   shops: ShopProfile[];
   currentShop: ShopProfile | null;
   error: {
@@ -27,15 +29,20 @@ interface ShopState {
     code: number;
     message: string;
   } | null;
+  registerError: { // ✅ Thêm registerError
+    code: number;
+    message: string;
+  } | null;
 }
 
 interface ShopProfile {
   account_id: string;
   name: string;
   description: string;
+  phone: string; // ✅ Thêm trường phone
   status: boolean;
   working_day: string[];
-  sub_address: any[]; // Array có thể chứa địa chỉ phụ
+  sub_address: any[];
 }
 
 // ✅ Search shops request
@@ -50,6 +57,16 @@ interface UpdateShopRequest {
   account_id: string;
   name: string;
   description: string;
+  phone: string; // ✅ Thêm trường phone
+  status: boolean;
+  working_day: string[];
+}
+
+// ✅ Thêm interface cho register shop
+interface RegisterShopRequest {
+  name: string;
+  description: string;
+  phone: string;
   status: boolean;
   working_day: string[];
 }
@@ -71,6 +88,11 @@ interface DeleteShopResponse {
   message: string;
 }
 
+// ✅ Thêm response interface cho register
+interface RegisterShopResponse {
+  message: string;
+}
+
 interface ErrorResponse {
   error: number;
   message: string;
@@ -82,12 +104,14 @@ const initialState: ShopState = {
   updating: false,
   searching: false,
   deleting: false,
+  registering: false, // ✅ Thêm state cho register
   shops: [],
   currentShop: null,
   error: null,
   searchError: null,
   updateError: null,
   deleteError: null,
+  registerError: null, // ✅ Thêm error state cho register
 };
 
 // ✅ 1. Search shops with query parameters
@@ -99,7 +123,6 @@ export const searchShops = createAsyncThunk<
   try {
     // Build query string from parameters
     const queryParams = new URLSearchParams();
-    
     if (params.name) queryParams.append("name", params.name);
     if (params.limit) queryParams.append("limit", params.limit.toString());
     if (params.offset) queryParams.append("offset", params.offset.toString());
@@ -128,11 +151,9 @@ export const searchShops = createAsyncThunk<
     };
   } catch (err: any) {
     console.error("❌ Search Shops Error:", err.response?.data);
-
     if (err.response) {
       const status = err.response.status;
       const errorData = err.response.data;
-
       switch (status) {
         case 401:
           return rejectWithValue({
@@ -156,7 +177,6 @@ export const searchShops = createAsyncThunk<
           });
       }
     }
-
     return rejectWithValue({
       error: 1,
       message: err.message || "Không thể kết nối đến máy chủ",
@@ -192,11 +212,9 @@ export const getShopById = createAsyncThunk<
     };
   } catch (err: any) {
     console.error("❌ Get Shop By ID Error:", err.response?.data);
-
     if (err.response) {
       const status = err.response.status;
       const errorData = err.response.data;
-
       switch (status) {
         case 401:
           return rejectWithValue({
@@ -220,7 +238,6 @@ export const getShopById = createAsyncThunk<
           });
       }
     }
-
     return rejectWithValue({
       error: 1,
       message: err.message || "Không thể kết nối đến máy chủ",
@@ -257,11 +274,9 @@ export const updateShop = createAsyncThunk<
     };
   } catch (err: any) {
     console.error("❌ Update Shop Error:", err.response?.data);
-
     if (err.response) {
       const status = err.response.status;
       const errorData = err.response.data;
-
       switch (status) {
         case 401:
           return rejectWithValue({
@@ -290,7 +305,6 @@ export const updateShop = createAsyncThunk<
           });
       }
     }
-
     return rejectWithValue({
       error: 1,
       message: err.message || "Không thể kết nối đến máy chủ",
@@ -326,11 +340,9 @@ export const deleteShop = createAsyncThunk<
     };
   } catch (err: any) {
     console.error("❌ Delete Shop Error:", err.response?.data);
-
     if (err.response) {
       const status = err.response.status;
       const errorData = err.response.data;
-
       switch (status) {
         case 401:
           return rejectWithValue({
@@ -359,13 +371,14 @@ export const deleteShop = createAsyncThunk<
           });
       }
     }
-
     return rejectWithValue({
       error: 1,
       message: err.message || "Không thể kết nối đến máy chủ",
     });
   }
 });
+
+
 
 // Shop slice
 const shopSlice = createSlice({
@@ -384,11 +397,15 @@ const shopSlice = createSlice({
     clearDeleteError: (state) => {
       state.deleteError = null;
     },
+    clearRegisterError: (state) => { // ✅ Thêm clear register error
+      state.registerError = null;
+    },
     clearAllShopErrors: (state) => {
       state.error = null;
       state.searchError = null;
       state.updateError = null;
       state.deleteError = null;
+      state.registerError = null; // ✅ Thêm vào clear all
     },
     resetShopState: (state) => {
       Object.assign(state, initialState);
@@ -430,7 +447,6 @@ const shopSlice = createSlice({
           };
         }
       })
-      
       // ✅ Get shop by ID cases
       .addCase(getShopById.pending, (state) => {
         state.loading = true;
@@ -459,7 +475,6 @@ const shopSlice = createSlice({
           };
         }
       })
-      
       // ✅ Update shop cases
       .addCase(updateShop.pending, (state) => {
         state.updating = true;
@@ -470,9 +485,7 @@ const shopSlice = createSlice({
         (state, action: PayloadAction<UpdateShopResponse>) => {
           state.updating = false;
           state.updateError = null;
-          
           console.log("✅ Update shop successful:", action.payload.message);
-          
           // ✅ Sau khi update thành công, cần fetch lại data mới
           // Component sẽ handle việc này bằng cách gọi getShopById
         }
@@ -491,7 +504,6 @@ const shopSlice = createSlice({
           };
         }
       })
-      
       // ✅ Delete shop cases
       .addCase(deleteShop.pending, (state) => {
         state.deleting = true;
@@ -502,9 +514,7 @@ const shopSlice = createSlice({
         (state, action: PayloadAction<DeleteShopResponse>) => {
           state.deleting = false;
           state.deleteError = null;
-          
           console.log("✅ Delete shop successful:", action.payload.message);
-          
           // ✅ Reset currentShop nếu nó đã được xóa
           state.currentShop = null;
         }
@@ -531,6 +541,7 @@ export const {
   clearSearchError,
   clearUpdateError,
   clearDeleteError,
+  clearRegisterError, 
   clearAllShopErrors,
   resetShopState,
   clearShopsList,
