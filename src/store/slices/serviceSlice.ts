@@ -124,18 +124,19 @@ const initialState: ServiceState = {
 // ✅ 1. Get all services (with optional search parameters)
 export const getAllServices = createAsyncThunk<
   ServicesListResponse,
-  SearchServiceRequest, // ✅ Đã đổi tên từ SearchServicesRequest
+  SearchServiceRequest | void , 
   { rejectValue: ErrorResponse }
 >("service/getAll", async (params = {}, { rejectWithValue }) => {
   try {
     const queryParams = new URLSearchParams();
-    if (params.name) queryParams.append("name", params.name);
-    if (params.serviceTypeId)
+    if (params?.shopId) queryParams.append("shopId", params.shopId);
+    if (params?.name) queryParams.append("name", params.name);
+    if (params?.serviceTypeId)
       queryParams.append("serviceTypeId", params.serviceTypeId);
-    if (params.sortBy) queryParams.append("sortBy", params.sortBy);
-    if (params.limit) queryParams.append("limit", params.limit.toString());
-    if (params.offset) queryParams.append("offset", params.offset.toString());
-    if (params.shopId) queryParams.append("shopId", params.shopId); // ✅ Thêm shopId vào query params
+    if (params?.sortBy) queryParams.append("sortBy", params.sortBy);
+    if (params?.limit) queryParams.append("limit", params.limit.toString());
+    if (params?.offset) queryParams.append("offset", params.offset.toString());
+    if (params?.shopId) queryParams.append("shopId", params.shopId); // ✅ Thêm shopId vào query params
 
     const queryString = queryParams.toString();
     const endpoint = queryString ? `Service?${queryString}` : "Service";
