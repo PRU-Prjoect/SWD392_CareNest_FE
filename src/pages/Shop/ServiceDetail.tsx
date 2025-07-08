@@ -23,6 +23,7 @@ const ServiceDetail = () => {
 
   const { currentService, loading, updating, error, updateError, deleteError } =
     useSelector((state: RootState) => state.service);
+  const { user } = useSelector((state: RootState) => state.auth);
 
   // ✅ Local state cho modals
   const [showEditModal, setShowEditModal] = useState(false);
@@ -160,6 +161,9 @@ const ServiceDetail = () => {
       </div>
     );
   }
+
+  // Determine which shop ID to use - prioritize the logged in user's ID if it exists
+  const shopId = user?.id || currentService.shop_id;
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
@@ -365,7 +369,7 @@ const ServiceDetail = () => {
 
                   <div>
                     <h3 className="text-sm font-medium text-gray-500 mb-1">
-                      Giới hạn/giờ
+                      Giới hạn khách/giờ
                     </h3>
                     <p className="text-lg font-semibold text-gray-800">
                       {currentService.limit_per_hour} khách
@@ -406,7 +410,12 @@ const ServiceDetail = () => {
                     </p>
                     <p>
                       <span className="font-medium">Shop ID:</span>{" "}
-                      {currentService.shop_id}
+                      {currentService.shop_id}{" "}
+                      {user?.id && user.id !== currentService.shop_id && (
+                        <span className="text-red-500">
+                          (Different from your shop ID: {user.id})
+                        </span>
+                      )}
                     </p>
                     <p>
                       <span className="font-medium">Service Type ID:</span>{" "}
@@ -456,6 +465,7 @@ const ServiceDetail = () => {
             setShowEditModal(false);
           }}
           service={currentService}
+          shopId={shopId}
         />
 
         {/* ✅ Delete Confirm Modal */}
