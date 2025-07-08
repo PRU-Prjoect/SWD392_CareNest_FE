@@ -1,8 +1,8 @@
 // layout/AppHeaderForUser.tsx
 import { useState } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import type { AppDispatch } from "@/store/store";
+import type { AppDispatch, RootState } from "@/store/store";
 import { getAllServices } from "@/store/slices/serviceSlice";
 import NotificationDropdown from "../components/header/NotificationDropdown";
 import UserDropdown from "../components/header/UserDropdown";
@@ -22,6 +22,8 @@ const AppHeaderForUser: React.FC<HeaderProps> = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
+  // ✅ Thêm kiểm tra trạng thái đăng nhập từ Redux store
+  const { isAuthenticated } = useSelector((state: RootState) => state.auth);
 
   const { pendingCount, loading: pendingLoading } = usePendingOrdersCount();
 
@@ -42,7 +44,10 @@ const AppHeaderForUser: React.FC<HeaderProps> = () => {
         })
       );
 
-      navigate("/app/services", {
+      // ✅ Kiểm tra trạng thái đăng nhập để điều hướng đến đường dẫn phù hợp
+      const baseRoute = isAuthenticated ? "/app/services" : "/guest/services";
+      
+      navigate(baseRoute, {
         state: { searchTerm: searchTerm.trim() },
       });
     } catch (error) {
@@ -81,7 +86,10 @@ const AppHeaderForUser: React.FC<HeaderProps> = () => {
 
       await dispatch(getAllServices(searchParams));
 
-      navigate("/app/services", {
+      // ✅ Kiểm tra trạng thái đăng nhập để điều hướng đến đường dẫn phù hợp
+      const baseRoute = isAuthenticated ? "/app/services" : "/guest/services";
+
+      navigate(baseRoute, {
         state: {
           filters: values,
           searchType: "filter",

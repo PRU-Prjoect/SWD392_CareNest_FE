@@ -7,7 +7,7 @@ const AppLayoutForGuest: React.FC = () => {
   return (
     <div className="min-h-screen">
       <AppHeaderForUser />
-      <main className="w-full p-4 md:p-6 pt-32 md:pt-36">
+      <main className="w-full p-2 sm:p-3 md:p-4 lg:p-6 pt-24 sm:pt-28 md:pt-32">
         <Outlet />
       </main>
       <Footer />
