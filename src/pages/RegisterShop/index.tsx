@@ -11,26 +11,42 @@ import { toast } from "react-toastify";
 
 // Danh sách các ngày làm việc
 const workingDayOptions = [
-  "Thứ 2",
-  "Thứ 3",
-  "Thứ 4",
-  "Thứ 5",
-  "Thứ 6",
-  "Thứ 7",
-  "Chủ nhật",
+  { vi: "Thứ 2", en: "Monday" },
+  { vi: "Thứ 3", en: "Tuesday" },
+  { vi: "Thứ 4", en: "Wednesday" },
+  { vi: "Thứ 5", en: "Thursday" },
+  { vi: "Thứ 6", en: "Friday" },
+  { vi: "Thứ 7", en: "Saturday" },
+  { vi: "Chủ nhật", en: "Sunday" },
 ];
 
 export default function RegisterShopPage() {
   // ✅ State variables được cập nhật
   const [shopName, setShopName] = useState("");
   const [shopDescription, setShopDescription] = useState("");
-  const [workingDays, setWorkingDays] = useState<string[]>([]); // ✅ Thêm working days
+  const [phone, setPhone] = useState(""); // ✅ Thêm phone state
+  
+  // ✅ Cập nhật cấu trúc workingDays để bao gồm giờ làm việc
+  const [workingDays, setWorkingDays] = useState<Array<{
+    day: string;
+    selected: boolean;
+    startTime: string;
+    endTime: string;
+  }>>(
+    workingDayOptions.map(day => ({
+      day: day.vi,
+      selected: false,
+      startTime: "08:00",
+      endTime: "17:00"
+    }))
+  );
 
   // ✅ Validation errors
   const [errors, setErrors] = useState({
     shopName: "",
     shopDescription: "",
     workingDays: "",
+    phone: "", // ✅ Thêm phone error
   });
 
   const navigate = useNavigate();
@@ -81,14 +97,17 @@ export default function RegisterShopPage() {
   }, [error]);
 
   // ✅ Handler cho working days
-  const handleWorkingDayChange = (day: string) => {
-    setWorkingDays((prev) => {
-      if (prev.includes(day)) {
-        return prev.filter((d) => d !== day);
-      } else {
-        return [...prev, day];
-      }
-    });
+  const handleWorkingDayChange = (index: number) => {
+    setWorkingDays(days => days.map((day, i) => 
+      i === index ? { ...day, selected: !day.selected } : day
+    ));
+  };
+
+  // ✅ Handler cho thay đổi thời gian
+  const handleTimeChange = (index: number, field: 'startTime' | 'endTime', value: string) => {
+    setWorkingDays(days => days.map((day, i) => 
+      i === index ? { ...day, [field]: value } : day
+    ));
   };
 
   const validateForm = () => {
@@ -96,6 +115,7 @@ export default function RegisterShopPage() {
       shopName: "",
       shopDescription: "",
       workingDays: "",
+      phone: "", // ✅ Thêm phone error
     };
     let isValid = true;
 
@@ -115,8 +135,17 @@ export default function RegisterShopPage() {
     }
 
     // Validate working days
-    if (workingDays.length === 0) {
+    if (!workingDays.some(day => day.selected)) {
       newErrors.workingDays = "Vui lòng chọn ít nhất một ngày làm việc";
+      isValid = false;
+    }
+
+    // ✅ Validate phone
+    if (!phone.trim()) {
+      newErrors.phone = "Số điện thoại không được để trống";
+      isValid = false;
+    } else if (!/^[0-9]{10,11}$/.test(phone.trim())) {
+      newErrors.phone = "Số điện thoại phải có 10-11 chữ số";
       isValid = false;
     }
 
@@ -141,7 +170,13 @@ export default function RegisterShopPage() {
       name: shopName.trim(), // ✅ Đổi từ shop_name
       description: shopDescription.trim(), // ✅ Đổi từ shop_description
       status: true, // ✅ Thêm status
-      working_day: workingDays, // ✅ Thêm working_day
+      working_day: workingDays
+        .filter(day => day.selected)
+        .map(day => {
+          const dayOption = workingDayOptions.find(option => option.vi === day.day);
+          return `${day.day} (${dayOption?.en}): ${day.startTime} - ${day.endTime}`;
+        }), // ✅ Format với cả ngày và giờ
+      phone: phone.trim(), // ✅ Thêm phone
     };
 
     try {
@@ -207,6 +242,25 @@ export default function RegisterShopPage() {
               )}
             </div>
 
+            {/* ✅ Ô nhập số điện thoại */}
+            <div className="relative">
+              <input
+                type="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="Số điện thoại"
+                className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 transition-all duration-200 ${
+                  errors.phone
+                    ? "border-red-500 focus:ring-red-500/20"
+                    : "border-gray-300 focus:ring-[#2A9D8F]/20 focus:border-[#2A9D8F]"
+                }`}
+                disabled={loading}
+              />
+              {errors.phone && (
+                <p className="text-red-500 text-xs mt-1">{errors.phone}</p>
+              )}
+            </div>
+
             {/* ✅ Ô nhập mô tả cửa hàng */}
             <div className="relative">
               <textarea
@@ -241,23 +295,56 @@ export default function RegisterShopPage() {
             {/* ✅ Working days selection */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Ngày làm việc:
+                Ngày và giờ làm việc:
               </label>
-              <div className="grid grid-cols-2 gap-2">
-                {workingDayOptions.map((day) => (
-                  <label
-                    key={day}
-                    className="flex items-center space-x-2 cursor-pointer"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={workingDays.includes(day)}
-                      onChange={() => handleWorkingDayChange(day)}
-                      className="rounded border-gray-300 text-[#2A9D8F] focus:ring-[#2A9D8F]"
-                      disabled={loading}
-                    />
-                    <span className="text-sm">{day}</span>
-                  </label>
+              <div className="space-y-3">
+                {workingDays.map((day, index) => (
+                  <div key={day.day} className="border rounded-lg p-3">
+                    <div className="flex items-center justify-between">
+                      <label className="flex items-center space-x-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={day.selected}
+                          onChange={() => handleWorkingDayChange(index)}
+                          className="rounded border-gray-300 text-[#2A9D8F] focus:ring-[#2A9D8F]"
+                          disabled={loading}
+                        />
+                        <span className="text-sm font-medium">{day.day}</span>
+                        <span className="text-xs text-gray-500">
+                          ({workingDayOptions.find(option => option.vi === day.day)?.en})
+                        </span>
+                      </label>
+                    </div>
+                    
+                    {day.selected && (
+                      <div className="mt-2 grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="block text-xs text-gray-500 mb-1">
+                            Giờ bắt đầu
+                          </label>
+                          <input
+                            type="time"
+                            value={day.startTime}
+                            onChange={(e) => handleTimeChange(index, 'startTime', e.target.value)}
+                            className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-[#2A9D8F]/20 focus:border-[#2A9D8F]"
+                            disabled={loading}
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-gray-500 mb-1">
+                            Giờ kết thúc
+                          </label>
+                          <input
+                            type="time"
+                            value={day.endTime}
+                            onChange={(e) => handleTimeChange(index, 'endTime', e.target.value)}
+                            className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-[#2A9D8F]/20 focus:border-[#2A9D8F]"
+                            disabled={loading}
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 ))}
               </div>
               {errors.workingDays && (

@@ -5,21 +5,13 @@ import { Clock } from "lucide-react";
 import { getLoginAccount } from "@/store/slices/accountSlice";
 import { getShopById, updateShop } from "@/store/slices/shopSlice";
 
-interface Account {
-  id: string;
-  username: string;
-  email: string;
-  role: string;
-  is_active: boolean;
-  img_url?: string;
-}
-
-interface Shop {
-  account_id: string;
-  name: string;
-  description: string;
-  status: boolean;
-  working_day: string[];
+// ✅ Định nghĩa interface mới cho cấu trúc ngày làm việc
+interface WorkingDayItem {
+  day: string;
+  en: string;
+  selected: boolean;
+  startTime: string;
+  endTime: string;
 }
 
 const ShopInfo: React.FC = () => {
@@ -40,8 +32,19 @@ const ShopInfo: React.FC = () => {
   const [formData, setFormData] = useState({
     name: "",
     description: "",
-    working_day: [] as string[],
+    phone: "", // ✅ Thêm phone state
   });
+
+  // ✅ Cập nhật cấu trúc workingDays để bao gồm giờ làm việc
+  const [workingDays, setWorkingDays] = useState<WorkingDayItem[]>([
+    { day: "Thứ 2", en: "Monday", selected: false, startTime: "08:00", endTime: "17:00" },
+    { day: "Thứ 3", en: "Tuesday", selected: false, startTime: "08:00", endTime: "17:00" },
+    { day: "Thứ 4", en: "Wednesday", selected: false, startTime: "08:00", endTime: "17:00" },
+    { day: "Thứ 5", en: "Thursday", selected: false, startTime: "08:00", endTime: "17:00" },
+    { day: "Thứ 6", en: "Friday", selected: false, startTime: "08:00", endTime: "17:00" },
+    { day: "Thứ 7", en: "Saturday", selected: false, startTime: "08:00", endTime: "17:00" },
+    { day: "Chủ nhật", en: "Sunday", selected: false, startTime: "08:00", endTime: "17:00" },
+  ]);
 
   // ✅ Fetch data khi component mount
   useEffect(() => {
@@ -57,24 +60,77 @@ const ShopInfo: React.FC = () => {
       setFormData({
         name: currentShop.name,
         description: currentShop.description,
-        working_day: currentShop.working_day || [],
+        phone: currentShop.phone || "", // ✅ Cập nhật phone từ API
       });
+
+      // ✅ Parse chuỗi working_day từ API
+      if (currentShop.working_day && currentShop.working_day.length > 0) {
+        const updatedWorkingDays = [...workingDays];
+        
+        currentShop.working_day.forEach(dayString => {
+          // Parse chuỗi định dạng "Thứ 2 (Monday): 08:00 - 17:00"
+          const regex = /^(.+) \((.+)\): (\d{2}:\d{2}) - (\d{2}:\d{2})$/;
+          const simpleRegex = /^(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)$/;
+          
+          if (regex.test(dayString)) {
+            const matches = dayString.match(regex);
+            if (matches) {
+              // eslint-disable-next-line @typescript-eslint/no-unused-vars
+              const [fullMatch, viDay, enDay, startTime, endTime] = matches;
+              
+              // Tìm và cập nhật ngày tương ứng
+              const dayIndex = updatedWorkingDays.findIndex(d => 
+                d.en === enDay || d.day === viDay
+              );
+              
+              if (dayIndex !== -1) {
+                updatedWorkingDays[dayIndex] = {
+                  ...updatedWorkingDays[dayIndex],
+                  selected: true,
+                  startTime,
+                  endTime
+                };
+              }
+            }
+          } else if (simpleRegex.test(dayString)) {
+            // Trường hợp format cũ chỉ có tên tiếng Anh
+            const dayIndex = updatedWorkingDays.findIndex(d => d.en === dayString);
+            if (dayIndex !== -1) {
+              updatedWorkingDays[dayIndex] = {
+                ...updatedWorkingDays[dayIndex],
+                selected: true
+              };
+            }
+          }
+        });
+        
+        setWorkingDays(updatedWorkingDays);
+      }
     }
   }, [currentShop]);
 
-  const workingDaysOptions = [
-    { key: "Monday", label: "Thứ 2" },
-    { key: "Tuesday", label: "Thứ 3" },
-    { key: "Wednesday", label: "Thứ 4" },
-    { key: "Thursday", label: "Thứ 5" },
-    { key: "Friday", label: "Thứ 6" },
-    { key: "Saturday", label: "Thứ 7" },
-    { key: "Sunday", label: "Chủ nhật" },
-  ];
+  // ✅ Handler cho working days
+  const handleWorkingDayChange = (index: number) => {
+    setWorkingDays(days => days.map((day, i) => 
+      i === index ? { ...day, selected: !day.selected } : day
+    ));
+  };
+
+  // ✅ Handler cho thay đổi thời gian
+  const handleTimeChange = (index: number, field: 'startTime' | 'endTime', value: string) => {
+    setWorkingDays(days => days.map((day, i) => 
+      i === index ? { ...day, [field]: value } : day
+    ));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user?.id) return;
+
+    // ✅ Format working_day array để gửi lên API
+    const formattedWorkingDays = workingDays
+      .filter(day => day.selected)
+      .map(day => `${day.day} (${day.en}): ${day.startTime} - ${day.endTime}`);
 
     try {
       await dispatch(
@@ -83,7 +139,8 @@ const ShopInfo: React.FC = () => {
           name: formData.name,
           description: formData.description,
           status: currentShop?.status ?? true,
-          working_day: formData.working_day,
+          working_day: formattedWorkingDays,
+          phone: formData.phone, // ✅ Thêm phone vào request
         })
       ).unwrap();
 
@@ -92,15 +149,6 @@ const ShopInfo: React.FC = () => {
     } catch (error) {
       console.error("Update shop failed:", error);
     }
-  };
-
-  const toggleWorkingDay = (day: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      working_day: prev.working_day.includes(day)
-        ? prev.working_day.filter((d) => d !== day)
-        : [...prev.working_day, day],
-    }));
   };
 
   if (loadingLogin || shopLoading) {
@@ -155,6 +203,23 @@ const ShopInfo: React.FC = () => {
                 className="w-full border border-gray-300 rounded-lg px-4 py-3 bg-gray-100 text-gray-500 text-lg"
               />
             </div>
+            
+            {/* ✅ Thêm trường số điện thoại */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-3">
+                Số điện thoại
+              </label>
+              <input
+                type="tel"
+                value={formData.phone}
+                onChange={(e) =>
+                  setFormData({ ...formData, phone: e.target.value })
+                }
+                className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 text-lg"
+                placeholder="Số điện thoại liên hệ"
+                disabled={shopUpdating}
+              />
+            </div>
           </div>
 
           <div>
@@ -174,31 +239,58 @@ const ShopInfo: React.FC = () => {
           </div>
         </div>
 
-        {/* ✅ Ngày làm việc */}
+        {/* ✅ Ngày và giờ làm việc - UI được cập nhật */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-4">
             <Clock className="w-5 h-5 inline mr-2" />
-            Ngày làm việc
+            Ngày và giờ làm việc
           </label>
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
-            {workingDaysOptions.map(({ key, label }) => (
-              <label
-                key={key}
-                className={`flex items-center justify-center p-3 border-2 rounded-lg cursor-pointer transition-all ${
-                  formData.working_day.includes(key)
-                    ? "border-teal-500 bg-teal-50 text-teal-700"
-                    : "border-gray-300 bg-white text-gray-700 hover:border-teal-300"
-                }`}
-              >
-                <input
-                  type="checkbox"
-                  checked={formData.working_day.includes(key)}
-                  onChange={() => toggleWorkingDay(key)}
-                  className="sr-only"
-                  disabled={shopUpdating}
-                />
-                <span className="text-sm font-medium">{label}</span>
-              </label>
+          <div className="space-y-4">
+            {workingDays.map((day, index) => (
+              <div key={day.en} className="border rounded-lg p-4 transition-all hover:border-teal-200">
+                <div className="flex items-center justify-between">
+                  <label className="flex items-center space-x-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={day.selected}
+                      onChange={() => handleWorkingDayChange(index)}
+                      className="rounded border-gray-300 text-teal-500 focus:ring-teal-500"
+                      disabled={shopUpdating}
+                    />
+                    <span className="text-sm font-medium">{day.day}</span>
+                    <span className="text-xs text-gray-500">({day.en})</span>
+                  </label>
+                </div>
+                
+                {day.selected && (
+                  <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">
+                        Giờ bắt đầu
+                      </label>
+                      <input
+                        type="time"
+                        value={day.startTime}
+                        onChange={(e) => handleTimeChange(index, 'startTime', e.target.value)}
+                        className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-teal-500 focus:border-teal-500"
+                        disabled={shopUpdating}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">
+                        Giờ kết thúc
+                      </label>
+                      <input
+                        type="time"
+                        value={day.endTime}
+                        onChange={(e) => handleTimeChange(index, 'endTime', e.target.value)}
+                        className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-teal-500 focus:border-teal-500"
+                        disabled={shopUpdating}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
             ))}
           </div>
         </div>
