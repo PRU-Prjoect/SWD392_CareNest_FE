@@ -39,7 +39,8 @@ export interface ServiceData {
   shop_id: string;
   description: string;
   discount_percent: number;
-  price: number;
+  price?: number; // Optional để xử lý trường hợp có thể không có
+  Price?: number; // Thêm trường Price với P viết hoa từ API
   limit_per_hour: number;
   duration_type: number;
   star: number;
@@ -157,8 +158,20 @@ export const getAllServices = createAsyncThunk<
       });
     }
 
+    // ✅ Chuẩn hóa dữ liệu để đảm bảo luôn có trường price với chữ p viết thường
+    const normalizedData = response.data.map(service => {
+      // Nếu có trường Price với P viết hoa nhưng không có trường price
+      if (service.Price !== undefined && service.price === undefined) {
+        return {
+          ...service,
+          price: service.Price // Sao chép giá trị từ Price sang price
+        };
+      }
+      return service;
+    });
+
     return {
-      data: response.data,
+      data: normalizedData,
     };
   } catch (err: any) {
     console.error("❌ Get All Services Error:", err.response?.data);
@@ -218,8 +231,17 @@ export const getServiceById = createAsyncThunk<
       });
     }
 
+    // ✅ Chuẩn hóa dữ liệu để đảm bảo luôn có trường price với chữ p viết thường
+    let serviceData = response.data;
+    if (serviceData.Price !== undefined && serviceData.price === undefined) {
+      serviceData = {
+        ...serviceData,
+        price: serviceData.Price // Sao chép giá trị từ Price sang price
+      };
+    }
+
     return {
-      data: response.data,
+      data: serviceData,
     };
   } catch (err: any) {
     console.error("❌ Get Service By ID Error:", err.response?.data);
@@ -264,9 +286,27 @@ export const createService = createAsyncThunk<
   { rejectValue: ErrorResponse }
 >("service/create", async (data, { rejectWithValue }) => {
   try {
-    const response = await api.post("Service", data, {
+    // Sử dụng FormData thay vì JSON object
+    const formData = new FormData();
+    
+    // Thêm các trường vào FormData với đúng tên như API endpoint yêu cầu
+    formData.append('id', data.id);
+    formData.append('name', data.name);
+    formData.append('is_active', String(data.is_active));
+    formData.append('shop_id', data.shop_id);
+    formData.append('description', data.description);
+    formData.append('discount_percent', String(data.discount_percent));
+    formData.append('Price', String(data.price)); // Sử dụng Price với P viết hoa
+    formData.append('limit_per_hour', String(data.limit_per_hour));
+    formData.append('duration_type', String(data.duration_type));
+    formData.append('Star', String(data.star)); // Sử dụng Star với S viết hoa
+    formData.append('purchases', String(data.purchases));
+    formData.append('service_type_id', data.service_type_id);
+    formData.append('img', ''); // Thêm trường img rỗng như trong curl request
+
+    const response = await api.post("Service", formData, {
       headers: {
-        "Content-Type": "application/json",
+        "Content-Type": "multipart/form-data", // Thay đổi Content-Type
         accept: "*/*",
       },
     });

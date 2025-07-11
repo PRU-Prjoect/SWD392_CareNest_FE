@@ -23,7 +23,7 @@ export const getCurrentToken = (): string | null => {
 
 // ✅ Create axios instance
 const api = axios.create({
-  baseURL: "https://carenest-api.lighttail.com/api/",
+  baseURL: "http://localhost:8080/api/",
   timeout: 10000,
   headers: {
     "Content-Type": "application/json",
