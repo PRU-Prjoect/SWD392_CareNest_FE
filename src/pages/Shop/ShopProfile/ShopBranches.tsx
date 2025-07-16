@@ -8,6 +8,8 @@ import {
   updateSubAddress,
   deleteSubAddress,
 } from "@/store/slices/subAddressSlice";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 interface SubAddress {
   id: string;
@@ -16,6 +18,13 @@ interface SubAddress {
   phone: string | number;
   address_name: string;
   is_default: boolean;
+}
+
+// Define a type for API errors
+interface ApiError {
+  message?: string;
+  code?: number;
+  [key: string]: unknown;
 }
 
 const ShopBranches: React.FC = () => {
@@ -58,9 +67,16 @@ const ShopBranches: React.FC = () => {
         })
       ).unwrap();
 
+      toast.success("Thêm chi nhánh thành công!");
       dispatch(searchSubAddresses({ shopId: user.id }));
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Create branch failed:", error);
+      const err = error as ApiError;
+      if (err?.message?.includes("entity changes") || err?.message?.includes("saving")) {
+        toast.error("Không thể tạo chi nhánh có cùng địa chỉ với một chi nhánh đã tồn tại!");
+      } else {
+        toast.error(err?.message || "Không thể tạo chi nhánh có cùng địa chỉ với một chi nhánh đã tồn tại!");
+      }
     }
   };
 
@@ -82,9 +98,16 @@ const ShopBranches: React.FC = () => {
         })
       ).unwrap();
 
+      toast.success("Cập nhật chi nhánh thành công!");
       dispatch(searchSubAddresses({ shopId: user.id }));
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Update branch failed:", error);
+      const err = error as ApiError;
+      if (err?.message?.includes("entity changes") || err?.message?.includes("saving")) {
+        toast.error("Không thể tạo chi nhánh có cùng địa chỉ với một chi nhánh đã tồn tại!");
+      } else {
+        toast.error(err?.message || "Cập nhật chi nhánh thất bại");
+      }
     }
   };
 
@@ -93,11 +116,14 @@ const ShopBranches: React.FC = () => {
 
     try {
       await dispatch(deleteSubAddress(branchId)).unwrap();
+      toast.success("Xóa chi nhánh thành công!");
       if (user?.id) {
         dispatch(searchSubAddresses({ shopId: user.id }));
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Delete branch failed:", error);
+      const err = error as ApiError;
+      toast.error(err?.message || "Xóa chi nhánh thất bại");
     }
   };
 
@@ -114,6 +140,17 @@ const ShopBranches: React.FC = () => {
 
   return (
     <div className="p-8">
+      <ToastContainer 
+        position="top-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+      />
       <div className="space-y-6">
         {/* ✅ Hiển thị error nếu có */}
         {subAddressError && (
