@@ -1,13 +1,11 @@
-import { useEffect, useState } from "react";
-import { Store, Home } from "lucide-react";
-import { useNavigate, useLocation } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
-import type { AppDispatch, RootState } from "@/store/store";
-import {
-  registerShop,
-  resetRegisterShopState,
-} from "@/store/slices/registerShopSlice";
-import { toast } from "react-toastify";
+import React, { useState, useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { toast } from 'react-toastify';
+import { Home, Store } from 'lucide-react';
+import { registerShop, resetRegisterShopState } from '@/store/slices/registerShopSlice';
+import type { AppDispatch, RootState } from '@/store/store';
+import { handleContextualError } from '@/utils/errorHandling';
 
 // Danh sách các ngày làm việc
 const workingDayOptions = [
@@ -92,7 +90,7 @@ export default function RegisterShopPage() {
   // Xử lý khi có lỗi từ server
   useEffect(() => {
     if (error) {
-      toast.error(error.message);
+      handleContextualError(error, "create");
     }
   }, [error]);
 
@@ -186,9 +184,9 @@ export default function RegisterShopPage() {
       } else if (registerShop.rejected.match(result)) {
         console.error("❌ Tạo shop profile thất bại:", result.payload);
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("❌ Unexpected error:", error);
-      toast.error("Có lỗi không mong muốn xảy ra");
+      handleContextualError(error, "create");
     }
   };
 

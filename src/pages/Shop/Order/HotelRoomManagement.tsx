@@ -17,6 +17,7 @@ import {
 import { searchSubAddresses } from '../../../store/slices/subAddressSlice';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { handleHotelError } from '../../../utils/errorHandling';
 
 // Định nghĩa interfaces dựa trên cấu trúc trong slice
 interface Room {
@@ -114,11 +115,8 @@ const HotelManagement: React.FC = () => {
   // Check for errors in the Redux state
   useEffect(() => {
     // Check for specific error message pattern and show toast
-    if (hotelsError?.message?.includes("entity changes") || 
-        hotelsError?.message?.includes("saving")) {
-      toast.error("Không thể tạo khách sạn có cùng địa chỉ với một khách sạn đã tồn tại!");
-    } else if (hotelsError) {
-      toast.error(hotelsError.message);
+    if (hotelsError) {
+      handleHotelError(hotelsError);
     }
   }, [hotelsError]);
 
@@ -393,12 +391,7 @@ const HotelManagement: React.FC = () => {
                 toast.success("Cập nhật khách sạn thành công!");
               })
               .catch((error) => {
-                if (error?.message?.includes("entity changes") || 
-                    error?.message?.includes("saving")) {
-                  toast.error("Không thể tạo khách sạn có cùng địa chỉ với một khách sạn đã tồn tại!");
-                } else {
-                  toast.error(error.message || "Cập nhật khách sạn thất bại");
-                }
+                handleHotelError(error);
               });
             } else {
               // Add new hotel
@@ -409,12 +402,7 @@ const HotelManagement: React.FC = () => {
                 toast.success("Tạo khách sạn thành công!");
               })
               .catch((error) => {
-                if (error?.message?.includes("entity changes") || 
-                    error?.message?.includes("saving")) {
-                  toast.error("Không thể tạo khách sạn có cùng địa chỉ với một khách sạn đã tồn tại!");
-                } else {
-                  toast.error(error.message || "Không thể tạo khách sạn có cùng địa chỉ với một khách sạn đã tồn tại!");
-                }
+                handleHotelError(error);
               });
             }
           }}

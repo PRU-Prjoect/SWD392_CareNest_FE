@@ -10,6 +10,7 @@ import {
 } from "@/store/slices/subAddressSlice";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { handleBranchError, handleContextualError } from "@/utils/errorHandling";
 
 interface SubAddress {
   id: string;
@@ -18,13 +19,6 @@ interface SubAddress {
   phone: string | number;
   address_name: string;
   is_default: boolean;
-}
-
-// Define a type for API errors
-interface ApiError {
-  message?: string;
-  code?: number;
-  [key: string]: unknown;
 }
 
 const ShopBranches: React.FC = () => {
@@ -71,12 +65,7 @@ const ShopBranches: React.FC = () => {
       dispatch(searchSubAddresses({ shopId: user.id }));
     } catch (error: unknown) {
       console.error("Create branch failed:", error);
-      const err = error as ApiError;
-      if (err?.message?.includes("entity changes") || err?.message?.includes("saving")) {
-        toast.error("Không thể tạo chi nhánh có cùng địa chỉ với một chi nhánh đã tồn tại!");
-      } else {
-        toast.error(err?.message || "Không thể tạo chi nhánh có cùng địa chỉ với một chi nhánh đã tồn tại!");
-      }
+      handleBranchError(error);
     }
   };
 
@@ -102,12 +91,7 @@ const ShopBranches: React.FC = () => {
       dispatch(searchSubAddresses({ shopId: user.id }));
     } catch (error: unknown) {
       console.error("Update branch failed:", error);
-      const err = error as ApiError;
-      if (err?.message?.includes("entity changes") || err?.message?.includes("saving")) {
-        toast.error("Không thể tạo chi nhánh có cùng địa chỉ với một chi nhánh đã tồn tại!");
-      } else {
-        toast.error(err?.message || "Cập nhật chi nhánh thất bại");
-      }
+      handleBranchError(error);
     }
   };
 
@@ -122,8 +106,7 @@ const ShopBranches: React.FC = () => {
       }
     } catch (error: unknown) {
       console.error("Delete branch failed:", error);
-      const err = error as ApiError;
-      toast.error(err?.message || "Xóa chi nhánh thất bại");
+      handleContextualError(error, "delete");
     }
   };
 

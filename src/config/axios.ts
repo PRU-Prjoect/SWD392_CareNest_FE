@@ -31,6 +31,94 @@ const api = axios.create({
   },
 });
 
+// ✅ Hàm tạo thông báo lỗi người dùng từ lỗi kỹ thuật
+export const getUserFriendlyErrorMessage = (error: unknown): string => {
+  // Nếu không có error object
+  if (!error) {
+    return "Đã xảy ra lỗi, vui lòng thử lại";
+  }
+
+  // Chuyển đổi error sang dạng có thể truy cập thuộc tính
+  const err = error as {
+    message?: string;
+    code?: string;
+    response?: {
+      status?: number;
+      data?: {
+        message?: string;
+      }
+    }
+  };
+
+  // Xử lý trường hợp message từ backend có pattern cụ thể
+  const errorMessage = err.message || (err.response?.data?.message) || "";
+  
+  // Xử lý các trường hợp lỗi cụ thể
+  if (errorMessage.includes("entity changes") || errorMessage.includes("saving")) {
+    return "Không thể tạo mục mới do trùng lặp dữ liệu. Vui lòng kiểm tra lại thông tin.";
+  }
+  
+  if (errorMessage.includes("password") && errorMessage.includes("incorrect")) {
+    return "Mật khẩu không chính xác";
+  }
+
+  if (errorMessage.includes("Email") && errorMessage.includes("already in use")) {
+    return "Email này đã được sử dụng";
+  }
+  
+  if (errorMessage.includes("validation")) {
+    return "Thông tin không hợp lệ. Vui lòng kiểm tra lại dữ liệu nhập vào.";
+  }
+
+  if (errorMessage.includes("Permission denied") || errorMessage.includes("not authorized")) {
+    return "Bạn không có quyền thực hiện hành động này";
+  }
+
+  if (errorMessage.includes("not found") || errorMessage.includes("404")) {
+    return "Không tìm thấy dữ liệu yêu cầu";
+  }
+
+  if (errorMessage.includes("timeout") || errorMessage.includes("timed out")) {
+    return "Kết nối mạng quá chậm, vui lòng thử lại sau";
+  }
+  
+  // Xử lý status code từ response
+  if (err.response) {
+    switch (err.response.status) {
+      case 400:
+        return "Yêu cầu không hợp lệ. Vui lòng kiểm tra lại dữ liệu.";
+      case 401:
+        return "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.";
+      case 403:
+        return "Bạn không có quyền thực hiện hành động này.";
+      case 404:
+        return "Không tìm thấy dữ liệu yêu cầu.";
+      case 409:
+        return "Dữ liệu đã tồn tại hoặc xung đột.";
+      case 422:
+        return "Dữ liệu không hợp lệ.";
+      case 429:
+        return "Quá nhiều yêu cầu. Vui lòng thử lại sau.";
+      case 500:
+      case 502:
+      case 503:
+      case 504:
+        return "Hệ thống đang gặp sự cố. Vui lòng thử lại sau.";
+    }
+  }
+
+  // Xử lý các lỗi mạng
+  if (err.code === "ECONNABORTED") {
+    return "Kết nối quá chậm. Vui lòng thử lại sau.";
+  }
+  if (err.code === "ERR_NETWORK") {
+    return "Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng.";
+  }
+
+  // Trả về message mặc định nếu không nhận diện được lỗi
+  return "Đã xảy ra lỗi, vui lòng thử lại";
+};
+
 // ✅ Request interceptor - Tự động thêm token
 const handleRequest = (config: InternalAxiosRequestConfig) => {
   const token = getCurrentToken();
@@ -144,7 +232,7 @@ const handleResponseError = (error: AxiosError) => {
       break;
 
     case 404:
-      toast.error("Không tìm thấy tài nguyên yêu cầu!");
+      toast.error("Không tìm thấy dữ liệu yêu cầu!");
       break;
 
     case 409:
@@ -163,23 +251,22 @@ const handleResponseError = (error: AxiosError) => {
     case 502:
     case 503:
     case 504:
-      toast.error("Lỗi mạng. Vui lòng thử lại!");
+      toast.error("Hệ thống đang gặp sự cố. Vui lòng thử lại sau!");
       break;
 
     default:
       // ✅ Handle network errors
       if (!error.response) {
         if (error.code === "ECONNABORTED") {
-          toast.error("Timeout! Kết nối quá chậm.");
+          toast.error("Kết nối quá chậm. Vui lòng thử lại sau.");
         } else if (error.code === "ERR_NETWORK") {
-          toast.error("Lỗi mạng. Kiểm tra kết nối internet!");
+          toast.error("Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng!");
         } else {
           toast.error("Không thể kết nối đến máy chủ!");
         }
       } else {
-        toast.error(
-          `Lỗi ${status}: ${error.response?.statusText || "Unknown error"}`
-        );
+        // Sử dụng hàm getUserFriendlyErrorMessage để hiển thị lỗi thân thiện hơn
+        toast.error(getUserFriendlyErrorMessage(error));
       }
       break;
   }
