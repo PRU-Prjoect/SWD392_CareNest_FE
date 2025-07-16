@@ -3,19 +3,18 @@ import { useDispatch, useSelector } from 'react-redux';
 import type { AppDispatch, RootState } from '../../../store/store';
 import {
   searchHotels,
-  getHotelById,
   createHotel,
   updateHotel,
   deleteHotel,
-  getHotelReport
+  
 } from '../../../store/slices/hotelSlice';
 import {
   getRooms,
-  getRoomById,
   createRoom,
   updateRoom,
   deleteRoom
 } from '../../../store/slices/roomSlice';
+import { searchSubAddresses } from '../../../store/slices/subAddressSlice';
 
 // Định nghĩa interfaces dựa trên cấu trúc trong slice
 interface Room {
@@ -600,6 +599,7 @@ interface HotelModalProps {
 }
 
 const HotelModal: React.FC<HotelModalProps> = ({ hotel, shopId, isOpen, onClose, onSave }) => {
+  const dispatch = useDispatch<AppDispatch>();
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -609,6 +609,16 @@ const HotelModal: React.FC<HotelModalProps> = ({ hotel, shopId, isOpen, onClose,
     sub_address_id: '1', // Giá trị mặc định, có thể cần điều chỉnh
     is_active: true,
   });
+  
+  // Get subAddresses from Redux store
+  const { subAddresses, searching: loadingAddresses } = useSelector((state: RootState) => state.subAddress);
+
+  // Fetch sub-addresses when component mounts
+  useEffect(() => {
+    if (shopId) {
+      dispatch(searchSubAddresses({ shopId }));
+    }
+  }, [dispatch, shopId]);
 
   useEffect(() => {
     if (hotel) {
@@ -629,11 +639,11 @@ const HotelModal: React.FC<HotelModalProps> = ({ hotel, shopId, isOpen, onClose,
         total_room: 0,
         available_room: 0,
         shop_id: shopId,
-        sub_address_id: '1',
+        sub_address_id: subAddresses.length > 0 ? subAddresses[0].id : '1',
         is_active: true,
       });
     }
-  }, [hotel, shopId, isOpen]);
+  }, [hotel, shopId, isOpen, subAddresses]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -675,6 +685,33 @@ const HotelModal: React.FC<HotelModalProps> = ({ hotel, shopId, isOpen, onClose,
               placeholder="Mô tả về khách sạn thú cưng..."
               rows={3}
             />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Địa chỉ *
+            </label>
+            {loadingAddresses ? (
+              <div className="flex items-center space-x-2">
+                <div className="w-5 h-5 border-t-2 border-teal-500 border-solid rounded-full animate-spin"></div>
+                <span className="text-sm text-gray-500">Đang tải...</span>
+              </div>
+            ) : (
+              <select
+                value={formData.sub_address_id}
+                onChange={(e) => setFormData({...formData, sub_address_id: e.target.value})}
+                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                required
+              >
+                {subAddresses.length > 0 ? (
+                  subAddresses.map(address => (
+                    <option key={address.id} value={address.id}>{address.address_name}</option>
+                  ))
+                ) : (
+                  <option value="">Không có địa chỉ nào</option>
+                )}
+              </select>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-4">
