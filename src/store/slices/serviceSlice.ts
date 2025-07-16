@@ -2,6 +2,12 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
 import api from "@/config/axios";
 
+// Define a type for API error responses
+interface ApiErrorResponse {
+  status: number;
+  data: Record<string, unknown>;
+}
+
 interface ServiceState {
   loading: boolean;
   updating: boolean;
@@ -39,13 +45,16 @@ export interface ServiceData {
   shop_id: string;
   description: string;
   discount_percent: number;
-  price?: number; // Optional để xử lý trường hợp có thể không có
-  Price?: number; // Thêm trường Price với P viết hoa từ API
+  price?: number; 
+  Price?: number;
   limit_per_hour: number;
   duration_type: number;
   star: number;
   purchases: number;
   service_type_id: string;
+  img_url?: string; // URL ảnh từ Cloudinary
+  img_url_id?: string; // ID ảnh từ Cloudinary
+  img?: null; // Trường img từ GET response
 }
 
 // Request interfaces
@@ -55,7 +64,7 @@ interface SearchServiceRequest {
   sortBy?: string;
   limit?: number;
   offset?: number;
-  shopId?: string; // ✅ Thêm trường shopId
+  shopId?: string; 
 }
 
 interface CreateServiceRequest {
@@ -71,6 +80,7 @@ interface CreateServiceRequest {
   star: number;
   purchases: number;
   service_type_id: string;
+  img?: File | null; // Cho phép upload file
 }
 
 interface UpdateServiceRequest {
@@ -86,6 +96,7 @@ interface UpdateServiceRequest {
   star: number;
   purchases: number;
   service_type_id: string;
+  img?: File | null; // Cho phép upload file
 }
 
 // Response interfaces
@@ -137,7 +148,6 @@ export const getAllServices = createAsyncThunk<
     if (params?.sortBy) queryParams.append("sortBy", params.sortBy);
     if (params?.limit) queryParams.append("limit", params.limit.toString());
     if (params?.offset) queryParams.append("offset", params.offset.toString());
-    if (params?.shopId) queryParams.append("shopId", params.shopId); // ✅ Thêm shopId vào query params
 
     const queryString = queryParams.toString();
     const endpoint = queryString ? `Service?${queryString}` : "Service";
@@ -173,11 +183,12 @@ export const getAllServices = createAsyncThunk<
     return {
       data: normalizedData,
     };
-  } catch (err: any) {
-    console.error("❌ Get All Services Error:", err.response?.data);
-    if (err.response) {
-      const status = err.response.status;
-      const errorData = err.response.data;
+  } catch (err: unknown) {
+    const error = err as { response?: { status: number; data: any }; message?: string };
+    console.error("❌ Get All Services Error:", error.response?.data);
+    if (error.response) {
+      const status = error.response.status;
+      const errorData = error.response.data;
       switch (status) {
         case 401:
           return rejectWithValue({
@@ -204,7 +215,7 @@ export const getAllServices = createAsyncThunk<
 
     return rejectWithValue({
       error: 1,
-      message: err.message || "Không thể kết nối đến máy chủ",
+      message: error.message || "Không thể kết nối đến máy chủ",
     });
   }
 });
@@ -243,11 +254,12 @@ export const getServiceById = createAsyncThunk<
     return {
       data: serviceData,
     };
-  } catch (err: any) {
-    console.error("❌ Get Service By ID Error:", err.response?.data);
-    if (err.response) {
-      const status = err.response.status;
-      const errorData = err.response.data;
+  } catch (err: unknown) {
+    const error = err as { response?: { status: number; data: any }; message?: string };
+    console.error("❌ Get Service By ID Error:", error.response?.data);
+    if (error.response) {
+      const status = error.response.status;
+      const errorData = error.response.data;
       switch (status) {
         case 401:
           return rejectWithValue({
@@ -274,7 +286,7 @@ export const getServiceById = createAsyncThunk<
 
     return rejectWithValue({
       error: 1,
-      message: err.message || "Không thể kết nối đến máy chủ",
+      message: error.message || "Không thể kết nối đến máy chủ",
     });
   }
 });
@@ -302,7 +314,13 @@ export const createService = createAsyncThunk<
     formData.append('Star', String(data.star)); // Sử dụng Star với S viết hoa
     formData.append('purchases', String(data.purchases));
     formData.append('service_type_id', data.service_type_id);
-    formData.append('img', ''); // Thêm trường img rỗng như trong curl request
+    
+    // Nếu có ảnh, append file, nếu không thì để trống
+    if (data.img) {
+      formData.append('img', data.img);
+    } else {
+      formData.append('img', '');
+    }
 
     const response = await api.post("Service", formData, {
       headers: {
@@ -316,11 +334,12 @@ export const createService = createAsyncThunk<
     return {
       message: response.data || "Service created successfully",
     };
-  } catch (err: any) {
-    console.error("❌ Create Service Error:", err.response?.data);
-    if (err.response) {
-      const status = err.response.status;
-      const errorData = err.response.data;
+  } catch (err: unknown) {
+    const error = err as { response?: { status: number; data: any }; message?: string };
+    console.error("❌ Create Service Error:", error.response?.data);
+    if (error.response) {
+      const status = error.response.status;
+      const errorData = error.response.data;
       switch (status) {
         case 401:
           return rejectWithValue({
@@ -347,7 +366,7 @@ export const createService = createAsyncThunk<
 
     return rejectWithValue({
       error: 1,
-      message: err.message || "Không thể kết nối đến máy chủ",
+      message: error.message || "Không thể kết nối đến máy chủ",
     });
   }
 });
@@ -359,9 +378,33 @@ export const updateService = createAsyncThunk<
   { rejectValue: ErrorResponse }
 >("service/update", async (data, { rejectWithValue }) => {
   try {
-    const response = await api.put("Service", data, {
+    // Sử dụng FormData thay vì JSON object
+    const formData = new FormData();
+    
+    // Thêm các trường vào FormData với đúng tên như API endpoint yêu cầu
+    formData.append('id', data.id);
+    formData.append('name', data.name);
+    formData.append('is_active', String(data.is_active));
+    formData.append('shop_id', data.shop_id);
+    formData.append('description', data.description);
+    formData.append('discount_percent', String(data.discount_percent));
+    formData.append('Price', String(data.price)); // Sử dụng Price với P viết hoa
+    formData.append('limit_per_hour', String(data.limit_per_hour));
+    formData.append('duration_type', String(data.duration_type));
+    formData.append('Star', String(data.star)); // Sử dụng Star với S viết hoa
+    formData.append('purchases', String(data.purchases));
+    formData.append('service_type_id', data.service_type_id);
+    
+    // Nếu có ảnh, append file, nếu không thì để trống
+    if (data.img) {
+      formData.append('img', data.img);
+    } else {
+      formData.append('img', '');
+    }
+
+    const response = await api.put("Service", formData, {
       headers: {
-        "Content-Type": "application/json",
+        "Content-Type": "multipart/form-data", // Thay đổi Content-Type
         accept: "*/*",
       },
     });
@@ -371,11 +414,12 @@ export const updateService = createAsyncThunk<
     return {
       message: response.data || "Service updated successfully",
     };
-  } catch (err: any) {
-    console.error("❌ Update Service Error:", err.response?.data);
-    if (err.response) {
-      const status = err.response.status;
-      const errorData = err.response.data;
+  } catch (err: unknown) {
+    const error = err as { response?: { status: number; data: any }; message?: string };
+    console.error("❌ Update Service Error:", error.response?.data);
+    if (error.response) {
+      const status = error.response.status;
+      const errorData = error.response.data;
       switch (status) {
         case 401:
           return rejectWithValue({
@@ -407,7 +451,7 @@ export const updateService = createAsyncThunk<
 
     return rejectWithValue({
       error: 1,
-      message: err.message || "Không thể kết nối đến máy chủ",
+      message: error.message || "Không thể kết nối đến máy chủ",
     });
   }
 });
@@ -430,11 +474,12 @@ export const deleteService = createAsyncThunk<
     return {
       message: response.data || "Service deleted successfully",
     };
-  } catch (err: any) {
-    console.error("❌ Delete Service Error:", err.response?.data);
-    if (err.response) {
-      const status = err.response.status;
-      const errorData = err.response.data;
+  } catch (err: unknown) {
+    const error = err as { response?: { status: number; data: any }; message?: string };
+    console.error("❌ Delete Service Error:", error.response?.data);
+    if (error.response) {
+      const status = error.response.status;
+      const errorData = error.response.data;
       switch (status) {
         case 401:
           return rejectWithValue({
@@ -461,7 +506,7 @@ export const deleteService = createAsyncThunk<
 
     return rejectWithValue({
       error: 1,
-      message: err.message || "Không thể kết nối đến máy chủ",
+      message: error.message || "Không thể kết nối đến máy chủ",
     });
   }
 });
