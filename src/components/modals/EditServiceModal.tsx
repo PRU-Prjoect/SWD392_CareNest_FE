@@ -1,10 +1,11 @@
 // components/modals/EditServiceModal.tsx
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import type { AppDispatch, RootState } from "@/store/store";
 import { updateService, clearUpdateError } from "@/store/slices/serviceSlice";
 import { searchServiceTypes } from "@/store/slices/serviceTypeShopSlice";
 import { toast } from "react-toastify";
+import { Camera, Upload } from "lucide-react";
 
 interface ServiceData {
   id: string;
@@ -19,6 +20,8 @@ interface ServiceData {
   star: number;
   purchases: number;
   service_type_id: string;
+  img_url?: string;
+  img_url_id?: string;
 }
 
 interface EditServiceModalProps {
@@ -57,11 +60,23 @@ const EditServiceModal: React.FC<EditServiceModalProps> = ({
     star: 0,
     purchases: 0,
     service_type_id: "",
+    img_url: "",
+    img_url_id: "",
   });
+
+  // ✅ States cho upload image
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [showImageUpload, setShowImageUpload] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (service) {
-      setFormData(service);
+      setFormData({
+        ...service,
+        img_url: service.img_url || "",
+        img_url_id: service.img_url_id || "",
+      });
     }
   }, [service]);
 
@@ -71,6 +86,53 @@ const EditServiceModal: React.FC<EditServiceModalProps> = ({
       dispatch(searchServiceTypes());
     }
   }, [dispatch, isOpen]);
+
+  // ✅ Handle file selection
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/gif"];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error("Chỉ chấp nhận file ảnh (JPEG, PNG, GIF)");
+      return;
+    }
+
+    // Validate file size (5MB)
+    const maxSize = 5 * 1024 * 1024;
+    if (file.size > maxSize) {
+      toast.error("Kích thước file không được vượt quá 5MB");
+      return;
+    }
+
+    setSelectedFile(file);
+
+    // Create preview URL
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setPreviewUrl(e.target?.result as string);
+    };
+    reader.readAsDataURL(file);
+    setShowImageUpload(true);
+  };
+
+  // ✅ Cancel image upload
+  const handleCancelImageUpload = () => {
+    setShowImageUpload(false);
+    setSelectedFile(null);
+    setPreviewUrl(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  // ✅ Get current avatar URL (from preview or service)
+  const getCurrentImageUrl = () => {
+    if (previewUrl) return previewUrl;
+    if (formData.img_url) return formData.img_url;
+    return null;
+  };
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -121,7 +183,8 @@ const EditServiceModal: React.FC<EditServiceModalProps> = ({
       // Override the shop_id with the provided shopId or fall back to user.id
       const dataToUpdate = {
         ...formData,
-        shop_id: effectiveShopId
+        shop_id: effectiveShopId,
+        img: selectedFile // Thêm file ảnh nếu có
       };
       
       const result = await dispatch(updateService(dataToUpdate));
@@ -170,6 +233,91 @@ const EditServiceModal: React.FC<EditServiceModalProps> = ({
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* ✅ Image upload section */}
+          <div className="flex flex-col items-center mb-4">
+            <div className="relative">
+              <div className="w-32 h-32 bg-gray-200 rounded-lg overflow-hidden flex items-center justify-center">
+                {getCurrentImageUrl() ? (
+                  <img
+                    src={getCurrentImageUrl()!}
+                    alt="Service image"
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.display = "none";
+                    }}
+                  />
+                ) : (
+                  <div className="text-gray-400 flex flex-col items-center">
+                    <Camera size={32} />
+                    <span className="text-xs mt-1">Chưa có ảnh</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Camera button overlay */}
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="absolute bottom-0 right-0 w-8 h-8 bg-[#f5b427] rounded-full flex items-center justify-center text-white hover:bg-[#c48909] transition-colors duration-200 shadow-lg"
+                title="Đổi ảnh dịch vụ"
+              >
+                <Camera className="w-4 h-4" />
+              </button>
+
+              {/* Hidden file input */}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleFileSelect}
+                className="hidden"
+              />
+            </div>
+            <p className="text-sm text-gray-500 mt-2">
+              Nhấn vào biểu tượng camera để thay đổi ảnh
+            </p>
+          </div>
+
+          {/* ✅ Image preview and upload controls */}
+          {showImageUpload && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+              <h3 className="text-sm font-medium text-blue-900 mb-3 flex items-center gap-2">
+                <Upload className="w-4 h-4" />
+                Xem trước ảnh dịch vụ mới
+              </h3>
+              <div className="flex items-center gap-4">
+                {previewUrl && (
+                  <div className="w-16 h-16 rounded-lg overflow-hidden border-2 border-white shadow-md">
+                    <img
+                      src={previewUrl}
+                      alt="Preview"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                )}
+                <div className="flex-1">
+                  <p className="text-sm text-blue-700">
+                    <strong>{selectedFile?.name}</strong>
+                  </p>
+                  <p className="text-xs text-blue-600">
+                    Kích thước:{" "}
+                    {selectedFile
+                      ? (selectedFile.size / 1024 / 1024).toFixed(2)
+                      : 0}{" "}
+                    MB
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleCancelImageUpload}
+                  className="px-3 py-1 text-sm text-gray-600 border border-gray-300 rounded hover:bg-gray-50 transition-colors duration-200"
+                >
+                  Hủy
+                </button>
+              </div>
+            </div>
+          )}
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Tên dịch vụ */}
             <div>

@@ -6,7 +6,9 @@ import {
   getAllServices,
   clearAllServiceErrors,
 } from "@/store/slices/serviceSlice";
+import type { ServiceData } from "@/store/slices/serviceSlice";
 import AddServiceModal from "@/components/modals/AddServiceModal";
+import EditServiceModal from "@/components/modals/EditServiceModal";
 
 const ServiceManagement = () => {
   const navigate = useNavigate();
@@ -22,6 +24,8 @@ const ServiceManagement = () => {
 
   // ✅ Local state cho filters và modal
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [selectedService, setSelectedService] = useState<ServiceData | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("");
 
@@ -68,6 +72,11 @@ const ServiceManagement = () => {
 
   const handleAddService = () => {
     setShowAddModal(true);
+  };
+
+  const handleEditService = (service: ServiceData) => {
+    setSelectedService(service);
+    setShowEditModal(true);
   };
 
   const handleViewDetail = (serviceId: string) => {
@@ -229,10 +238,59 @@ const ServiceManagement = () => {
               key={service.id}
               className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden"
             >
-              <div className="h-48 bg-gradient-to-r from-teal-100 to-blue-100 flex items-center justify-center">
-                <div className="text-center">
+              <div className="h-48 bg-gradient-to-r from-teal-100 to-blue-100 flex items-center justify-center relative">
+                {service.img_url ? (
+                  <img
+                    src={service.img_url}
+                    alt={service.name}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      // Fallback if image fails to load
+                      const target = e.target as HTMLImageElement;
+                      target.onerror = null;
+                      target.src = ""; // Clear src to prevent infinite loop
+                      target.parentElement!.classList.add("bg-gradient-to-r", "from-teal-100", "to-blue-100");
+                      target.style.display = "none";
+                      
+                      // Add fallback icon
+                      const iconDiv = document.createElement("div");
+                      iconDiv.className = "text-center";
+                      iconDiv.innerHTML = `
+                        <svg class="w-16 h-16 text-teal-600 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H9m0 0H5m0 0h2M7 7h10M7 11h4M7 15h10" />
+                        </svg>
+                        <p class="text-teal-600 font-medium">${service.name}</p>
+                      `;
+                      target.parentElement!.appendChild(iconDiv);
+                    }}
+                  />
+                ) : (
+                  <div className="text-center">
+                    <svg
+                      className="w-16 h-16 text-teal-600 mx-auto mb-2"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H9m0 0H5m0 0h2M7 7h10M7 11h4M7 15h10"
+                      />
+                    </svg>
+                    <p className="text-teal-600 font-medium">{service.name}</p>
+                  </div>
+                )}
+                
+                {/* Edit button overlay */}
+                <button
+                  onClick={() => handleEditService(service)}
+                  className="absolute top-2 right-2 w-8 h-8 bg-white/80 rounded-full flex items-center justify-center text-gray-700 hover:bg-white transition-colors duration-200 shadow-md"
+                  title="Chỉnh sửa dịch vụ"
+                >
                   <svg
-                    className="w-16 h-16 text-teal-600 mx-auto mb-2"
+                    className="w-4 h-4"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -241,11 +299,10 @@ const ServiceManagement = () => {
                       strokeLinecap="round"
                       strokeLinejoin="round"
                       strokeWidth={2}
-                      d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H9m0 0H5m0 0h2M7 7h10M7 11h4M7 15h10"
+                      d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
                     />
                   </svg>
-                  <p className="text-teal-600 font-medium">{service.name}</p>
-                </div>
+                </button>
               </div>
 
               {/* Service Info */}
@@ -271,7 +328,7 @@ const ServiceManagement = () => {
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-500">Giá:</span>
                     <span className="text-gray-800 font-medium">
-                      {service.discount_percent > 0 ? (
+                      {service.discount_percent > 0 && (service.price !== undefined) ? (
                         <>
                           <span className="line-through text-gray-400 mr-1">
                             {service.price.toLocaleString("vi-VN")} VNĐ
@@ -286,7 +343,7 @@ const ServiceManagement = () => {
                           </span>
                         </>
                       ) : (
-                        `${service.price.toLocaleString("vi-VN")} VNĐ`
+                        `${service.price?.toLocaleString("vi-VN") || 0} VNĐ`
                       )}
                     </span>
                   </div>
@@ -324,31 +381,52 @@ const ServiceManagement = () => {
                   )}
                 </div>
 
-                <button
-                  onClick={() => handleViewDetail(service.id)}
-                  className="w-full px-4 py-2 bg-teal-600 text-white text-sm rounded-lg hover:bg-teal-700 transition-colors flex items-center justify-center space-x-2"
-                >
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleEditService(service)}
+                    className="flex-1 px-3 py-2 bg-gray-100 text-gray-700 text-sm rounded-lg hover:bg-gray-200 transition-colors flex items-center justify-center space-x-1"
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                    />
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                    />
-                  </svg>
-                  <span>Xem chi tiết</span>
-                </button>
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+                      />
+                    </svg>
+                    <span>Chỉnh sửa</span>
+                  </button>
+                  <button
+                    onClick={() => handleViewDetail(service.id)}
+                    className="flex-1 px-3 py-2 bg-teal-600 text-white text-sm rounded-lg hover:bg-teal-700 transition-colors flex items-center justify-center space-x-1"
+                  >
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                      />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                      />
+                    </svg>
+                    <span>Chi tiết</span>
+                  </button>
+                </div>
               </div>
             </div>
           ))}
@@ -413,6 +491,24 @@ const ServiceManagement = () => {
       <AddServiceModal
         isOpen={showAddModal}
         onClose={() => setShowAddModal(false)}
+        shopId={user.id}
+      />
+
+      {/* ✅ Edit Service Modal */}
+      <EditServiceModal
+        isOpen={showEditModal}
+        onClose={() => {
+          setShowEditModal(false);
+          setSelectedService(null);
+          // Refresh service list after edit
+          if (user?.id) {
+            dispatch(getAllServices({ 
+              shopId: user.id,
+              sortBy: "createdAt" 
+            }));
+          }
+        }}
+        service={selectedService}
         shopId={user.id}
       />
     </div>
