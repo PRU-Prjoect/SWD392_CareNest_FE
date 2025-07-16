@@ -5,7 +5,7 @@ import api from "@/config/axios";
 // Define a type for API error responses
 interface ApiErrorResponse {
   status: number;
-  data: Record<string, unknown>;
+  data: Record<string, any>;
 }
 
 interface ServiceState {
@@ -45,16 +45,12 @@ export interface ServiceData {
   shop_id: string;
   description: string;
   discount_percent: number;
-  price?: number; 
-  Price?: number;
+  price: number;
   limit_per_hour: number;
   duration_type: number;
   star: number;
   purchases: number;
   service_type_id: string;
-  img_url?: string; // URL ảnh từ Cloudinary
-  img_url_id?: string; // ID ảnh từ Cloudinary
-  img?: null; // Trường img từ GET response
 }
 
 // Request interfaces
@@ -64,7 +60,7 @@ interface SearchServiceRequest {
   sortBy?: string;
   limit?: number;
   offset?: number;
-  shopId?: string; 
+  shopId?: string;
 }
 
 interface CreateServiceRequest {
@@ -80,7 +76,6 @@ interface CreateServiceRequest {
   star: number;
   purchases: number;
   service_type_id: string;
-  img?: File | null; // Cho phép upload file
 }
 
 interface UpdateServiceRequest {
@@ -96,7 +91,6 @@ interface UpdateServiceRequest {
   star: number;
   purchases: number;
   service_type_id: string;
-  img?: File | null; // Cho phép upload file
 }
 
 // Response interfaces
@@ -136,15 +130,14 @@ const initialState: ServiceState = {
 // ✅ 1. Get all services (with optional search parameters)
 export const getAllServices = createAsyncThunk<
   ServicesListResponse,
-  SearchServiceRequest | void , 
+  SearchServiceRequest | void,
   { rejectValue: ErrorResponse }
 >("service/getAll", async (params = {}, { rejectWithValue }) => {
   try {
     const queryParams = new URLSearchParams();
     if (params?.shopId) queryParams.append("shopId", params.shopId);
     if (params?.name) queryParams.append("name", params.name);
-    if (params?.serviceTypeId)
-      queryParams.append("serviceTypeId", params.serviceTypeId);
+    if (params?.serviceTypeId) queryParams.append("serviceTypeId", params.serviceTypeId);
     if (params?.sortBy) queryParams.append("sortBy", params.sortBy);
     if (params?.limit) queryParams.append("limit", params.limit.toString());
     if (params?.offset) queryParams.append("offset", params.offset.toString());
@@ -168,27 +161,17 @@ export const getAllServices = createAsyncThunk<
       });
     }
 
-    // ✅ Chuẩn hóa dữ liệu để đảm bảo luôn có trường price với chữ p viết thường
-    const normalizedData = response.data.map(service => {
-      // Nếu có trường Price với P viết hoa nhưng không có trường price
-      if (service.Price !== undefined && service.price === undefined) {
-        return {
-          ...service,
-          price: service.Price // Sao chép giá trị từ Price sang price
-        };
-      }
-      return service;
-    });
-
     return {
-      data: normalizedData,
+      data: response.data,
     };
   } catch (err: unknown) {
     const error = err as { response?: { status: number; data: any }; message?: string };
     console.error("❌ Get All Services Error:", error.response?.data);
+
     if (error.response) {
       const status = error.response.status;
       const errorData = error.response.data;
+
       switch (status) {
         case 401:
           return rejectWithValue({
@@ -223,7 +206,7 @@ export const getAllServices = createAsyncThunk<
 // ✅ 2. Get service by ID
 export const getServiceById = createAsyncThunk<
   ServiceResponse,
-  string, // service_id
+  string,
   { rejectValue: ErrorResponse }
 >("service/getById", async (serviceId, { rejectWithValue }) => {
   try {
@@ -242,24 +225,17 @@ export const getServiceById = createAsyncThunk<
       });
     }
 
-    // ✅ Chuẩn hóa dữ liệu để đảm bảo luôn có trường price với chữ p viết thường
-    let serviceData = response.data;
-    if (serviceData.Price !== undefined && serviceData.price === undefined) {
-      serviceData = {
-        ...serviceData,
-        price: serviceData.Price // Sao chép giá trị từ Price sang price
-      };
-    }
-
     return {
-      data: serviceData,
+      data: response.data,
     };
   } catch (err: unknown) {
     const error = err as { response?: { status: number; data: any }; message?: string };
     console.error("❌ Get Service By ID Error:", error.response?.data);
+
     if (error.response) {
       const status = error.response.status;
       const errorData = error.response.data;
+
       switch (status) {
         case 401:
           return rejectWithValue({
@@ -298,33 +274,9 @@ export const createService = createAsyncThunk<
   { rejectValue: ErrorResponse }
 >("service/create", async (data, { rejectWithValue }) => {
   try {
-    // Sử dụng FormData thay vì JSON object
-    const formData = new FormData();
-    
-    // Thêm các trường vào FormData với đúng tên như API endpoint yêu cầu
-    formData.append('id', data.id);
-    formData.append('name', data.name);
-    formData.append('is_active', String(data.is_active));
-    formData.append('shop_id', data.shop_id);
-    formData.append('description', data.description);
-    formData.append('discount_percent', String(data.discount_percent));
-    formData.append('Price', String(data.price)); // Sử dụng Price với P viết hoa
-    formData.append('limit_per_hour', String(data.limit_per_hour));
-    formData.append('duration_type', String(data.duration_type));
-    formData.append('Star', String(data.star)); // Sử dụng Star với S viết hoa
-    formData.append('purchases', String(data.purchases));
-    formData.append('service_type_id', data.service_type_id);
-    
-    // Nếu có ảnh, append file, nếu không thì để trống
-    if (data.img) {
-      formData.append('img', data.img);
-    } else {
-      formData.append('img', '');
-    }
-
-    const response = await api.post("Service", formData, {
+    const response = await api.post("Service", data, {
       headers: {
-        "Content-Type": "multipart/form-data", // Thay đổi Content-Type
+        "Content-Type": "application/json",
         accept: "*/*",
       },
     });
@@ -337,9 +289,11 @@ export const createService = createAsyncThunk<
   } catch (err: unknown) {
     const error = err as { response?: { status: number; data: any }; message?: string };
     console.error("❌ Create Service Error:", error.response?.data);
+
     if (error.response) {
       const status = error.response.status;
       const errorData = error.response.data;
+
       switch (status) {
         case 401:
           return rejectWithValue({
@@ -378,33 +332,9 @@ export const updateService = createAsyncThunk<
   { rejectValue: ErrorResponse }
 >("service/update", async (data, { rejectWithValue }) => {
   try {
-    // Sử dụng FormData thay vì JSON object
-    const formData = new FormData();
-    
-    // Thêm các trường vào FormData với đúng tên như API endpoint yêu cầu
-    formData.append('id', data.id);
-    formData.append('name', data.name);
-    formData.append('is_active', String(data.is_active));
-    formData.append('shop_id', data.shop_id);
-    formData.append('description', data.description);
-    formData.append('discount_percent', String(data.discount_percent));
-    formData.append('Price', String(data.price)); // Sử dụng Price với P viết hoa
-    formData.append('limit_per_hour', String(data.limit_per_hour));
-    formData.append('duration_type', String(data.duration_type));
-    formData.append('Star', String(data.star)); // Sử dụng Star với S viết hoa
-    formData.append('purchases', String(data.purchases));
-    formData.append('service_type_id', data.service_type_id);
-    
-    // Nếu có ảnh, append file, nếu không thì để trống
-    if (data.img) {
-      formData.append('img', data.img);
-    } else {
-      formData.append('img', '');
-    }
-
-    const response = await api.put("Service", formData, {
+    const response = await api.put("Service", data, {
       headers: {
-        "Content-Type": "multipart/form-data", // Thay đổi Content-Type
+        "Content-Type": "application/json",
         accept: "*/*",
       },
     });
@@ -417,9 +347,11 @@ export const updateService = createAsyncThunk<
   } catch (err: unknown) {
     const error = err as { response?: { status: number; data: any }; message?: string };
     console.error("❌ Update Service Error:", error.response?.data);
+
     if (error.response) {
       const status = error.response.status;
       const errorData = error.response.data;
+
       switch (status) {
         case 401:
           return rejectWithValue({
@@ -459,7 +391,7 @@ export const updateService = createAsyncThunk<
 // ✅ 5. Delete service
 export const deleteService = createAsyncThunk<
   SimpleResponse,
-  string, // service_id
+  string,
   { rejectValue: ErrorResponse }
 >("service/delete", async (serviceId, { rejectWithValue }) => {
   try {
@@ -477,9 +409,11 @@ export const deleteService = createAsyncThunk<
   } catch (err: unknown) {
     const error = err as { response?: { status: number; data: any }; message?: string };
     console.error("❌ Delete Service Error:", error.response?.data);
+
     if (error.response) {
       const status = error.response.status;
       const errorData = error.response.data;
+
       switch (status) {
         case 401:
           return rejectWithValue({
@@ -544,7 +478,7 @@ const serviceSlice = createSlice({
     clearServicesList: (state) => {
       state.services = [];
     },
-    setCurrentService: (state, action: PayloadAction<ServiceData>) => {
+    setCurrentService: (state, action: PayloadAction<ServiceData | null>) => {
       state.currentService = action.payload;
     },
   },
@@ -555,15 +489,12 @@ const serviceSlice = createSlice({
         state.searching = true;
         state.searchError = null;
       })
-      .addCase(
-        getAllServices.fulfilled,
-        (state, action: PayloadAction<ServicesListResponse>) => {
-          state.searching = false;
-          state.services = action.payload.data;
-          state.searchError = null;
-          console.log(`✅ Retrieved ${action.payload.data.length} services`);
-        }
-      )
+      .addCase(getAllServices.fulfilled, (state, action: PayloadAction<ServicesListResponse>) => {
+        state.searching = false;
+        state.services = action.payload.data;
+        state.searchError = null;
+        console.log(`✅ Retrieved ${action.payload.data.length} services`);
+      })
       .addCase(getAllServices.rejected, (state, action) => {
         state.searching = false;
         if (action.payload) {
@@ -578,21 +509,17 @@ const serviceSlice = createSlice({
           };
         }
       })
-
       // ✅ Get service by ID cases
       .addCase(getServiceById.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
-      .addCase(
-        getServiceById.fulfilled,
-        (state, action: PayloadAction<ServiceResponse>) => {
-          state.loading = false;
-          state.currentService = action.payload.data;
-          state.error = null;
-          console.log("✅ Retrieved service:", action.payload.data.name);
-        }
-      )
+      .addCase(getServiceById.fulfilled, (state, action: PayloadAction<ServiceResponse>) => {
+        state.loading = false;
+        state.currentService = action.payload.data;
+        state.error = null;
+        console.log("✅ Retrieved service:", action.payload.data.name);
+      })
       .addCase(getServiceById.rejected, (state, action) => {
         state.loading = false;
         if (action.payload) {
@@ -607,20 +534,16 @@ const serviceSlice = createSlice({
           };
         }
       })
-
       // ✅ Create service cases
       .addCase(createService.pending, (state) => {
         state.creating = true;
         state.createError = null;
       })
-      .addCase(
-        createService.fulfilled,
-        (state, action: PayloadAction<SimpleResponse>) => {
-          state.creating = false;
-          state.createError = null;
-          console.log("✅ Create service successful:", action.payload.message);
-        }
-      )
+      .addCase(createService.fulfilled, (state, action: PayloadAction<SimpleResponse>) => {
+        state.creating = false;
+        state.createError = null;
+        console.log("✅ Create service successful:", action.payload.message);
+      })
       .addCase(createService.rejected, (state, action) => {
         state.creating = false;
         if (action.payload) {
@@ -635,21 +558,16 @@ const serviceSlice = createSlice({
           };
         }
       })
-
       // ✅ Update service cases
       .addCase(updateService.pending, (state) => {
         state.updating = true;
         state.updateError = null;
       })
-      .addCase(
-        updateService.fulfilled,
-        (state, action: PayloadAction<SimpleResponse>) => {
-          state.updating = false;
-          state.updateError = null;
-          console.log("✅ Update service successful:", action.payload.message);
-          // Sau khi update thành công, cần fetch lại data mới
-        }
-      )
+      .addCase(updateService.fulfilled, (state, action: PayloadAction<SimpleResponse>) => {
+        state.updating = false;
+        state.updateError = null;
+        console.log("✅ Update service successful:", action.payload.message);
+      })
       .addCase(updateService.rejected, (state, action) => {
         state.updating = false;
         if (action.payload) {
@@ -664,7 +582,6 @@ const serviceSlice = createSlice({
           };
         }
       })
-
       // ✅ Delete service cases
       .addCase(deleteService.pending, (state) => {
         state.deleting = true;
@@ -673,17 +590,14 @@ const serviceSlice = createSlice({
       .addCase(deleteService.fulfilled, (state, { payload, meta }) => {
         state.deleting = false;
         state.deleteError = null;
-
+        
         // Reset currentService nếu đã bị xóa
         if (state.currentService && meta.arg === state.currentService.id) {
           state.currentService = null;
         }
-
+        
         // Remove from services list
-        state.services = state.services.filter(
-          (service) => service.id !== meta.arg
-        );
-
+        state.services = state.services.filter((service) => service.id !== meta.arg);
         console.log("✅ Delete service successful:", payload.message);
       })
       .addCase(deleteService.rejected, (state, action) => {
