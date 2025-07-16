@@ -15,6 +15,8 @@ import {
   deleteRoom
 } from '../../../store/slices/roomSlice';
 import { searchSubAddresses } from '../../../store/slices/subAddressSlice';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 // Định nghĩa interfaces dựa trên cấu trúc trong slice
 interface Room {
@@ -109,6 +111,17 @@ const HotelManagement: React.FC = () => {
     }
   }, [dispatch, hotels]);
 
+  // Check for errors in the Redux state
+  useEffect(() => {
+    // Check for specific error message pattern and show toast
+    if (hotelsError?.message?.includes("entity changes") || 
+        hotelsError?.message?.includes("saving")) {
+      toast.error("Không thể tạo khách sạn có cùng địa chỉ với một khách sạn đã tồn tại!");
+    } else if (hotelsError) {
+      toast.error(hotelsError.message);
+    }
+  }, [hotelsError]);
+
   const handleAddHotel = () => {
     setEditingHotel(null);
     setShowHotelModal(true);
@@ -155,6 +168,7 @@ const HotelManagement: React.FC = () => {
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
+      <ToastContainer position="top-right" autoClose={5000} hideProgressBar={false} newestOnTop={false} closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover />
       <div className="max-w-7xl mx-auto">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900">
@@ -372,12 +386,37 @@ const HotelManagement: React.FC = () => {
               dispatch(updateHotel({
                 ...hotelData,
                 id: editingHotel.id
-              }));
+              }))
+              .unwrap()
+              .then(() => {
+                setShowHotelModal(false);
+                toast.success("Cập nhật khách sạn thành công!");
+              })
+              .catch((error) => {
+                if (error?.message?.includes("entity changes") || 
+                    error?.message?.includes("saving")) {
+                  toast.error("Không thể tạo khách sạn có cùng địa chỉ với một khách sạn đã tồn tại!");
+                } else {
+                  toast.error(error.message || "Cập nhật khách sạn thất bại");
+                }
+              });
             } else {
               // Add new hotel
-              dispatch(createHotel(hotelData));
+              dispatch(createHotel(hotelData))
+              .unwrap()
+              .then(() => {
+                setShowHotelModal(false);
+                toast.success("Tạo khách sạn thành công!");
+              })
+              .catch((error) => {
+                if (error?.message?.includes("entity changes") || 
+                    error?.message?.includes("saving")) {
+                  toast.error("Không thể tạo khách sạn có cùng địa chỉ với một khách sạn đã tồn tại!");
+                } else {
+                  toast.error(error.message || "Không thể tạo khách sạn có cùng địa chỉ với một khách sạn đã tồn tại!");
+                }
+              });
             }
-            setShowHotelModal(false);
           }}
         />
       )}
