@@ -21,7 +21,10 @@ const ServicesPage: React.FC = () => {
 
   // ✅ Get search info from navigation state
   useEffect(() => {
-    const state = location.state as any;
+    const state = location.state as {
+      searchTerm?: string;
+      filters?: Record<string, string>;
+    } | undefined;
 
     if (state?.searchTerm) {
       setCurrentSearchTerm(state.searchTerm);
@@ -116,21 +119,48 @@ const ServicesPage: React.FC = () => {
               key={service.id}
               className="bg-white rounded-lg shadow p-4 flex flex-col hover:shadow-lg transition"
             >
-              {/* Service Image Placeholder */}
-              <div className="w-full h-28 bg-gradient-to-r from-teal-100 to-blue-100 rounded mb-3 flex items-center justify-center">
-                <svg
-                  className="w-12 h-12 text-teal-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H9m0 0H5m0 0h2M7 7h10M7 11h4M7 15h10"
+              {/* Service Image */}
+              <div className="w-full h-28 bg-gradient-to-r from-teal-100 to-blue-100 rounded mb-3 flex items-center justify-center overflow-hidden">
+                {service.img_url ? (
+                  <img
+                    src={service.img_url}
+                    alt={service.name}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      // Fallback if image fails to load
+                      const target = e.target as HTMLImageElement;
+                      target.onerror = null;
+                      target.style.display = "none";
+                      
+                      // Add icon
+                      const parentElement = target.parentElement;
+                      if (parentElement) {
+                        const iconDiv = document.createElement("div");
+                        iconDiv.className = "flex items-center justify-center h-full";
+                        iconDiv.innerHTML = `
+                          <svg class="w-12 h-12 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H9m0 0H5m0 0h2M7 7h10M7 11h4M7 15h10" />
+                          </svg>
+                        `;
+                        parentElement.appendChild(iconDiv);
+                      }
+                    }}
                   />
-                </svg>
+                ) : (
+                  <svg
+                    className="w-12 h-12 text-teal-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H9m0 0H5m0 0h2M7 7h10M7 11h4M7 15h10"
+                    />
+                  </svg>
+                )}
               </div>
 
               {/* Service Info */}
@@ -143,18 +173,18 @@ const ServicesPage: React.FC = () => {
                   {service.discount_percent > 0 ? (
                     <>
                       <span className="line-through text-gray-400 text-sm mr-1">
-                        {service.price.toLocaleString()} đ
+                        {(service.price || 0).toLocaleString()} đ
                       </span>
                       <span>
                         {(
-                          (service.price * (100 - service.discount_percent)) /
+                          ((service.price || 0) * (100 - service.discount_percent)) /
                           100
                         ).toLocaleString()}{" "}
                         đ
                       </span>
                     </>
                   ) : (
-                    `${service.price.toLocaleString()} đ`
+                    `${(service.price || 0).toLocaleString()} đ`
                   )}
                 </div>
 

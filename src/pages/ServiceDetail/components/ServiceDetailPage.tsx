@@ -139,9 +139,9 @@ const ServiceDetailPage: React.FC = () => {
 
   // ✅ Calculate discounted price
   const finalPrice =
-    currentService.discount_percent > 0
+    currentService.discount_percent > 0 && typeof currentService.price === 'number'
       ? (currentService.price * (100 - currentService.discount_percent)) / 100
-      : currentService.price;
+      : currentService.price || 0;
 
   // ✅ Success state - Show service details
   return (
@@ -182,24 +182,51 @@ const ServiceDetailPage: React.FC = () => {
         <div className="bg-white rounded-xl shadow-lg overflow-hidden">
           {/* Service image section */}
           <div className="h-64 md:h-80 bg-gradient-to-br from-teal-100 via-blue-100 to-purple-100 flex items-center justify-center">
-            <div className="text-center">
-              <svg
-                className="w-24 h-24 text-teal-600 mx-auto mb-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={1.5}
-                  d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H9m0 0H5m0 0h2M7 7h10M7 11h4M7 15h10"
-                />
-              </svg>
-              <p className="text-teal-700 font-semibold text-xl">
-                {currentService.name}
-              </p>
-            </div>
+            {currentService.img_url ? (
+              <img 
+                src={currentService.img_url} 
+                alt={currentService.name} 
+                className="h-full w-full object-cover"
+                onError={(e) => {
+                  // Fallback if image fails to load
+                  const target = e.target as HTMLImageElement;
+                  target.onerror = null;
+                  target.style.display = "none";
+                  
+                  const parentElement = target.parentElement;
+                  if (parentElement) {
+                    const iconDiv = document.createElement("div");
+                    iconDiv.className = "text-center";
+                    iconDiv.innerHTML = `
+                      <svg class="w-24 h-24 text-teal-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H9m0 0H5m0 0h2M7 7h10M7 11h4M7 15h10" />
+                      </svg>
+                      <p class="text-teal-700 font-semibold text-xl">${currentService.name}</p>
+                    `;
+                    parentElement.appendChild(iconDiv);
+                  }
+                }}
+              />
+            ) : (
+              <div className="text-center">
+                <svg
+                  className="w-24 h-24 text-teal-600 mx-auto mb-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.5}
+                    d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H9m0 0H5m0 0h2M7 7h10M7 11h4M7 15h10"
+                  />
+                </svg>
+                <p className="text-teal-700 font-semibold text-xl">
+                  {currentService.name}
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Service details */}
@@ -283,7 +310,7 @@ const ServiceDetailPage: React.FC = () => {
                   {currentService.discount_percent > 0 ? (
                     <>
                       <span className="text-lg text-gray-400 line-through">
-                        {currentService.price.toLocaleString()} đ
+                        {(currentService.price || 0).toLocaleString()} đ
                       </span>
                       <span className="text-3xl font-bold text-red-600">
                         {finalPrice.toLocaleString()} đ
@@ -294,7 +321,7 @@ const ServiceDetailPage: React.FC = () => {
                     </>
                   ) : (
                     <span className="text-3xl font-bold text-gray-900">
-                      {currentService.price.toLocaleString()} đ
+                      {(currentService.price || 0).toLocaleString()} đ
                     </span>
                   )}
                 </div>

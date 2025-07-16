@@ -5,11 +5,15 @@ import Button from "../../../components/ui/Button";
 import { Link } from "react-router-dom";
 
 interface Service {
-  id: number;
-  title: string;
-  price: string;
-  image: string;
+  id: number | string;
+  title?: string;
+  name?: string;
+  price?: string | number;
+  Price?: number;
+  image?: string;
+  img_url?: string; // Thêm trường img_url từ API
   rating?: number;
+  star?: number; // Thêm trường star từ API
   reviews?: number;
   description?: string;
 }
@@ -23,6 +27,23 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
   service,
   className = "",
 }) => {
+  // Lấy các giá trị phù hợp từ các trường có thể có của service
+  const title = service.title || service.name || "Dịch vụ";
+  const rating = service.rating || service.star;
+  const priceValue = 
+    typeof service.price === 'number' 
+      ? service.price 
+      : service.Price || 
+        (typeof service.price === 'string' ? service.price : "0");
+  
+  // Xử lý hiển thị giá
+  const displayPrice = typeof priceValue === 'number' 
+    ? `${priceValue.toLocaleString()} đ` 
+    : priceValue;
+  
+  // Sử dụng img_url nếu có, ngược lại dùng image
+  const imageUrl = service.img_url || service.image;
+  
   return (
     <Card
       className={`overflow-hidden hover:shadow-lg transition-shadow duration-200 cursor-pointer group ${className}`}
@@ -30,21 +51,21 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
       {/* Image Container */}
       <div className="relative overflow-hidden">
         <img
-          src={service.image}
-          alt={service.title}
+          src={imageUrl}
+          alt={title}
           className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-200"
           onError={(e) => {
             // Fallback image nếu không load được
             (e.target as HTMLImageElement).src =
-              "hhttps://i.pinimg.com/736x/38/f4/f2/38f4f2d8652c7aa795f5e3ee75b5919c.jpg";
+              "https://i.pinimg.com/736x/38/f4/f2/38f4f2d8652c7aa795f5e3ee75b5919c.jpg";
           }}
         />
 
         {/* Rating Badge */}
-        {service.rating && (
+        {rating && (
           <div className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-full flex items-center gap-1">
             <span className="text-yellow-500 text-sm">⭐</span>
-            <span className="text-xs font-medium">{service.rating}</span>
+            <span className="text-xs font-medium">{rating}</span>
           </div>
         )}
 
@@ -55,7 +76,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
       {/* Content */}
       <div className="p-4">
         <h3 className="font-semibold text-gray-900 mb-2 group-hover:text-[#2A9D8F] transition-colors duration-200 line-clamp-2">
-          {service.title}
+          {title}
         </h3>
 
         {service.description && (
@@ -67,7 +88,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
         {/* Price and Reviews */}
         <div className="flex items-center justify-between mb-3">
           <span className="text-lg font-bold text-[#87A96B]">
-            {service.price}
+            {displayPrice}
           </span>
           {service.reviews && (
             <span className="text-xs text-gray-500">

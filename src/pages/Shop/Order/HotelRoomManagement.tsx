@@ -1,68 +1,114 @@
 import React, { useState, useEffect } from 'react';
-import type { Hotel, Room, HotelWithRooms } from '../../types/hotel';
+import { useDispatch, useSelector } from 'react-redux';
+import type { AppDispatch, RootState } from '../../../store/store';
+import {
+  searchHotels,
+  getHotelById,
+  createHotel,
+  updateHotel,
+  deleteHotel,
+  getHotelReport
+} from '../../../store/slices/hotelSlice';
+import {
+  getRooms,
+  getRoomById,
+  createRoom,
+  updateRoom,
+  deleteRoom
+} from '../../../store/slices/roomSlice';
+
+// Định nghĩa interfaces dựa trên cấu trúc trong slice
+interface Room {
+  id: string;
+  room_number: number;
+  room_type: number;
+  max_capacity: number;
+  daily_price: number;
+  is_available: boolean;
+  amendities: string;
+  star: number;
+  hotel_id: string;
+}
+
+interface Hotel {
+  id: string;
+  name: string;
+  description: string;
+  total_room: number;
+  available_room: number;
+  shop_id: string;
+  sub_address_id: string;
+  is_active: boolean;
+}
+
+interface HotelWithRooms extends Hotel {
+  rooms: Room[];
+}
+
+// Map room type từ number về string để hiển thị
+const mapRoomTypeToString = (type: number): string => {
+  switch (type) {
+    case 0: return 'Economy';
+    case 1: return 'Standard';
+    case 2: return 'Suite';
+    case 3: return 'VIP';
+    default: return 'Standard';
+  }
+};
 
 const HotelManagement: React.FC = () => {
-  const [hotels, setHotels] = useState<HotelWithRooms[]>([]);
+  const dispatch = useDispatch<AppDispatch>();
   const [selectedHotel, setSelectedHotel] = useState<HotelWithRooms | null>(null);
   const [showHotelModal, setShowHotelModal] = useState(false);
   const [showRoomModal, setShowRoomModal] = useState(false);
   const [editingHotel, setEditingHotel] = useState<Hotel | null>(null);
   const [editingRoom, setEditingRoom] = useState<Room | null>(null);
+  const [shopId, setShopId] = useState<string>('');
 
-  // Sample data
-  const sampleHotels: HotelWithRooms[] = [
-    {
-      id: 1,
-      name: 'Pet Paradise Hotel',
-      description: 'Khách sạn cao cấp dành cho thú cưng',
-      total_room: 20,
-      available_room: 15,
-      shop_id: 1,
-      sub_address_id: 1,
-      is_active: true,
-      star: 5,
-      rooms: [
-        {
-          id: 1,
-          hotel_id: 1,
-          room_number: 'A01',
-          room_type: 'VIP',
-          max_capability: 2,
-          daily_price: 500000,
-          is_available: true,
-          amenities: 'Điều hòa, Camera, Đồ chơi cao cấp',
-          star: 5
-        },
-        {
-          id: 2,
-          hotel_id: 1,
-          room_number: 'B01',
-          room_type: 'Standard',
-          max_capability: 1,
-          daily_price: 300000,
-          is_available: false,
-          amenities: 'Quạt, Đồ chơi cơ bản',
-          star: 3
-        }
-      ]
-    },
-    {
-      id: 2,
-      name: 'Cozy Pet Inn',
-      description: 'Khách sạn ấm cúng cho thú cưng nhỏ',
-      total_room: 15,
-      available_room: 12,
-      shop_id: 1,
-      sub_address_id: 2,
-      is_active: true,
-      star: 4,
-      rooms: []
-    }
-  ];
+  // Lấy data từ Redux store
+  const {
+    hotels,
+    loading: hotelsLoading,
+    error: hotelsError,
+    creating: hotelCreating,
+    updating: hotelUpdating,
+    deleting: hotelDeleting,
 
+  } = useSelector((state: RootState) => state.hotel);
+
+  const {
+    rooms,
+    loading: roomsLoading,
+    // error: roomsError,
+    creating: roomCreating,
+    updating: roomUpdating,
+    deleting: roomDeleting
+  } = useSelector((state: RootState) => state.room);
+
+  // Lấy thông tin shop từ Redux auth
+  const { user } = useSelector((state: RootState) => state.auth);
+
+  // Kết hợp hotels và rooms để tạo HotelWithRooms
+  const hotelsWithRooms: HotelWithRooms[] = hotels.map(hotel => ({
+    ...hotel,
+    rooms: rooms.filter(room => room.hotel_id === hotel.id)
+  }));
+
+  // Lấy danh sách khách sạn khi component được mount
   useEffect(() => {
-    setHotels(sampleHotels);
-  }, []);
+    if (user && user.id) {
+      setShopId(user.id);
+      // Tìm kiếm khách sạn theo shop ID
+      dispatch(searchHotels({ shopId: user.id }));
+    }
+  }, [dispatch, user]);
+
+  // Lấy danh sách phòng khi có danh sách khách sạn
+  useEffect(() => {
+    if (hotels.length > 0) {
+      dispatch(getRooms());
+    }
+  }, [dispatch, hotels]);
 
   const handleAddHotel = () => {
     setEditingHotel(null);
@@ -74,9 +120,9 @@ const HotelManagement: React.FC = () => {
     setShowHotelModal(true);
   };
 
-  const handleDeleteHotel = (hotelId: number) => {
+  const handleDeleteHotel = (hotelId: string) => {
     if (confirm('Bạn có chắc chắn muốn xóa khách sạn này?')) {
-      setHotels(hotels.filter(h => h.id !== hotelId));
+      dispatch(deleteHotel(hotelId));
     }
   };
 
@@ -91,17 +137,15 @@ const HotelManagement: React.FC = () => {
     setShowRoomModal(true);
   };
 
-  const handleDeleteRoom = (roomId: number) => {
+  const handleDeleteRoom = (roomId: string) => {
     if (confirm('Bạn có chắc chắn muốn xóa phòng này?')) {
-      setHotels(hotels.map(hotel => ({
-        ...hotel,
-        rooms: hotel.rooms.filter(r => r.id !== roomId)
-      })));
+      dispatch(deleteRoom(roomId));
     }
   };
 
-  const getRoomTypeColor = (type: Room['room_type']) => {
-    switch (type) {
+  const getRoomTypeColor = (type: number) => {
+    const typeString = mapRoomTypeToString(type);
+    switch (typeString) {
       case 'VIP': return 'bg-purple-100 text-purple-800';
       case 'Suite': return 'bg-gold-100 text-gold-800';
       case 'Standard': return 'bg-blue-100 text-blue-800';
@@ -120,178 +164,219 @@ const HotelManagement: React.FC = () => {
           <button
             onClick={handleAddHotel}
             className="bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-700 transition-colors"
+            disabled={hotelCreating}
           >
-            + Thêm khách sạn mới
+            {hotelCreating ? 'Đang tạo...' : '+ Thêm khách sạn mới'}
           </button>
         </div>
 
+        {/* Hiển thị lỗi nếu có */}
+        {hotelsError && (
+          <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-md">
+            {hotelsError.message}
+          </div>
+        )}
+
+        {/* Loading indicator */}
+        {hotelsLoading && (
+          <div className="text-center py-10">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-teal-600"></div>
+            <p className="mt-2 text-gray-500">Đang tải dữ liệu...</p>
+          </div>
+        )}
+
         {/* Danh sách khách sạn */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {hotels.map((hotel) => (
-            <div key={hotel.id} className="bg-white rounded-lg shadow-md overflow-hidden">
-              {/* Header khách sạn */}
-              <div className="p-6 border-b border-gray-200">
-                <div className="flex justify-between items-start mb-4">
-                  <div>
-                    <h2 className="text-xl font-semibold text-gray-900">{hotel.name}</h2>
-                    <div className="flex items-center mt-1">
-                      {[...Array(hotel.star)].map((_, i) => (
-                        <span key={i} className="text-yellow-400">⭐</span>
-                      ))}
-                      <span className="ml-2 text-sm text-gray-500">({hotel.star} sao)</span>
-                    </div>
-                  </div>
-                  <div className="flex space-x-2">
-                    <button
-                      onClick={() => handleEditHotel(hotel)}
-                      className="text-blue-600 hover:text-blue-800"
-                    >
-                      ✏️
-                    </button>
-                    <button
-                      onClick={() => handleDeleteHotel(hotel.id)}
-                      className="text-red-600 hover:text-red-800"
-                    >
-                      🗑️
-                    </button>
-                  </div>
-                </div>
-
-                <p className="text-gray-600 text-sm mb-4">{hotel.description}</p>
-
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <span className="text-gray-500">Tổng phòng:</span>
-                    <span className="ml-2 font-medium">{hotel.total_room}</span>
-                  </div>
-                  <div>
-                    <span className="text-gray-500">Phòng trống:</span>
-                    <span className="ml-2 font-medium text-green-600">{hotel.available_room}</span>
-                  </div>
-                </div>
-
-                <div className="mt-4">
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                    hotel.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                  }`}>
-                    {hotel.is_active ? 'Hoạt động' : 'Tạm dừng'}
-                  </span>
-                </div>
-              </div>
-
-              {/* Danh sách phòng */}
-              <div className="p-6">
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-lg font-medium text-gray-900">
-                    Danh sách phòng ({hotel.rooms.length})
-                  </h3>
-                  <button
-                    onClick={() => handleAddRoom(hotel)}
-                    className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700 transition-colors"
-                  >
-                    + Thêm phòng
-                  </button>
-                </div>
-
-                {hotel.rooms.length > 0 ? (
-                  <div className="space-y-3 max-h-60 overflow-y-auto">
-                    {hotel.rooms.map((room) => (
-                      <div key={room.id} className="border border-gray-200 rounded-lg p-3">
-                        <div className="flex justify-between items-start mb-2">
-                          <div>
-                            <h4 className="font-medium text-gray-900">
-                              Phòng {room.room_number}
-                            </h4>
-                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${getRoomTypeColor(room.room_type)}`}>
-                              {room.room_type}
-                            </span>
-                          </div>
-                          <div className="flex space-x-2">
-                            <button
-                              onClick={() => handleEditRoom(room)}
-                              className="text-blue-600 hover:text-blue-800 text-sm"
-                            >
-                              ✏️
-                            </button>
-                            <button
-                              onClick={() => handleDeleteRoom(room.id)}
-                              className="text-red-600 hover:text-red-800 text-sm"
-                            >
-                              🗑️
-                            </button>
-                          </div>
-                        </div>
-
-                        <div className="text-xs text-gray-600 space-y-1">
-                          <p>Sức chứa: {room.max_capability} thú cưng</p>
-                          <p>Giá: {room.daily_price.toLocaleString('vi-VN')}đ/ngày</p>
-                          <p>Tiện nghi: {room.amenities}</p>
-                          <p className={`${room.is_available ? 'text-green-600' : 'text-red-600'}`}>
-                            {room.is_available ? 'Có sẵn' : 'Đã đặt'}
-                          </p>
+        {!hotelsLoading && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {hotelsWithRooms.length > 0 ? (
+              hotelsWithRooms.map((hotel) => (
+                <div key={hotel.id} className="bg-white rounded-lg shadow-md overflow-hidden">
+                  {/* Header khách sạn */}
+                  <div className="p-6 border-b border-gray-200">
+                    <div className="flex justify-between items-start mb-4">
+                      <div>
+                        <h2 className="text-xl font-semibold text-gray-900">{hotel.name}</h2>
+                        <div className="flex items-center mt-1">
+                          {[...Array(5)].map((_, i) => (
+                            <span key={i} className={`text-yellow-400 ${i < Math.round(hotel.rooms.reduce((sum, room) => sum + room.star, 0) / (hotel.rooms.length || 1)) ? 'opacity-100' : 'opacity-30'}`}>⭐</span>
+                          ))}
                         </div>
                       </div>
-                    ))}
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => handleEditHotel(hotel)}
+                          className="text-blue-600 hover:text-blue-800"
+                          disabled={hotelUpdating}
+                        >
+                          ✏️
+                        </button>
+                        <button
+                          onClick={() => handleDeleteHotel(hotel.id)}
+                          className="text-red-600 hover:text-red-800"
+                          disabled={hotelDeleting}
+                        >
+                          🗑️
+                        </button>
+                      </div>
+                    </div>
+
+                    <p className="text-gray-600 text-sm mb-4">{hotel.description}</p>
+
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <span className="text-gray-500">Tổng phòng:</span>
+                        <span className="ml-2 font-medium">{hotel.total_room}</span>
+                      </div>
+                      <div>
+                        <span className="text-gray-500">Phòng trống:</span>
+                        <span className="ml-2 font-medium text-green-600">{hotel.available_room}</span>
+                      </div>
+                    </div>
+
+                    <div className="mt-4">
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        hotel.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                      }`}>
+                        {hotel.is_active ? 'Hoạt động' : 'Tạm dừng'}
+                      </span>
+                    </div>
                   </div>
-                ) : (
-                  <div className="text-center py-8 text-gray-500">
-                    <p>Chưa có phòng nào</p>
-                    <p className="text-sm">Nhấn "Thêm phòng" để bắt đầu</p>
+
+                  {/* Danh sách phòng */}
+                  <div className="p-6">
+                    <div className="flex justify-between items-center mb-4">
+                      <h3 className="text-lg font-medium text-gray-900">
+                        Danh sách phòng ({hotel.rooms.length})
+                      </h3>
+                      <button
+                        onClick={() => handleAddRoom(hotel)}
+                        className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700 transition-colors"
+                        disabled={roomCreating}
+                      >
+                        {roomCreating ? 'Đang tạo...' : '+ Thêm phòng'}
+                      </button>
+                    </div>
+
+                    {roomsLoading && (
+                      <div className="text-center py-4">
+                        <div className="inline-block animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-blue-600"></div>
+                      </div>
+                    )}
+
+                    {!roomsLoading && hotel.rooms.length > 0 ? (
+                      <div className="space-y-3 max-h-60 overflow-y-auto">
+                        {hotel.rooms.map((room) => (
+                          <div key={room.id} className="border border-gray-200 rounded-lg p-3">
+                            <div className="flex justify-between items-start mb-2">
+                              <div>
+                                <h4 className="font-medium text-gray-900">
+                                  Phòng {room.room_number}
+                                </h4>
+                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${getRoomTypeColor(room.room_type)}`}>
+                                  {mapRoomTypeToString(room.room_type)}
+                                </span>
+                              </div>
+                              <div className="flex space-x-2">
+                                <button
+                                  onClick={() => handleEditRoom(room)}
+                                  className="text-blue-600 hover:text-blue-800 text-sm"
+                                  disabled={roomUpdating}
+                                >
+                                  ✏️
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteRoom(room.id)}
+                                  className="text-red-600 hover:text-red-800 text-sm"
+                                  disabled={roomDeleting}
+                                >
+                                  🗑️
+                                </button>
+                              </div>
+                            </div>
+
+                            <div className="text-xs text-gray-600 space-y-1">
+                              <p>Sức chứa: {room.max_capacity} thú cưng</p>
+                              <p>Giá: {room.daily_price.toLocaleString('vi-VN')}đ/ngày</p>
+                              <p>Tiện nghi: {room.amendities}</p>
+                              <p className={`${room.is_available ? 'text-green-600' : 'text-red-600'}`}>
+                                {room.is_available ? 'Có sẵn' : 'Đã đặt'}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-8 text-gray-500">
+                        <p>Chưa có phòng nào</p>
+                        <p className="text-sm">Nhấn "Thêm phòng" để bắt đầu</p>
+                      </div>
+                    )}
                   </div>
-                )}
+                </div>
+              ))
+            ) : (
+              <div className="col-span-2 text-center py-10 bg-white rounded-lg shadow-md">
+                <p className="text-gray-500 mb-4">Chưa có khách sạn nào</p>
+                <button
+                  onClick={handleAddHotel}
+                  className="bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-700 transition-colors"
+                >
+                  + Thêm khách sạn mới
+                </button>
               </div>
-            </div>
-          ))}
-        </div>
+            )}
+          </div>
+        )}
 
         {/* Thống kê tổng quan */}
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="bg-white p-4 rounded-lg shadow-md">
-            <h3 className="text-sm font-medium text-gray-500">Tổng khách sạn</h3>
-            <p className="text-2xl font-bold text-gray-900">{hotels.length}</p>
+        {!hotelsLoading && hotelsWithRooms.length > 0 && (
+          <div className="mt-8 grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="bg-white p-4 rounded-lg shadow-md">
+              <h3 className="text-sm font-medium text-gray-500">Tổng khách sạn</h3>
+              <p className="text-2xl font-bold text-gray-900">{hotelsWithRooms.length}</p>
+            </div>
+            <div className="bg-white p-4 rounded-lg shadow-md">
+              <h3 className="text-sm font-medium text-gray-500">Tổng phòng</h3>
+              <p className="text-2xl font-bold text-blue-600">
+                {hotelsWithRooms.reduce((sum, hotel) => sum + hotel.total_room, 0)}
+              </p>
+            </div>
+            <div className="bg-white p-4 rounded-lg shadow-md">
+              <h3 className="text-sm font-medium text-gray-500">Phòng trống</h3>
+              <p className="text-2xl font-bold text-green-600">
+                {hotelsWithRooms.reduce((sum, hotel) => sum + hotel.available_room, 0)}
+              </p>
+            </div>
+            <div className="bg-white p-4 rounded-lg shadow-md">
+              <h3 className="text-sm font-medium text-gray-500">Tỷ lệ lấp đầy</h3>
+              <p className="text-2xl font-bold text-purple-600">
+                {hotelsWithRooms.length > 0 ? 
+                  Math.round(((hotelsWithRooms.reduce((sum, hotel) => sum + hotel.total_room, 0) - 
+                  hotelsWithRooms.reduce((sum, hotel) => sum + hotel.available_room, 0)) / 
+                  hotelsWithRooms.reduce((sum, hotel) => sum + hotel.total_room, 0)) * 100) : 0}%
+              </p>
+            </div>
           </div>
-          <div className="bg-white p-4 rounded-lg shadow-md">
-            <h3 className="text-sm font-medium text-gray-500">Tổng phòng</h3>
-            <p className="text-2xl font-bold text-blue-600">
-              {hotels.reduce((sum, hotel) => sum + hotel.total_room, 0)}
-            </p>
-          </div>
-          <div className="bg-white p-4 rounded-lg shadow-md">
-            <h3 className="text-sm font-medium text-gray-500">Phòng trống</h3>
-            <p className="text-2xl font-bold text-green-600">
-              {hotels.reduce((sum, hotel) => sum + hotel.available_room, 0)}
-            </p>
-          </div>
-          <div className="bg-white p-4 rounded-lg shadow-md">
-            <h3 className="text-sm font-medium text-gray-500">Tỷ lệ lấp đầy</h3>
-            <p className="text-2xl font-bold text-purple-600">
-              {hotels.length > 0 ? 
-                Math.round(((hotels.reduce((sum, hotel) => sum + hotel.total_room, 0) - 
-                hotels.reduce((sum, hotel) => sum + hotel.available_room, 0)) / 
-                hotels.reduce((sum, hotel) => sum + hotel.total_room, 0)) * 100) : 0}%
-            </p>
-          </div>
-        </div>
+        )}
       </div>
 
       {/* Modal thêm/sửa khách sạn */}
       {showHotelModal && (
         <HotelModal
           hotel={editingHotel}
+          shopId={shopId}
           isOpen={showHotelModal}
           onClose={() => setShowHotelModal(false)}
           onSave={(hotelData) => {
             if (editingHotel) {
               // Update hotel
-              setHotels(hotels.map(h => h.id === editingHotel.id ? { ...h, ...hotelData } : h));
+              dispatch(updateHotel({
+                ...hotelData,
+                id: editingHotel.id
+              }));
             } else {
               // Add new hotel
-              const newHotel: HotelWithRooms = {
-                ...hotelData,
-                id: Date.now(),
-                rooms: []
-              };
-              setHotels([...hotels, newHotel]);
+              dispatch(createHotel(hotelData));
             }
             setShowHotelModal(false);
           }}
@@ -308,22 +393,17 @@ const HotelManagement: React.FC = () => {
           onSave={(roomData) => {
             if (editingRoom) {
               // Update room
-              setHotels(hotels.map(hotel => ({
-                ...hotel,
-                rooms: hotel.rooms.map(r => r.id === editingRoom.id ? { ...r, ...roomData } : r)
-              })));
+              dispatch(updateRoom({
+                ...roomData,
+                id: editingRoom.id,
+                hotel_id: editingRoom.hotel_id
+              }));
             } else {
               // Add new room
-              const newRoom: Room = {
+              dispatch(createRoom({
                 ...roomData,
-                id: Date.now(),
                 hotel_id: selectedHotel!.id
-              };
-              setHotels(hotels.map(hotel => 
-                hotel.id === selectedHotel!.id 
-                  ? { ...hotel, rooms: [...hotel.rooms, newRoom] }
-                  : hotel
-              ));
+              }));
             }
             setShowRoomModal(false);
           }}
@@ -332,6 +412,7 @@ const HotelManagement: React.FC = () => {
     </div>
   );
 };
+
 interface RoomModalProps {
   room: Room | null;
   hotel: HotelWithRooms | null;
@@ -342,13 +423,13 @@ interface RoomModalProps {
 
 const RoomModal: React.FC<RoomModalProps> = ({ room, hotel, isOpen, onClose, onSave }) => {
   const [formData, setFormData] = useState({
-    room_number: '',
-    room_type: 'Standard' as Room['room_type'],
-    max_capability: 1,
+    room_number: 1,
+    room_type: 1,
+    max_capacity: 1,
     daily_price: 0,
     is_available: true,
-    amenities: ''
-    // Bỏ field star
+    amendities: '',
+    star: 3
   });
 
   useEffect(() => {
@@ -356,44 +437,21 @@ const RoomModal: React.FC<RoomModalProps> = ({ room, hotel, isOpen, onClose, onS
       setFormData({
         room_number: room.room_number,
         room_type: room.room_type,
-        max_capability: room.max_capability,
+        max_capacity: room.max_capacity,
         daily_price: room.daily_price,
         is_available: room.is_available,
-        amenities: room.amenities
-        // Bỏ star: room.star
+        amendities: room.amendities,
+        star: room.star
       });
     } else {
       setFormData({
-        room_number: '',
-        room_type: 'Standard',
-        max_capability: 1,
+        room_number: 1,
+        room_type: 1,
+        max_capacity: 1,
         daily_price: 0,
         is_available: true,
-        amenities: ''
-        // Bỏ star: 3
-      });
-    }
-  }, [room, isOpen]);
-
-
-  useEffect(() => {
-    if (room) {
-      setFormData({
-        room_number: room.room_number,
-        room_type: room.room_type,
-        max_capability: room.max_capability,
-        daily_price: room.daily_price,
-        is_available: room.is_available,
-        amenities: room.amenities,
-      });
-    } else {
-      setFormData({
-        room_number: '',
-        room_type: 'Standard',
-        max_capability: 1,
-        daily_price: 0,
-        is_available: true,
-        amenities: '',
+        amendities: '',
+        star: 3
       });
     }
   }, [room, isOpen]);
@@ -419,11 +477,10 @@ const RoomModal: React.FC<RoomModalProps> = ({ room, hotel, isOpen, onClose, onS
                 Số phòng *
               </label>
               <input
-                type="text"
+                type="number"
                 value={formData.room_number}
-                onChange={(e) => setFormData({...formData, room_number: e.target.value})}
+                onChange={(e) => setFormData({...formData, room_number: parseInt(e.target.value) || 1})}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="VD: A01"
                 required
               />
             </div>
@@ -433,13 +490,13 @@ const RoomModal: React.FC<RoomModalProps> = ({ room, hotel, isOpen, onClose, onS
               </label>
               <select
                 value={formData.room_type}
-                onChange={(e) => setFormData({...formData, room_type: e.target.value as Room['room_type']})}
+                onChange={(e) => setFormData({...formData, room_type: parseInt(e.target.value)})}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
-                <option value="Economy">Economy</option>
-                <option value="Standard">Standard</option>
-                <option value="Suite">Suite</option>
-                <option value="VIP">VIP</option>
+                <option value={0}>Economy</option>
+                <option value={1}>Standard</option>
+                <option value={2}>Suite</option>
+                <option value={3}>VIP</option>
               </select>
             </div>
           </div>
@@ -451,8 +508,8 @@ const RoomModal: React.FC<RoomModalProps> = ({ room, hotel, isOpen, onClose, onS
               </label>
               <input
                 type="number"
-                value={formData.max_capability}
-                onChange={(e) => setFormData({...formData, max_capability: parseInt(e.target.value) || 1})}
+                value={formData.max_capacity}
+                onChange={(e) => setFormData({...formData, max_capacity: parseInt(e.target.value) || 1})}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 min="1"
                 required
@@ -478,12 +535,39 @@ const RoomModal: React.FC<RoomModalProps> = ({ room, hotel, isOpen, onClose, onS
               Tiện nghi
             </label>
             <textarea
-              value={formData.amenities}
-              onChange={(e) => setFormData({...formData, amenities: e.target.value})}
+              value={formData.amendities}
+              onChange={(e) => setFormData({...formData, amendities: e.target.value})}
               className="w-full border border-gray-300 rounded-lg px-3 py-2 h-20 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="VD: Điều hòa, Camera, Đồ chơi..."
               rows={3}
             />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Đánh giá sao
+            </label>
+            <select
+              value={formData.star}
+              onChange={(e) => setFormData({...formData, star: parseInt(e.target.value)})}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              {[1, 2, 3, 4, 5].map(star => (
+                <option key={star} value={star}>{star} sao</option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="flex items-center">
+              <input
+                type="checkbox"
+                checked={formData.is_available}
+                onChange={(e) => setFormData({...formData, is_available: e.target.checked})}
+                className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+              />
+              <span className="ml-2 text-sm text-gray-700">Phòng có sẵn</span>
+            </label>
           </div>
 
           <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
@@ -506,26 +590,26 @@ const RoomModal: React.FC<RoomModalProps> = ({ room, hotel, isOpen, onClose, onS
     </div>
   );
 };
-// Thêm HotelModal component vào đây
+
 interface HotelModalProps {
   hotel: Hotel | null;
+  shopId: string;
   isOpen: boolean;
   onClose: () => void;
   onSave: (hotel: Omit<Hotel, 'id'>) => void;
 }
 
-const HotelModal: React.FC<HotelModalProps> = ({ hotel, isOpen, onClose, onSave }) => {
+const HotelModal: React.FC<HotelModalProps> = ({ hotel, shopId, isOpen, onClose, onSave }) => {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
     total_room: 0,
     available_room: 0,
-    shop_id: 1, // Current shop ID
-    sub_address_id: 1,
+    shop_id: '',
+    sub_address_id: '1', // Giá trị mặc định, có thể cần điều chỉnh
     is_active: true,
   });
 
-  
   useEffect(() => {
     if (hotel) {
       setFormData({
@@ -544,12 +628,12 @@ const HotelModal: React.FC<HotelModalProps> = ({ hotel, isOpen, onClose, onSave 
         description: '',
         total_room: 0,
         available_room: 0,
-        shop_id: 1,
-        sub_address_id: 1,
+        shop_id: shopId,
+        sub_address_id: '1',
         is_active: true,
       });
     }
-  }, [hotel, isOpen]);
+  }, [hotel, shopId, isOpen]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
