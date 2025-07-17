@@ -37,6 +37,10 @@ import ShopBranches from "@/pages/Shop/ShopProfile/ShopBranches";
 import ServiceDetail from "@/pages/Shop/ServiceDetail";
 import AppointmentDetailPage from "@/pages/ServiceDetail/components/AppointmentDetailPage";
 
+// Import các trang khách sạn mới
+import HotelServices from "@/pages/Services/HotelServices";
+import HotelDetailPage from "@/pages/ServiceDetail/HotelDetailPage";
+
 // Component chứa toàn bộ định nghĩa các route
 const AppRoutes = () => {
   return (
@@ -55,6 +59,9 @@ const AppRoutes = () => {
         <Route path="service-detail/:id" element={<ServiceDetailPage />} />
         <Route path="booking/:serviceId" element={<BookingPage />} />
         <Route path="shop/:shopId/services" element={<ShopServicesPage />} />
+        {/* Routes mới cho khách sạn */}
+        <Route path="hotel-services" element={<HotelServices />} />
+        <Route path="hotel/:id" element={<HotelDetailPage />} />
         <Route index element={<Navigate to="home" replace />} />
       </Route>
 
@@ -77,6 +84,9 @@ const AppRoutes = () => {
         <Route path="appointments/:appointmentId" element={<AppointmentDetailPage />} />
         <Route path="profile" element={<ProfilePage />} />
         <Route path="shop/:shopId/services" element={<ShopServicesPage />} />
+        {/* Routes mới cho khách sạn */}
+        <Route path="hotel-services" element={<HotelServices />} />
+        <Route path="hotel/:id" element={<HotelDetailPage />} />
         <Route index element={<Navigate to="home" replace />} />
       </Route>
 

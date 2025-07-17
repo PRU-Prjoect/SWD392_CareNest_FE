@@ -348,6 +348,153 @@ const AppHeaderForUser: React.FC<HeaderProps> = () => {
           />
         </div>
       </div>
+
+      {/* MOBILE DROPDOWN MENU */}
+      {isApplicationMenuOpen && (
+        <div className="absolute top-16 left-0 right-0 bg-white shadow-lg rounded-b-lg p-2 lg:hidden z-50">
+          {/* Thanh tìm kiếm */}
+          <div className="mb-4 p-2">
+            <form onSubmit={handleSearchSubmit}>
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Tìm kiếm dịch vụ..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full bg-gray-100 border-0 rounded-md py-3 px-4 pr-10 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                />
+                <button
+                  type="submit"
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400"
+                >
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 20 20"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      clipRule="evenodd"
+                      d="M8 4C5.79086 4 4 5.79086 4 8C4 10.2091 5.79086 12 8 12C10.2091 12 12 10.2091 12 8C12 5.79086 10.2091 4 8 4ZM2 8C2 4.68629 4.68629 2 8 2C11.3137 2 14 4.68629 14 8C14 9.29583 13.5892 10.4957 12.8907 11.4765L17.7071 16.2929C18.0976 16.6834 18.0976 17.3166 17.7071 17.7071C17.3166 18.0976 16.6834 18.0976 16.2929 17.7071L11.4765 12.8907C10.4957 13.5892 9.29583 14 8 14C4.68629 14 2 11.3137 2 8Z"
+                      fill="currentColor"
+                    />
+                  </svg>
+                </button>
+              </div>
+            </form>
+          </div>
+
+          {/* Liên kết menu */}
+          <div className="space-y-2">
+            <Link
+              to={isAuthenticated ? "/app/services" : "/guest/services"}
+              className="block px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-md"
+              onClick={() => setApplicationMenuOpen(false)}
+            >
+              Dịch vụ
+            </Link>
+            <Link
+              to={isAuthenticated ? "/app/hotel-services" : "/guest/hotel-services"}
+              className="block px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-md"
+              onClick={() => setApplicationMenuOpen(false)}
+            >
+              Khách sạn thú cưng
+            </Link>
+            {isAuthenticated && (
+              <>
+                <Link
+                  to="/app/order-history"
+                  className="block px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-md"
+                  onClick={() => setApplicationMenuOpen(false)}
+                >
+                  Lịch sử đơn hàng
+                </Link>
+                <Link
+                  to="/app/profile"
+                  className="block px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-md"
+                  onClick={() => setApplicationMenuOpen(false)}
+                >
+                  Tài khoản
+                </Link>
+              </>
+            )}
+            {/* ... other menu items ... */}
+          </div>
+        </div>
+      )}
+
+      {/* Advanced Search Bar */}
+      <div className="w-full bg-white shadow-sm py-2 border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center space-x-6">
+            {/* Navigation Links */}
+            <nav className="flex items-center space-x-6 text-sm">
+              <Link
+                to={isAuthenticated ? "/app/home" : "/guest/home"}
+                className="py-2 text-gray-500 hover:text-teal-600 transition-colors"
+              >
+                Trang chủ
+              </Link>
+              <Link
+                to={isAuthenticated ? "/app/services" : "/guest/services"}
+                className="py-2 text-gray-500 hover:text-teal-600 transition-colors"
+              >
+                Dịch vụ
+              </Link>
+              <Link
+                to={isAuthenticated ? "/app/hotel-services" : "/guest/hotel-services"}
+                className="py-2 text-gray-500 hover:text-teal-600 transition-colors"
+              >
+                Khách sạn thú cưng
+              </Link>
+              {isAuthenticated && (
+                <Link
+                  to="/app/order-history"
+                  className="py-2 text-gray-500 hover:text-teal-600 transition-colors"
+                >
+                  Đơn hàng
+                </Link>
+              )}
+            </nav>
+
+            {/* Filter Button */}
+            <div className="ml-auto">
+              <button
+                onClick={() => {
+                  navigate(
+                    isAuthenticated ? "/app/services" : "/guest/services"
+                  );
+                }}
+                className="text-sm text-gray-500 hover:text-teal-600 flex items-center space-x-1"
+              >
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 16 16"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M14.5 2H1.5C1.224 2 1 2.224 1 2.5V3.5C1 3.776 1.224 4 1.5 4H14.5C14.776 4 15 3.776 15 3.5V2.5C15 2.224 14.776 2 14.5 2Z"
+                    fill="currentColor"
+                  />
+                  <path
+                    d="M12.5 7H3.5C3.224 7 3 7.224 3 7.5V8.5C3 8.776 3.224 9 3.5 9H12.5C12.776 9 13 8.776 13 8.5V7.5C13 7.224 12.776 7 12.5 7Z"
+                    fill="currentColor"
+                  />
+                  <path
+                    d="M9.5 12H6.5C6.224 12 6 12.224 6 12.5V13.5C6 13.776 6.224 14 6.5 14H9.5C9.776 14 10 13.776 10 13.5V12.5C10 12.224 9.776 12 9.5 12Z"
+                    fill="currentColor"
+                  />
+                </svg>
+                <span>Lọc tìm kiếm</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
     </>
   );
 };
