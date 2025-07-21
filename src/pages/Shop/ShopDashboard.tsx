@@ -222,7 +222,7 @@ const AdminDashboard = () => {
                     paddingAngle={2}
                     dataKey="value"
                   >
-                    {servicePieData.map((entry, index) => (
+                    {servicePieData.map((_, index) => (
                       <Cell
                         key={`cell-${index}`}
                         fill={COLORS[index % COLORS.length]}

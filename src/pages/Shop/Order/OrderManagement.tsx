@@ -603,10 +603,6 @@ const OrderManagement = () => {
     }
   };
 
-  const handleViewDetail = (order: ServiceOrder) => {
-    alert(`Chi tiết đơn hàng ${order.id} - Sẽ mở modal/page chi tiết`);
-  };
-
   return (
     <div className="p-4 md:p-6 bg-gray-50 min-h-screen">
       {/* Header */}

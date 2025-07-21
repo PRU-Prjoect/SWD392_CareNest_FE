@@ -62,15 +62,6 @@ interface UpdateShopRequest {
   working_day: string[];
 }
 
-// ✅ Thêm interface cho register shop
-interface RegisterShopRequest {
-  name: string;
-  description: string;
-  phone: string;
-  status: boolean;
-  working_day: string[];
-}
-
 // Response interfaces
 interface ShopResponse {
   data: ShopProfile;
@@ -85,11 +76,6 @@ interface UpdateShopResponse {
 }
 
 interface DeleteShopResponse {
-  message: string;
-}
-
-// ✅ Thêm response interface cho register
-interface RegisterShopResponse {
   message: string;
 }
 

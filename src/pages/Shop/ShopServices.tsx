@@ -102,7 +102,7 @@ const ShopServicesPage: React.FC = () => {
       
       if (matches) {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const [_, viDay, enDay, startTime, endTime] = matches;
+        const [_, __, enDay, startTime, endTime] = matches;
         const dayIndex = englishDays.findIndex(d => d.toLowerCase() === enDay.toLowerCase());
         
         if (dayIndex !== -1) {

@@ -76,7 +76,7 @@ const ShopInfo: React.FC = () => {
             const matches = dayString.match(regex);
             if (matches) {
               // eslint-disable-next-line @typescript-eslint/no-unused-vars
-              const [fullMatch, viDay, enDay, startTime, endTime] = matches;
+              const [_, viDay, enDay, startTime, endTime] = matches;
               
               // Tìm và cập nhật ngày tương ứng
               const dayIndex = updatedWorkingDays.findIndex(d => 
