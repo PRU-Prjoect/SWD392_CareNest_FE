@@ -131,15 +131,6 @@ const HotelDetailPage: React.FC = () => {
     navigate(-1);
   };
   
-  // Format date
-  const formatDate = (date: Date) => {
-    return new Intl.DateTimeFormat('vi-VN', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit'
-    }).format(date);
-  };
-  
   // Loading state
   if (hotelLoading) {
     return (

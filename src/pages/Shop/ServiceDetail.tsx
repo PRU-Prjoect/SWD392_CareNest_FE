@@ -1,12 +1,11 @@
 // pages/Shop/ServiceDetail.tsx
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import type { RootState, AppDispatch } from "@/store/store";
 import {
   getServiceById,
   deleteService,
-  updateService,
   clearAllServiceErrors,
   clearUpdateError,
   clearDeleteError,

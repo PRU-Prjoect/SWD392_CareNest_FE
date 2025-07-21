@@ -1,7 +1,7 @@
 // components/DateTimePicker/index.tsx
 import React, { useState, useRef, useEffect } from "react";
 import { DayPicker } from "react-day-picker";
-import { format, isValid, parse } from "date-fns";
+import { format, isValid } from "date-fns";
 import { vi } from "date-fns/locale";
 import "react-day-picker/dist/style.css";
 import "./DateTimePicker.css";

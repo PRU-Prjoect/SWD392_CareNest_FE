@@ -278,7 +278,7 @@ const AppSidebarForShop = () => {
               ) : (
                 /* Regular menu items */
                 <Link
-                  to={item.path}
+                  to={item.path || ''}
                   onClick={() => setIsSidebarOpen(false)}
                   className={`flex items-center space-x-3 px-6 py-3 hover:bg-teal-700 transition-colors ${
                     location.pathname === item.path ||

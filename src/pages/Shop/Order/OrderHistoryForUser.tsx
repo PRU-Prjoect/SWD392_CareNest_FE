@@ -7,13 +7,6 @@ import { getAllAppointments } from "@/store/slices/appointmentSlice";
 import { getShopById } from "@/store/slices/shopSlice";
 import { AppointmentStatus } from "@/types/enums";
 
-// ✅ Tái sử dụng interface từ OrderManagement
-interface Pet {
-  name: string;
-  type: string;
-  age: number;
-}
-
 interface OrderHistory {
   id: string;
   shopName: string; // ✅ Thay vì customerName

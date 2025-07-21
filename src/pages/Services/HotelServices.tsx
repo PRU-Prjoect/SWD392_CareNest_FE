@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
-import { MapPin, Star, Heart, Calendar, Shield, Check, Grid, List, Map, Clock, PawPrint, Award, Filter } from 'lucide-react';
+import { MapPin, Star, Heart, Shield, Check, Grid, List, Map, Clock, PawPrint, Award, Filter } from 'lucide-react';
 import { searchHotels } from '../../store/slices/hotelSlice';
 import type { AppDispatch, RootState } from '../../store/store';
 import { handleContextualError } from '../../utils/errorHandling';

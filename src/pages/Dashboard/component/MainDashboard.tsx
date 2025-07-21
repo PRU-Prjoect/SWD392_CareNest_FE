@@ -1,5 +1,3 @@
-import React from "react";
-
 const MainDashboard = () => {
   return (
     <div className=" bg-white dark:bg-gray-900 rounded-lg shadow p-6">
