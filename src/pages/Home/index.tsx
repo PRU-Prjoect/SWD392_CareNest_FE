@@ -5,6 +5,9 @@ import LatestServices from "./components/LatestServices";
 import HeroBanner from "./components/HeroBanner";
 import HighestRating from "./components/HighestRating";
 import MostBuy from "./components/MostBuy";
+import ServiceList from "./components/ServiceList";
+// Import the new ServiceList component that fetches real data
+// import ServiceList from "./components/ServiceList";
 
 const HomePage: React.FC = () => {
   return (
@@ -15,12 +18,17 @@ const HomePage: React.FC = () => {
       {/* Service Categories */}
       <ServiceCategories />
 
+      {/* OPTION 1: Original components with sample data */}
       {/* Latest Services */}
-      <LatestServices />
+      {/* <LatestServices /> */}
       {/* Highest Rating */}
-      <HighestRating></HighestRating>
+      {/* <HighestRating /> */}
       {/* Most Buy */}
-      <MostBuy></MostBuy>
+      {/* <MostBuy /> */}
+
+      {/* OPTION 2: New component that fetches real services */}
+      {/* Uncomment the line below and comment out the three components above to use the real data */}
+      <ServiceList />
     </div>
   );
 };
