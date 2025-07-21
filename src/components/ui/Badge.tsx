@@ -1,4 +1,4 @@
-type BadgeVariant = "light" | "solid";
+type BadgeVariant = "light" | "solid" | "secondary" | "destructive" | "outline";
 type BadgeSize = "sm" | "md";
 type BadgeColor =
   | "primary"
@@ -58,6 +58,34 @@ const Badge: React.FC<BadgeProps> = ({
       info: "bg-blue-light-500 text-white dark:text-white",
       light: "bg-gray-400 dark:bg-white/5 text-white dark:text-white/80",
       dark: "bg-gray-700 text-white dark:text-white",
+    },
+    // Thêm các variants mới
+    secondary: {
+      primary: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300",
+      success: "bg-success-100 text-success-800 dark:bg-success-900/30 dark:text-success-300",
+      error: "bg-error-100 text-error-800 dark:bg-error-900/30 dark:text-error-300",
+      warning: "bg-warning-100 text-warning-800 dark:bg-warning-900/30 dark:text-warning-300",
+      info: "bg-blue-light-100 text-blue-light-800 dark:bg-blue-light-900/30 dark:text-blue-light-300",
+      light: "bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-300",
+      dark: "bg-gray-600 text-white dark:bg-gray-800 dark:text-white",
+    },
+    destructive: {
+      primary: "bg-error-100 text-error-800 dark:bg-error-900/30 dark:text-error-300",
+      success: "bg-error-100 text-error-800 dark:bg-error-900/30 dark:text-error-300",
+      error: "bg-error-100 text-error-800 dark:bg-error-900/30 dark:text-error-300",
+      warning: "bg-error-100 text-error-800 dark:bg-error-900/30 dark:text-error-300",
+      info: "bg-error-100 text-error-800 dark:bg-error-900/30 dark:text-error-300",
+      light: "bg-error-100 text-error-800 dark:bg-error-900/30 dark:text-error-300",
+      dark: "bg-error-100 text-error-800 dark:bg-error-900/30 dark:text-error-300",
+    },
+    outline: {
+      primary: "bg-transparent border border-gray-300 text-gray-700 dark:border-gray-600 dark:text-gray-300",
+      success: "bg-transparent border border-success-300 text-success-700 dark:border-success-600 dark:text-success-300",
+      error: "bg-transparent border border-error-300 text-error-700 dark:border-error-600 dark:text-error-300",
+      warning: "bg-transparent border border-warning-300 text-warning-700 dark:border-warning-600 dark:text-warning-300",
+      info: "bg-transparent border border-blue-light-300 text-blue-light-700 dark:border-blue-light-600 dark:text-blue-light-300",
+      light: "bg-transparent border border-gray-300 text-gray-700 dark:border-gray-600 dark:text-gray-300",
+      dark: "bg-transparent border border-gray-500 text-gray-700 dark:border-gray-400 dark:text-gray-300",
     },
   };
 

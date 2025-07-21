@@ -931,14 +931,8 @@ const accountSlice = createSlice({
           state.deleting = false;
           state.deleteError = null;
 
-          // Reset currentAccount nếu đã bị xóa
-          if (
-            state.currentAccount &&
-            action.meta.arg === state.currentAccount.id
-          ) {
-            state.currentAccount = null;
-          }
-
+          // No way to know which account was deleted from the response
+          // Just log the successful deletion
           console.log("✅ Delete account successful:", action.payload.message);
         }
       )

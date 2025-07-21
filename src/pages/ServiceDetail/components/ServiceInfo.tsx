@@ -1,6 +1,6 @@
 import React from "react";
 import Badge from "../../../components/ui/Badge";
-import type { Service } from "../../../types/service";
+import type { Service } from "../../../types/services";
 
 interface ServiceInfoProps {
   service: Service;

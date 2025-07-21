@@ -24,7 +24,7 @@ import {
   clearAllAccountErrors,
 } from "@/store/slices/AccountSlice"; // ✅ Import uploadImage từ accountSlice
 import { toast } from "react-toastify";
-import ChangePasswordModal from "../../components/ChangePasswordModal";
+import ChangePasswordModal from "@/components/ChangePasswordModal";
 
 export default function ProfilePage() {
   const dispatch = useDispatch<AppDispatch>();

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 
 interface Pet {
   id: number;
@@ -51,9 +51,11 @@ const OrderHotelRoomManagement = () => {
     | "all"
   >("arriving-today");
   const [bookings, setBookings] = useState<HotelBooking[]>([]);
-  const [hotelOccupancy, setHotelOccupancy] = useState({
-    occupied: 5,
-    total: 20,
+  // State để lưu thông tin về tình trạng lưu trú
+  const [hotelOccupancy] = useState({
+    totalRooms: 10,
+    occupiedRooms: 6,
+    upcomingBookings: 3,
   });
 
   // Dữ liệu mẫu cho hotel bookings
@@ -318,13 +320,13 @@ const OrderHotelRoomManagement = () => {
           <div className="flex items-center space-x-4">
             <div className="text-center">
               <div className="text-2xl font-bold text-purple-600">
-                {hotelOccupancy.occupied}
+                {hotelOccupancy.occupiedRooms}
               </div>
               <div className="text-sm text-gray-500">Phòng đang sử dụng</div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-gray-400">
-                {hotelOccupancy.total - hotelOccupancy.occupied}
+                {hotelOccupancy.totalRooms - hotelOccupancy.occupiedRooms}
               </div>
               <div className="text-sm text-gray-500">Phòng trống</div>
             </div>
@@ -334,7 +336,7 @@ const OrderHotelRoomManagement = () => {
               <span>Occupancy Rate</span>
               <span>
                 {Math.round(
-                  (hotelOccupancy.occupied / hotelOccupancy.total) * 100
+                  (hotelOccupancy.occupiedRooms / hotelOccupancy.totalRooms) * 100
                 )}
                 %
               </span>
@@ -344,7 +346,7 @@ const OrderHotelRoomManagement = () => {
                 className="bg-gradient-to-r from-purple-500 to-pink-500 h-3 rounded-full transition-all duration-500"
                 style={{
                   width: `${
-                    (hotelOccupancy.occupied / hotelOccupancy.total) * 100
+                    (hotelOccupancy.occupiedRooms / hotelOccupancy.totalRooms) * 100
                   }%`,
                 }}
               ></div>
@@ -509,43 +511,12 @@ const OrderHotelRoomManagement = () => {
                       </div>
                     </div>
                     <div className="space-y-2">
-                      {booking.pets.map((pet, index) => (
+                      {booking.pets.map((pet) => (
                         <div
                           key={pet.id}
-                          className="flex items-center space-x-3"
+                          className="inline-block bg-purple-100 rounded-full px-3 py-1 text-xs text-purple-800 mr-2 mb-2"
                         >
-                          <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
-                            {pet.avatar ? (
-                              <img
-                                src={pet.avatar}
-                                alt={pet.name}
-                                className="w-10 h-10 rounded-full object-cover"
-                              />
-                            ) : (
-                              <span className="text-lg">🐕</span>
-                            )}
-                          </div>
-                          <div>
-                            <div className="font-medium text-gray-800">
-                              {pet.name}
-                            </div>
-                            <div className="text-sm text-gray-600">
-                              {pet.type}, {pet.age} tuổi
-                            </div>
-                            {pet.specialRequirements &&
-                              pet.specialRequirements.length > 0 && (
-                                <div className="flex flex-wrap gap-1 mt-1">
-                                  {pet.specialRequirements.map((req, i) => (
-                                    <span
-                                      key={i}
-                                      className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded"
-                                    >
-                                      ⚠️ {req}
-                                    </span>
-                                  ))}
-                                </div>
-                              )}
-                          </div>
+                          {pet.name} ({pet.type})
                         </div>
                       ))}
                     </div>

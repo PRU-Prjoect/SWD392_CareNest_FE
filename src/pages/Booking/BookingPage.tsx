@@ -192,11 +192,11 @@ const BookingPage: React.FC = () => {
 
             // Tính giá cuối cùng sau giảm giá
             const finalPrice =
-              currentService.discount_percent > 0 && currentService.price
-                ? (currentService.price *
+              currentService.discount_percent > 0
+                ? (currentService.price ?? 0 *
                     (100 - currentService.discount_percent)) /
                   100
-                : currentService.price;
+                : currentService.price ?? 0;
 
             // ✅ Chuẩn bị data để pass sang ThankYouPage với ID thật
             const bookingData = {
@@ -304,9 +304,9 @@ const BookingPage: React.FC = () => {
 
   // Tính giá cuối cùng sau giảm giá
   const finalPrice =
-    currentService.discount_percent > 0 && currentService.price
-      ? (currentService.price * (100 - currentService.discount_percent)) / 100
-      : currentService.price;
+    currentService.discount_percent > 0
+      ? ((currentService.price ?? 0) * (100 - currentService.discount_percent)) / 100
+      : currentService.price ?? 0;
 
   return (
     <div className="min-h-screen bg-gray-50">

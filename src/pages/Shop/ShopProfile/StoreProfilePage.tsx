@@ -12,7 +12,6 @@ import {
   Phone,
   Clock,
   Shield,
-  Settings,
 } from "lucide-react";
 
 // ✅ Import các actions từ slices
@@ -25,7 +24,6 @@ import {
   deleteSubAddress,
 } from "@/store/slices/subAddressSlice";
 import {
-  forgetPassword,
   sendEmailOtp,
   confirmEmailOtp,
   resetPassword,
@@ -69,7 +67,6 @@ const StoreProfile: React.FC = () => {
   const {
     currentAccount,
     loadingLogin,
-    updating: accountUpdating,
     sendingOtp,
     confirmingOtp,
     resettingPassword,
@@ -110,6 +107,7 @@ const StoreProfile: React.FC = () => {
           account_id: user.id,
           name: shopData.name || currentShop?.name || "",
           description: shopData.description || currentShop?.description || "",
+          phone: currentShop?.phone || "",
           status: shopData.status ?? currentShop?.status ?? true,
           working_day: shopData.working_day || currentShop?.working_day || [],
         })
@@ -332,7 +330,6 @@ const StoreProfile: React.FC = () => {
           <BranchesSection
             subAddresses={subAddresses}
             loading={subAddressLoading}
-            creating={subAddressCreating}
             updating={subAddressUpdating}
             deleting={subAddressDeleting}
             error={subAddressError}
@@ -629,7 +626,6 @@ const SecuritySection: React.FC<SecuritySectionProps> = ({
 interface BranchesSectionProps {
   subAddresses: SubAddress[];
   loading: boolean;
-  creating: boolean;
   updating: boolean;
   deleting: boolean;
   error: any;
@@ -640,7 +636,6 @@ interface BranchesSectionProps {
 const BranchesSection: React.FC<BranchesSectionProps> = ({
   subAddresses,
   loading,
-  creating,
   updating,
   deleting,
   error,

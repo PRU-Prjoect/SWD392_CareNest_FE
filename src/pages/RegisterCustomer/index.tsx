@@ -143,11 +143,6 @@ export default function RegisterCustomerPage() {
     }
   };
 
-  // Lấy ngày hiện tại để làm max date cho birthday
-  const getCurrentDate = () => {
-    return new Date().toISOString().split("T")[0];
-  };
-
   // ✅ Không render nếu không có account data
   if (!accountData) {
     return null;

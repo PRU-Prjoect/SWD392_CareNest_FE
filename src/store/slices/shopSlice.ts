@@ -57,16 +57,7 @@ interface UpdateShopRequest {
   account_id: string;
   name: string;
   description: string;
-  phone: string; // ✅ Thêm trường phone
-  status: boolean;
-  working_day: string[];
-}
-
-// ✅ Thêm interface cho register shop
-interface RegisterShopRequest {
-  name: string;
-  description: string;
-  phone: string;
+  phone: string; 
   status: boolean;
   working_day: string[];
 }
@@ -85,11 +76,6 @@ interface UpdateShopResponse {
 }
 
 interface DeleteShopResponse {
-  message: string;
-}
-
-// ✅ Thêm response interface cho register
-interface RegisterShopResponse {
   message: string;
 }
 
@@ -123,9 +109,12 @@ export const searchShops = createAsyncThunk<
   try {
     // Build query string from parameters
     const queryParams = new URLSearchParams();
-    if (params.name) queryParams.append("name", params.name);
-    if (params.limit) queryParams.append("limit", params.limit.toString());
-    if (params.offset) queryParams.append("offset", params.offset.toString());
+    
+    if (params && typeof params === 'object') {
+      if ('name' in params && params.name) queryParams.append("name", params.name);
+      if ('limit' in params && params.limit) queryParams.append("limit", params.limit.toString());
+      if ('offset' in params && params.offset) queryParams.append("offset", params.offset.toString());
+    }
 
     const queryString = queryParams.toString();
     const endpoint = queryString ? `Shop?${queryString}` : "Shop";

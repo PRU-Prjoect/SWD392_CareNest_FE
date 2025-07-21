@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import { Clock } from "lucide-react";
-import { getLoginAccount } from "@/store/slices/accountSlice";
+import { getLoginAccount } from "@/store/slices/AccountSlice";
 import { getShopById, updateShop } from "@/store/slices/shopSlice";
 
 // ✅ Định nghĩa interface mới cho cấu trúc ngày làm việc
@@ -76,7 +76,7 @@ const ShopInfo: React.FC = () => {
             const matches = dayString.match(regex);
             if (matches) {
               // eslint-disable-next-line @typescript-eslint/no-unused-vars
-              const [fullMatch, viDay, enDay, startTime, endTime] = matches;
+              const [_, viDay, enDay, startTime, endTime] = matches;
               
               // Tìm và cập nhật ngày tương ứng
               const dayIndex = updatedWorkingDays.findIndex(d => 

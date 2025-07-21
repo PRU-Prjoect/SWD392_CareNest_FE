@@ -2,12 +2,6 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
 import api from "@/config/axios";
 
-// Define a type for API error responses
-interface ApiErrorResponse {
-  status: number;
-  data: Record<string, unknown>;
-}
-
 interface ServiceState {
   loading: boolean;
   updating: boolean;

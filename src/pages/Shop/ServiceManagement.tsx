@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import type { RootState, AppDispatch } from "@/store/store";
@@ -508,7 +508,10 @@ const ServiceManagement = () => {
             }));
           }
         }}
-        service={selectedService}
+        service={selectedService ? {
+          ...selectedService,
+          price: selectedService.price ?? 0  // Đảm bảo price luôn là number
+        } : null}
         shopId={user.id}
       />
     </div>

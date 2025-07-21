@@ -213,7 +213,7 @@ const CurrentOrderForUser = () => {
                       id: serviceResult.data.id,
                       name: serviceResult.data.name,
                       note: appointment.notes || "",
-                      price: serviceResult.data.price,
+                      price: serviceResult.data.price ?? 0,
                       shopId: serviceResult.data.shop_id,
                     };
                   } catch (error) {
