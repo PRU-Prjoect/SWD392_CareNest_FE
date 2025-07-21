@@ -1,10 +1,10 @@
 // pages/Home/HomePage.tsx
 import React from "react";
 import ServiceCategories from "./components/ServiceCategories";
-import LatestServices from "./components/LatestServices";
+// import LatestServices from "./components/LatestServices";
 import HeroBanner from "./components/HeroBanner";
-import HighestRating from "./components/HighestRating";
-import MostBuy from "./components/MostBuy";
+// import HighestRating from "./components/HighestRating";
+    // import MostBuy from "./components/MostBuy";
 import ServiceList from "./components/ServiceList";
 // Import the new ServiceList component that fetches real data
 // import ServiceList from "./components/ServiceList";
