@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
-import { Search, MapPin, Star, Sliders, Heart, Calendar, Shield, Check, Grid, List, Map, Clock, PawPrint, Award, DollarSign, Filter } from 'lucide-react';
+import { MapPin, Star, Heart, Calendar, Shield, Check, Grid, List, Map, Clock, PawPrint, Award, Filter } from 'lucide-react';
 import { searchHotels } from '../../store/slices/hotelSlice';
 import type { AppDispatch, RootState } from '../../store/store';
 import { handleContextualError } from '../../utils/errorHandling';
@@ -63,7 +63,6 @@ const HotelServices: React.FC = () => {
     checkOutDate: '',
     view: 'grid'
   });
-  const [showFilters, setShowFilters] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 9;
 
@@ -283,47 +282,35 @@ const HotelServices: React.FC = () => {
           </p>
           
           {/* Search bar with enhanced UI */}
-          <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-2 bg-white p-2 rounded-lg shadow-lg max-w-4xl">
-            <div className="relative flex items-center border-r pr-4">
-              <MapPin className="absolute left-3 text-gray-500 w-5 h-5" />
-              <input
-                type="text"
-                name="location"
-                value={filters.location}
-                onChange={handleFilterChange}
-                placeholder="Địa điểm"
-                className="w-full pl-10 py-3 focus:outline-none"
-              />
-            </div>
-            <div className="relative flex items-center border-r pr-4">
-              <Calendar className="absolute left-3 text-gray-500 w-5 h-5" />
-              <input
-                type="date"
-                name="checkInDate"
-                value={filters.checkInDate}
-                onChange={handleFilterChange}
-                placeholder="Ngày đến"
-                className="w-full pl-10 py-3 focus:outline-none"
-              />
-            </div>
-            <div className="relative flex">
-              <PawPrint className="absolute left-3 text-gray-500 w-5 h-5" />
-              <select
-                name="petType"
-                value={filters.petType[0] || ''}
-                onChange={(e) => setFilters(prev => ({ ...prev, petType: e.target.value ? [e.target.value] : [] }))}
-                className="w-full pl-10 py-3 focus:outline-none bg-white"
-              >
-                <option value="">Loại thú cưng</option>
-                <option value="dog">Chó</option>
-                <option value="cat">Mèo</option>
-                <option value="rabbit">Thỏ</option>
-              </select>
-              <button 
-                className="absolute right-0 top-0 h-full bg-teal-600 hover:bg-teal-700 text-white px-6 rounded-r-lg"
-              >
-                Tìm ngay
-              </button>
+          <div className="mt-8 bg-white p-2 rounded-lg shadow-lg max-w-4xl">
+            <div className="flex flex-col md:flex-row">
+              <div className="flex-1 relative flex items-center md:border-r md:pr-4 mb-2 md:mb-0">
+                <MapPin className="absolute left-3 text-gray-500 w-5 h-5" />
+                <input
+                  type="text"
+                  name="location"
+                  value={filters.location}
+                  onChange={handleFilterChange}
+                  placeholder="Địa điểm"
+                  className="w-full pl-10 py-3 focus:outline-none"
+                />
+              </div>
+              <div className="flex-1 relative flex items-center">
+                <input
+                  type="text"
+                  name="keyword"
+                  value={filters.keyword}
+                  onChange={handleFilterChange}
+                  placeholder="Tên khách sạn, mô tả..."
+                  className="w-full pl-4 py-3 pr-24 focus:outline-none"
+                />
+                <button 
+                  className="absolute right-0 h-full bg-teal-600 hover:bg-teal-700 text-white px-6 rounded-r-lg"
+                  onClick={() => setCurrentPage(1)}
+                >
+                  Tìm ngay
+                </button>
+              </div>
             </div>
           </div>
           
