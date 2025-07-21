@@ -18,6 +18,7 @@ interface CreateAppointmentResponse {
   start_time: string;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const isCreateAppointmentResponse = (
   payload: any
 ): payload is CreateAppointmentResponse => {
@@ -191,7 +192,7 @@ const BookingPage: React.FC = () => {
 
             // Tính giá cuối cùng sau giảm giá
             const finalPrice =
-              currentService.discount_percent > 0
+              currentService.discount_percent > 0 && currentService.price
                 ? (currentService.price *
                     (100 - currentService.discount_percent)) /
                   100
@@ -303,7 +304,7 @@ const BookingPage: React.FC = () => {
 
   // Tính giá cuối cùng sau giảm giá
   const finalPrice =
-    currentService.discount_percent > 0
+    currentService.discount_percent > 0 && currentService.price
       ? (currentService.price * (100 - currentService.discount_percent)) / 100
       : currentService.price;
 
@@ -374,10 +375,10 @@ const BookingPage: React.FC = () => {
                   {currentService.discount_percent > 0 ? (
                     <>
                       <span className="text-lg text-gray-400 line-through">
-                        {currentService.price.toLocaleString()} đ
+                        {currentService.price?.toLocaleString()} đ
                       </span>
                       <span className="text-xl font-bold text-red-600">
-                        {finalPrice.toLocaleString()} đ
+                        {finalPrice?.toLocaleString()} đ
                       </span>
                       <span className="bg-red-100 text-red-800 text-xs font-semibold px-2 py-1 rounded">
                         -{currentService.discount_percent}%
@@ -385,7 +386,7 @@ const BookingPage: React.FC = () => {
                     </>
                   ) : (
                     <span className="text-xl font-bold text-teal-700">
-                      {currentService.price.toLocaleString()} đ
+                      {currentService.price?.toLocaleString()} đ
                     </span>
                   )}
                 </div>
