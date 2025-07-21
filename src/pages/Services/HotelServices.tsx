@@ -4,6 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import { MapPin, Star, Heart, Shield, Check, Grid, List, Map, Clock, PawPrint, Award, Filter } from 'lucide-react';
 import { searchHotels } from '../../store/slices/hotelSlice';
+import { searchShops } from '../../store/slices/shopSlice';
+import { searchSubAddresses } from '../../store/slices/subAddressSlice';
 import type { AppDispatch, RootState } from '../../store/store';
 import { handleContextualError } from '../../utils/errorHandling';
 import { Pagination } from '../../components/ui/Pagination';
@@ -68,18 +70,22 @@ const HotelServices: React.FC = () => {
 
   // Get hotels from Redux store
   const { hotels, loading, error } = useSelector((state: RootState) => state.hotel);
+  const { shops } = useSelector((state: RootState) => state.shop);
+  const { subAddresses } = useSelector((state: RootState) => state.subAddress);
 
   // Fetch hotels on component mount and when filters change
   useEffect(() => {
-    const fetchHotels = async () => {
+    const fetchData = async () => {
       try {
         await dispatch(searchHotels({}));
+        await dispatch(searchShops({}));
+        await dispatch(searchSubAddresses({}));
       } catch (error) {
         handleContextualError(error, "fetch");
       }
     };
     
-    fetchHotels();
+    fetchData();
   }, [dispatch]);
 
   // Handle error
@@ -89,23 +95,36 @@ const HotelServices: React.FC = () => {
     }
   }, [error]);
 
-  // Map API hotels to our extended interface
+  // Map API hotels to our extended interface with real data from shops and subAddresses
   const extendedHotels = React.useMemo((): HotelWithExtras[] => {
-    return hotels.map(hotel => ({
-      ...hotel,
-      avg_rating: 4.5 + Math.random() * 0.5, // Mock values with some variation
-      avg_price: 350000 + Math.floor(Math.random() * 500000),
-      address_name: 'Quận 1, TPHCM',
-      shop_name: 'Pet Shop',
-      distance: (Math.random() * 5).toFixed(1) + 'km',
-      services: ['y_te_24_7', 'dua_don', 'grooming', 'training'].slice(0, 2 + Math.floor(Math.random() * 3)),
-      petTypes: ['dog', 'cat', 'rabbit'].slice(0, 1 + Math.floor(Math.random() * 3)),
-      isFavorite: Math.random() > 0.7,
-      isVerified: Math.random() > 0.3,
-      isTopRated: Math.random() > 0.7,
-      quickResponse: Math.random() > 0.5
-    }));
-  }, [hotels]);
+    return hotels.map(hotel => {
+      // Find related shop
+      const relatedShop = shops.find(shop => shop.account_id === hotel.shop_id);
+      
+      // Find related address
+      const relatedAddress = subAddresses.find(address => address.id === hotel.sub_address_id);
+
+      // Calculate mock rating and price (in a real app, these would come from the API)
+      // These can be replaced with real data when available
+      const mockRating = 4.5 + Math.random() * 0.5;
+      const mockPrice = 350000 + Math.floor(Math.random() * 500000);
+
+      return {
+        ...hotel,
+        shop_name: relatedShop?.name || 'Shop không rõ',
+        address_name: relatedAddress?.address_name || 'Địa chỉ chưa cập nhật',
+        avg_rating: mockRating, 
+        avg_price: mockPrice,
+        distance: (Math.random() * 5).toFixed(1) + 'km',
+        services: ['y_te_24_7', 'dua_don', 'grooming', 'training'].slice(0, 2 + Math.floor(Math.random() * 3)),
+        petTypes: ['dog', 'cat', 'rabbit'].slice(0, 1 + Math.floor(Math.random() * 3)),
+        isFavorite: Math.random() > 0.7,
+        isVerified: Math.random() > 0.3,
+        isTopRated: mockRating > 4.7,
+        quickResponse: Math.random() > 0.5
+      };
+    });
+  }, [hotels, shops, subAddresses]);
 
   // Filter and sort hotels
   const filteredHotels = React.useMemo(() => {
@@ -317,7 +336,7 @@ const HotelServices: React.FC = () => {
           {/* Trust indicators */}
           <div className="mt-10 flex flex-wrap justify-center gap-6 text-white">
             <div className="flex items-center">
-              <span className="font-bold text-xl mr-2">1000+</span> khách sạn
+              <span className="font-bold text-xl mr-2">{hotels.length}+</span> khách sạn
             </div>
             <div className="flex items-center">
               <span className="font-bold text-xl mr-2">50,000+</span> thú cưng hài lòng
