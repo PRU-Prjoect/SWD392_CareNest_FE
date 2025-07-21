@@ -111,9 +111,12 @@ export const searchSubAddresses = createAsyncThunk<
     // Build query string from parameters
     const queryParams = new URLSearchParams();
 
-    if (params.shopId) queryParams.append("shopId", params.shopId);
-    if (params.addressName)
-      queryParams.append("addressName", params.addressName);
+    if (params && typeof params === 'object') {
+      if ('shopId' in params && params.shopId) 
+        queryParams.append("shopId", params.shopId);
+      if ('addressName' in params && params.addressName)
+        queryParams.append("addressName", params.addressName);
+    }
 
     const queryString = queryParams.toString();
     const endpoint = queryString ? `Sub_Address?${queryString}` : "Sub_Address";
