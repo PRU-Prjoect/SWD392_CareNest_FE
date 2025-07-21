@@ -155,7 +155,7 @@ const OrderHistoryForUser = () => {
                       id: serviceResult.data.id,
                       name: serviceResult.data.name,
                       note: appointment.notes || "",
-                      price: serviceResult.data.price,
+                      price: serviceResult.data.price ?? 0, // Thêm giá trị mặc định là 0 nếu price là undefined
                       shopId: serviceResult.data.shop_id,
                     };
                   } catch (error) {

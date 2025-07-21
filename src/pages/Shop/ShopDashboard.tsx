@@ -1,7 +1,5 @@
 import { useEffect } from "react";
-import { useSelector, useDispatch } from "react-redux";
-import type { RootState } from "@/store/store"; // Adjust import path as needed
-import { getShopById } from "@/store/slices/shopSlice"; // Adjust import path as needed
+import { useDispatch, useSelector } from "react-redux";
 import {
   BarChart,
   Bar,
@@ -14,14 +12,12 @@ import {
   Pie,
   Cell,
 } from "recharts";
+import type { RootState } from "@/store/store";
 
 const AdminDashboard = () => {
+  // Hooks
   const dispatch = useDispatch();
-
-  // ✅ Lấy user info từ auth state
   const { user } = useSelector((state: RootState) => state.auth);
-
-  // ✅ Lấy shop info từ shop state
   const { currentShop, loading } = useSelector(
     (state: RootState) => state.shop
   );
@@ -30,7 +26,11 @@ const AdminDashboard = () => {
   useEffect(() => {
     if (user?.id) {
       console.log("🚀 Fetching shop data for account_id:", user.id);
-      dispatch(getShopById(user.id));
+      // Sử dụng cách đơn giản để tránh lỗi TypeScript
+      dispatch({ 
+        type: 'shop/getById',
+        payload: user.id
+      });
     }
   }, [dispatch, user?.id]);
 

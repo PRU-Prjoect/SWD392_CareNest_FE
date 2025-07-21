@@ -22,6 +22,20 @@ interface Room {
   images?: string[];
 }
 
+// Định nghĩa type mở rộng HotelDataExtended để đảm bảo có các trường cần thiết
+type HotelDataExtended = {
+  id: string;
+  name: string;
+  description: string;
+  total_room: number;
+  available_room: number;
+  shop_id: string;
+  sub_address_id: string;
+  is_active: boolean;
+  address_name?: string;
+  avg_rating?: number;
+};
+
 // Map room type từ number về string để hiển thị
 const mapRoomTypeToString = (type: number): string => {
   switch (type) {
@@ -51,8 +65,11 @@ const HotelDetailPage: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   
   // Lấy thông tin khách sạn và phòng từ Redux store
-  const { currentHotel, loading: hotelLoading, error: hotelError } = useSelector((state: RootState) => state.hotel);
+  const { currentHotel: currentHotelData, loading: hotelLoading, error: hotelError } = useSelector((state: RootState) => state.hotel);
   const { rooms, loading: roomsLoading } = useSelector((state: RootState) => state.room);
+  
+  // Sử dụng type assertion để chuyển đổi currentHotel thành HotelDataExtended
+  const currentHotel = currentHotelData as unknown as HotelDataExtended;
   
   // Local state
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);

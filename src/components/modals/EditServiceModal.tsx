@@ -7,6 +7,7 @@ import { searchServiceTypes } from "@/store/slices/serviceTypeShopSlice";
 import { toast } from "react-toastify";
 import { Camera, Upload } from "lucide-react";
 
+// Cập nhật interface ServiceData để phù hợp với interface trong serviceSlice.ts
 interface ServiceData {
   id: string;
   name: string;
@@ -14,7 +15,7 @@ interface ServiceData {
   shop_id: string;
   description: string;
   discount_percent: number;
-  price: number;
+  price: number; // Giữ nguyên là number cho component này
   limit_per_hour: number;
   duration_type: number;
   star: number;
@@ -74,6 +75,7 @@ const EditServiceModal: React.FC<EditServiceModalProps> = ({
     if (service) {
       setFormData({
         ...service,
+        price: service.price || 0, // Đảm bảo price luôn là number
         img_url: service.img_url || "",
         img_url_id: service.img_url_id || "",
       });

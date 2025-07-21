@@ -508,7 +508,10 @@ const ServiceManagement = () => {
             }));
           }
         }}
-        service={selectedService}
+        service={selectedService ? {
+          ...selectedService,
+          price: selectedService.price ?? 0  // Đảm bảo price luôn là number
+        } : null}
         shopId={user.id}
       />
     </div>

@@ -275,7 +275,7 @@ const OrderManagement = () => {
             scheduledDate,
             status: mapAppointmentStatus(appointment.status),
             totalAmount: relatedServices.reduce(
-              (sum, service) => sum + service.price,
+              (sum, service) => sum + (service?.price ?? 0),
               0
             ),
             branch: currentShop?.name || "Chi nhánh Vinhome Grand Park",
@@ -314,7 +314,7 @@ const OrderManagement = () => {
         ...new Set(
           orders
             .map((order) => order.originalAppointment?.customer_id)
-            .filter(Boolean)
+            .filter((id): id is string => Boolean(id))
         ),
       ];
 

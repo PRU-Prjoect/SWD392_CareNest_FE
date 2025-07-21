@@ -324,11 +324,11 @@ const ServiceDetail = () => {
                       {currentService.discount_percent > 0 ? (
                         <>
                           <span className="line-through text-gray-400 text-base mr-2">
-                            {currentService.price.toLocaleString("vi-VN")} VNĐ
+                            {currentService.price?.toLocaleString("vi-VN") ?? '0'} VNĐ
                           </span>
                           <span className="text-red-600">
                             {(
-                              (currentService.price *
+                              ((currentService.price ?? 0) *
                                 (100 - currentService.discount_percent)) /
                               100
                             ).toLocaleString("vi-VN")}{" "}
@@ -336,7 +336,7 @@ const ServiceDetail = () => {
                           </span>
                         </>
                       ) : (
-                        `${currentService.price.toLocaleString("vi-VN")} VNĐ`
+                        `${currentService.price?.toLocaleString("vi-VN") ?? '0'} VNĐ`
                       )}
                     </div>
                   </div>
@@ -463,7 +463,10 @@ const ServiceDetail = () => {
             console.log("DEBUG: Closing edit modal");
             setShowEditModal(false);
           }}
-          service={currentService}
+          service={{
+            ...currentService,
+            price: currentService.price ?? 0,  // Đảm bảo giá trị price luôn là number
+          }}
           shopId={shopId}
         />
 

@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import { Clock } from "lucide-react";
-import { getLoginAccount } from "@/store/slices/accountSlice";
+import { getLoginAccount } from "@/store/slices/AccountSlice";
 import { getShopById, updateShop } from "@/store/slices/shopSlice";
 
 // ✅ Định nghĩa interface mới cho cấu trúc ngày làm việc
