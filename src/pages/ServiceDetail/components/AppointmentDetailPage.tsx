@@ -19,6 +19,21 @@ interface AppointmentData {
   end_time?: string;
 }
 
+// Define interfaces for service appointment data
+interface ServiceAppointment {
+  appointment_id: string;
+  service_id: string;
+}
+
+// Define the shape of data returned from API
+interface ServiceData {
+  id: string;
+  name: string;
+  price?: number;
+  shop_id: string;
+  // other properties from API might be here
+}
+
 interface ServiceDetail {
   id: string;
   name: string;
@@ -62,10 +77,15 @@ const AppointmentDetailPage: React.FC = () => {
         const serviceAppointmentsResult = await dispatch(
           getAllServiceAppointments({ appointmentId: appointmentId })
         ).unwrap();
+        
+        // Ensure serviceAppointmentsResult.data is treated as an array of ServiceAppointment
+        const serviceAppointments = Array.isArray(serviceAppointmentsResult.data) 
+          ? serviceAppointmentsResult.data 
+          : [];
 
         // Fetch service details and shop info
-        const servicePromises = serviceAppointmentsResult.data.map(
-          async (sa: any) => {
+        const servicePromises = serviceAppointments.map(
+          async (sa: ServiceAppointment) => {
             const serviceResult = await dispatch(
               getServiceById(sa.service_id)
             ).unwrap();
@@ -73,14 +93,41 @@ const AppointmentDetailPage: React.FC = () => {
           }
         );
 
-        const serviceDetails = await Promise.all(servicePromises);
-        setServices(serviceDetails);
+        const serviceDetailsFromApi = await Promise.all(servicePromises);
+        
+        // Transform service data to match ServiceDetail interface
+        const transformedServices: ServiceDetail[] = serviceDetailsFromApi.map((service: ServiceData) => ({
+          id: service.id,
+          name: service.name,
+          price: service.price ?? 0, // Default to 0 if price is undefined
+          shop_id: service.shop_id
+        }));
+        
+        setServices(transformedServices);
 
         // If we have services, get shop details from the first service
-        if (serviceDetails.length > 0) {
-          const shopId = serviceDetails[0].shop_id;
+        if (transformedServices.length > 0) {
+          const shopId = transformedServices[0].shop_id;
           const shopResult = await dispatch(getShopById(shopId)).unwrap();
-          setShop(shopResult.data);
+          
+          // Use type assertion after checking the shape
+          const shopData = shopResult.data as unknown as {
+            id?: string;
+            name?: string;
+            address?: string;
+            phone?: string;
+          };
+          
+          // Log the actual shape of the data for debugging
+          console.log('Shop data from API:', shopData);
+          
+          // Use a more defensive approach to extract shop data
+          setShop({
+            id: shopData?.id ?? '',
+            name: shopData?.name ?? '',
+            address: shopData?.address ?? 'Chưa cập nhật địa chỉ',
+            phone: shopData?.phone ?? ''
+          });
         }
         
         setLoading(false);
