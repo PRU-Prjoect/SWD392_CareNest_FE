@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { toast, ToastContainer } from 'react-toastify';
+import { ToastContainer } from 'react-toastify';
 import { Search, MapPin, Star, Sliders } from 'lucide-react';
 import { searchHotels } from '../../store/slices/hotelSlice';
 import type { AppDispatch, RootState } from '../../store/store';
 import { handleContextualError } from '../../utils/errorHandling';
 import { Pagination } from '../../components/ui/Pagination';
 
-// Định nghĩa interfaces
-interface Hotel {
+// Extended Hotel interface to match our UI needs
+interface HotelWithExtras {
   id: string;
   name: string;
   description: string;
@@ -18,9 +18,10 @@ interface Hotel {
   shop_id: string;
   sub_address_id: string;
   is_active: boolean;
-  shop_name?: string; // Tên cửa hàng
-  address_name?: string; // Địa chỉ
-  avg_rating?: number; // Đánh giá trung bình
+  shop_name?: string; 
+  address_name?: string;
+  avg_rating?: number;
+  avg_price?: number;
 }
 
 interface FilterState {
@@ -54,8 +55,7 @@ const HotelServices: React.FC = () => {
   useEffect(() => {
     const fetchHotels = async () => {
       try {
-        // Chỉ lấy các khách sạn đang hoạt động
-        await dispatch(searchHotels({ isActive: true }));
+        await dispatch(searchHotels({}));
       } catch (error) {
         handleContextualError(error, "fetch");
       }
@@ -71,9 +71,20 @@ const HotelServices: React.FC = () => {
     }
   }, [error]);
 
+  // Map API hotels to our extended interface
+  const extendedHotels = React.useMemo((): HotelWithExtras[] => {
+    return hotels.map(hotel => ({
+      ...hotel,
+      avg_rating: 4.5, // Default or mock values for now
+      avg_price: 500000,
+      address_name: 'Ho Chi Minh City',
+      shop_name: 'Pet Shop'
+    }));
+  }, [hotels]);
+
   // Filter and sort hotels
   const filteredHotels = React.useMemo(() => {
-    return hotels.filter(hotel => {
+    return extendedHotels.filter(hotel => {
       // Filter by keyword
       if (filters.keyword && !hotel.name.toLowerCase().includes(filters.keyword.toLowerCase()) && 
           !hotel.description.toLowerCase().includes(filters.keyword.toLowerCase())) {
@@ -85,7 +96,7 @@ const HotelServices: React.FC = () => {
         return false;
       }
       
-      // Filter by price range (giả sử có giá trung bình)
+      // Filter by price range
       if (hotel.avg_price) {
         if (filters.minPrice && parseFloat(filters.minPrice) > hotel.avg_price) {
           return false;
@@ -110,7 +121,7 @@ const HotelServices: React.FC = () => {
           return 0;
       }
     });
-  }, [hotels, filters]);
+  }, [extendedHotels, filters]);
 
   // Pagination logic
   const totalPages = Math.ceil(filteredHotels.length / itemsPerPage);

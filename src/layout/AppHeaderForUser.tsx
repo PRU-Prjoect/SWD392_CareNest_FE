@@ -420,81 +420,9 @@ const AppHeaderForUser: React.FC<HeaderProps> = () => {
                 </Link>
               </>
             )}
-            {/* ... other menu items ... */}
           </div>
         </div>
       )}
-
-      {/* Advanced Search Bar */}
-      <div className="w-full bg-white shadow-sm py-2 border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center space-x-6">
-            {/* Navigation Links */}
-            <nav className="flex items-center space-x-6 text-sm">
-              <Link
-                to={isAuthenticated ? "/app/home" : "/guest/home"}
-                className="py-2 text-gray-500 hover:text-teal-600 transition-colors"
-              >
-                Trang chủ
-              </Link>
-              <Link
-                to={isAuthenticated ? "/app/services" : "/guest/services"}
-                className="py-2 text-gray-500 hover:text-teal-600 transition-colors"
-              >
-                Dịch vụ
-              </Link>
-              <Link
-                to={isAuthenticated ? "/app/hotel-services" : "/guest/hotel-services"}
-                className="py-2 text-gray-500 hover:text-teal-600 transition-colors"
-              >
-                Khách sạn thú cưng
-              </Link>
-              {isAuthenticated && (
-                <Link
-                  to="/app/order-history"
-                  className="py-2 text-gray-500 hover:text-teal-600 transition-colors"
-                >
-                  Đơn hàng
-                </Link>
-              )}
-            </nav>
-
-            {/* Filter Button */}
-            <div className="ml-auto">
-              <button
-                onClick={() => {
-                  navigate(
-                    isAuthenticated ? "/app/services" : "/guest/services"
-                  );
-                }}
-                className="text-sm text-gray-500 hover:text-teal-600 flex items-center space-x-1"
-              >
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 16 16"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    d="M14.5 2H1.5C1.224 2 1 2.224 1 2.5V3.5C1 3.776 1.224 4 1.5 4H14.5C14.776 4 15 3.776 15 3.5V2.5C15 2.224 14.776 2 14.5 2Z"
-                    fill="currentColor"
-                  />
-                  <path
-                    d="M12.5 7H3.5C3.224 7 3 7.224 3 7.5V8.5C3 8.776 3.224 9 3.5 9H12.5C12.776 9 13 8.776 13 8.5V7.5C13 7.224 12.776 7 12.5 7Z"
-                    fill="currentColor"
-                  />
-                  <path
-                    d="M9.5 12H6.5C6.224 12 6 12.224 6 12.5V13.5C6 13.776 6.224 14 6.5 14H9.5C9.776 14 10 13.776 10 13.5V12.5C10 12.224 9.776 12 9.5 12Z"
-                    fill="currentColor"
-                  />
-                </svg>
-                <span>Lọc tìm kiếm</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
     </>
   );
 };
