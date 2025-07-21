@@ -6,6 +6,7 @@ import { MapPin, Star, Heart, Shield, Check, Grid, List, Map, Clock, PawPrint, A
 import { searchHotels } from '../../store/slices/hotelSlice';
 import { searchShops } from '../../store/slices/shopSlice';
 import { searchSubAddresses } from '../../store/slices/subAddressSlice';
+import { getRooms } from '../../store/slices/roomSlice';
 import type { AppDispatch, RootState } from '../../store/store';
 import { handleContextualError } from '../../utils/errorHandling';
 import { Pagination } from '../../components/ui/Pagination';
@@ -24,6 +25,8 @@ interface HotelWithExtras {
   address_name?: string;
   avg_rating?: number;
   avg_price?: number;
+  lowest_price?: number;
+  highest_price?: number;
   distance?: string;
   services?: string[];
   petTypes?: string[];
@@ -72,6 +75,7 @@ const HotelServices: React.FC = () => {
   const { hotels, loading, error } = useSelector((state: RootState) => state.hotel);
   const { shops } = useSelector((state: RootState) => state.shop);
   const { subAddresses } = useSelector((state: RootState) => state.subAddress);
+  const { rooms } = useSelector((state: RootState) => state.room);
 
   // Fetch hotels on component mount and when filters change
   useEffect(() => {
@@ -80,6 +84,7 @@ const HotelServices: React.FC = () => {
         await dispatch(searchHotels({}));
         await dispatch(searchShops({}));
         await dispatch(searchSubAddresses({}));
+        await dispatch(getRooms()); // Fetch all rooms
       } catch (error) {
         handleContextualError(error, "fetch");
       }
@@ -104,17 +109,39 @@ const HotelServices: React.FC = () => {
       // Find related address
       const relatedAddress = subAddresses.find(address => address.id === hotel.sub_address_id);
 
-      // Calculate mock rating and price (in a real app, these would come from the API)
-      // These can be replaced with real data when available
+      // Get all rooms for this hotel
+      const hotelRooms = rooms.filter(room => room.hotel_id === hotel.id);
+
+      // Calculate actual prices from rooms
+      let lowestPrice = 0;
+      let highestPrice = 0;
+      let averagePrice = 0;
+
+      if (hotelRooms.length > 0) {
+        // Find lowest and highest prices
+        lowestPrice = Math.min(...hotelRooms.map(room => room.daily_price));
+        highestPrice = Math.max(...hotelRooms.map(room => room.daily_price));
+        // Calculate average price
+        averagePrice = hotelRooms.reduce((sum, room) => sum + room.daily_price, 0) / hotelRooms.length;
+      } else {
+        // Fallback to mock prices if no rooms available
+        const mockPrice = 350000 + Math.floor(Math.random() * 500000);
+        lowestPrice = mockPrice;
+        highestPrice = mockPrice;
+        averagePrice = mockPrice;
+      }
+
+      // Calculate mock rating (in a real app, this would come from the API)
       const mockRating = 4.5 + Math.random() * 0.5;
-      const mockPrice = 350000 + Math.floor(Math.random() * 500000);
 
       return {
         ...hotel,
         shop_name: relatedShop?.name || 'Shop không rõ',
         address_name: relatedAddress?.address_name || 'Địa chỉ chưa cập nhật',
-        avg_rating: mockRating, 
-        avg_price: mockPrice,
+        avg_rating: mockRating,
+        avg_price: averagePrice,
+        lowest_price: lowestPrice,
+        highest_price: highestPrice,
         distance: (Math.random() * 5).toFixed(1) + 'km',
         services: ['y_te_24_7', 'dua_don', 'grooming', 'training'].slice(0, 2 + Math.floor(Math.random() * 3)),
         petTypes: ['dog', 'cat', 'rabbit'].slice(0, 1 + Math.floor(Math.random() * 3)),
@@ -124,7 +151,7 @@ const HotelServices: React.FC = () => {
         quickResponse: Math.random() > 0.5
       };
     });
-  }, [hotels, shops, subAddresses]);
+  }, [hotels, shops, subAddresses, rooms]);
 
   // Filter and sort hotels
   const filteredHotels = React.useMemo(() => {
@@ -163,11 +190,11 @@ const HotelServices: React.FC = () => {
       }
       
       // Filter by price range
-      if (hotel.avg_price) {
-        if (filters.minPrice && parseFloat(filters.minPrice) > hotel.avg_price) {
+      if (hotel.lowest_price) {
+        if (filters.minPrice && parseFloat(filters.minPrice) > hotel.lowest_price) {
           return false;
         }
-        if (filters.maxPrice && parseFloat(filters.maxPrice) < hotel.avg_price) {
+        if (filters.maxPrice && parseFloat(filters.maxPrice) < hotel.lowest_price) {
           return false;
         }
       }
@@ -176,9 +203,9 @@ const HotelServices: React.FC = () => {
     }).sort((a, b) => {
       switch (filters.sortBy) {
         case 'price_asc':
-          return (a.avg_price || 0) - (b.avg_price || 0);
+          return (a.lowest_price || 0) - (b.lowest_price || 0);
         case 'price_desc':
-          return (b.avg_price || 0) - (a.avg_price || 0);
+          return (b.lowest_price || 0) - (a.lowest_price || 0);
         case 'rating':
           return (b.avg_rating || 0) - (a.avg_rating || 0);
         case 'name':
@@ -386,89 +413,6 @@ const HotelServices: React.FC = () => {
                 />
               </div>
             </div>
-            
-            <div className="border-t pt-4 pb-3">
-              <h4 className="font-medium text-sm mb-2">Loại thú cưng</h4>
-              <div className="space-y-2">
-                {['dog', 'cat', 'rabbit'].map(pet => (
-                  <label key={pet} className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      checked={filters.petType.includes(pet)}
-                      onChange={() => handleCheckboxChange('petType', pet)}
-                      className="rounded text-teal-600 focus:ring-teal-500"
-                    />
-                    <span className="text-sm">{getPetTypeName(pet)}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-
-            <div className="border-t pt-4 pb-3">
-              <h4 className="font-medium text-sm mb-2">Đánh giá</h4>
-              <div className="space-y-2">
-                {[5, 4, 3, 2, 1].map(star => (
-                  <button
-                    key={star}
-                    onClick={() => handleRatingFilter(star)}
-                    className={`flex items-center ${filters.rating === star ? 'text-yellow-500 font-medium' : 'text-gray-600'}`}
-                  >
-                    <div className="flex">
-                      {Array.from({ length: star }).map((_, i) => (
-                        <Star key={i} className={`w-4 h-4 fill-current ${filters.rating === star ? 'text-yellow-400' : 'text-gray-300'}`} />
-                      ))}
-                    </div>
-                    <span className="ml-2 text-sm">{star}+ sao</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-            
-            <div className="border-t pt-4 pb-3">
-              <h4 className="font-medium text-sm mb-2">Dịch vụ</h4>
-              <div className="space-y-2">
-                {['y_te_24_7', 'dua_don', 'grooming', 'training'].map(service => (
-                  <label key={service} className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      checked={filters.services.includes(service)}
-                      onChange={() => handleCheckboxChange('services', service)}
-                      className="rounded text-teal-600 focus:ring-teal-500"
-                    />
-                    <div className="flex items-center">
-                      {renderServiceIcon(service)}
-                      <span className="text-sm">{getServiceName(service)}</span>
-                    </div>
-                  </label>
-                ))}
-              </div>
-            </div>
-            
-            <div className="border-t pt-4">
-              <h4 className="font-medium text-sm mb-2">Ngày</h4>
-              <div className="space-y-2">
-                <div>
-                  <label className="text-xs text-gray-500">Check-in</label>
-                  <input
-                    type="date"
-                    name="checkInDate"
-                    value={filters.checkInDate}
-                    onChange={handleFilterChange}
-                    className="w-full border border-gray-300 rounded-md p-2 text-sm mt-1"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs text-gray-500">Check-out</label>
-                  <input
-                    type="date"
-                    name="checkOutDate"
-                    value={filters.checkOutDate}
-                    onChange={handleFilterChange}
-                    className="w-full border border-gray-300 rounded-md p-2 text-sm mt-1"
-                  />
-                </div>
-              </div>
-            </div>
           </div>
           
           {/* Main content */}
@@ -506,7 +450,6 @@ const HotelServices: React.FC = () => {
                     onChange={handleFilterChange}
                     className="ml-4 border border-gray-300 rounded-lg px-3 py-1 text-sm"
                   >
-                    <option value="rating">Đánh giá cao nhất</option>
                     <option value="price_asc">Giá thấp đến cao</option>
                     <option value="price_desc">Giá cao đến thấp</option>
                     <option value="name">Tên (A-Z)</option>
@@ -594,7 +537,7 @@ const HotelServices: React.FC = () => {
                       
                       <div className="mb-3">
                         <div className="text-teal-600 font-bold text-lg">
-                          từ {hotel.avg_price ? `${hotel.avg_price.toLocaleString('vi-VN')}₫` : 'Liên hệ'}/đêm
+                          từ {hotel.lowest_price ? `${hotel.lowest_price.toLocaleString('vi-VN')}₫` : 'Liên hệ'}/đêm
                         </div>
                         <div className="flex items-center space-x-2 mt-1">
                           {hotel.petTypes?.map(pet => (
@@ -640,7 +583,7 @@ const HotelServices: React.FC = () => {
                           onClick={() => handleViewHotel(hotel.id)}
                           className="px-4 py-2 bg-teal-600 text-white rounded-md hover:bg-teal-700 transition-colors text-sm flex-1 text-center"
                         >
-                          Đặt ngay - {(hotel.avg_price || 0).toLocaleString('vi-VN').slice(0, -3)}k
+                          Đặt ngay - {(hotel.lowest_price || 0).toLocaleString('vi-VN').slice(0, -3)}k
                         </button>
                       </div>
                     </div>
@@ -718,7 +661,7 @@ const HotelServices: React.FC = () => {
                       
                       <div className="flex justify-between items-center">
                         <div className="text-teal-600 font-bold">
-                          {hotel.avg_price ? `${hotel.avg_price.toLocaleString('vi-VN')}₫/đêm` : 'Liên hệ'}
+                          {hotel.lowest_price ? `${hotel.lowest_price.toLocaleString('vi-VN')}₫/đêm` : 'Liên hệ'}
                         </div>
                         <div className="flex space-x-2">
                           <button
