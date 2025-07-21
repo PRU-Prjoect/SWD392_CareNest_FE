@@ -57,7 +57,7 @@ interface UpdateShopRequest {
   account_id: string;
   name: string;
   description: string;
-  phone: string; // ✅ Thêm trường phone
+  phone: string; 
   status: boolean;
   working_day: string[];
 }

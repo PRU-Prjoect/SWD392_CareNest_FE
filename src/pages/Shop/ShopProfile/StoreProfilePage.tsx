@@ -107,6 +107,7 @@ const StoreProfile: React.FC = () => {
           account_id: user.id,
           name: shopData.name || currentShop?.name || "",
           description: shopData.description || currentShop?.description || "",
+          phone: currentShop?.phone || "",
           status: shopData.status ?? currentShop?.status ?? true,
           working_day: shopData.working_day || currentShop?.working_day || [],
         })

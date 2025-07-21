@@ -7,7 +7,7 @@ import {
   sendEmailOtp,
   confirmEmailOtp,
   resetPassword,
-} from "@/store/slices/accountSlice";
+} from "@/store/slices/AccountSlice";
 
 interface Account {
   id: string;
@@ -125,7 +125,7 @@ const ShopSecurity: React.FC = () => {
       {/* Password Change Modal */}
       {showPasswordModal && (
         <PasswordChangeModal
-          account={currentAccount}
+          account={currentAccount as Account | null}
           onClose={() => setShowPasswordModal(false)}
           sendingOtp={sendingOtp}
           confirmingOtp={confirmingOtp}

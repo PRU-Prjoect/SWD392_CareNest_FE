@@ -342,17 +342,17 @@ const ShopServicesPage: React.FC = () => {
                           {service.discount_percent > 0 ? (
                             <>
                               <span className="line-through text-gray-400 mr-1">
-                                {service.price.toLocaleString("vi-VN")} VNĐ
+                                {(service.price ?? 0).toLocaleString("vi-VN")} VNĐ
                               </span>
                               <span className="text-red-600">
                                 {(
-                                  (service.price * (100 - service.discount_percent)) / 100
+                                  ((service.price ?? 0) * (100 - service.discount_percent)) / 100
                                 ).toLocaleString("vi-VN")}{" "}
                                 VNĐ
                               </span>
                             </>
                           ) : (
-                            `${service.price.toLocaleString("vi-VN")} VNĐ`
+                            `${(service.price ?? 0).toLocaleString("vi-VN")} VNĐ`
                           )}
                         </span>
                       </div>
