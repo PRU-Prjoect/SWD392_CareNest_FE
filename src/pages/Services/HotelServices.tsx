@@ -233,22 +233,22 @@ const HotelServices: React.FC = () => {
     setCurrentPage(1); // Reset to first page when filters change
   };
 
-  const handleCheckboxChange = (category: 'petType' | 'services', value: string) => {
-    setFilters(prev => {
-      const currentValues = [...prev[category]];
-      if (currentValues.includes(value)) {
-        return { ...prev, [category]: currentValues.filter(item => item !== value) };
-      } else {
-        return { ...prev, [category]: [...currentValues, value] };
-      }
-    });
-    setCurrentPage(1);
-  };
+  // const handleCheckboxChange = (category: 'petType' | 'services', value: string) => {
+  //   setFilters(prev => {
+  //     const currentValues = [...prev[category]];
+  //     if (currentValues.includes(value)) {
+  //       return { ...prev, [category]: currentValues.filter(item => item !== value) };
+  //     } else {
+  //       return { ...prev, [category]: [...currentValues, value] };
+  //     }
+  //   });
+  //   setCurrentPage(1);
+  // };
 
-  const handleRatingFilter = (rating: number) => {
-    setFilters(prev => ({ ...prev, rating: prev.rating === rating ? null : rating }));
-    setCurrentPage(1);
-  };
+  // const handleRatingFilter = (rating: number) => {
+  //   setFilters(prev => ({ ...prev, rating: prev.rating === rating ? null : rating }));
+  //   setCurrentPage(1);
+  // };
 
   const clearFilters = () => {
     setFilters({
