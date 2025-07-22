@@ -337,11 +337,11 @@ const HotelServices: React.FC = () => {
       <ToastContainer position="top-right" />
       
       {/* Hero Banner */}
-      <div className="relative bg-gradient-to-r from-teal-500 to-blue-500 h-96 flex items-center">
+      <div className="relative bg-cover bg-center h-96 flex items-center" style={{ backgroundImage: `url('/image/hinhnenkhachsan.png')` }}>
         <div className="absolute inset-0 bg-black opacity-30"></div>
         <div className="container mx-auto px-6 relative z-10">
-          <h1 className="text-5xl font-bold text-white mb-4">Ngôi nhà thứ hai cho boss của bạn</h1>
-          <p className="text-white text-xl max-w-2xl mb-8">
+          <h1 className="text-5xl font-bold text-amber-100 mb-4 px-4 py-2 inline-block bg-[#3E5F44] bg-opacity-40 rounded">Ngôi nhà thứ hai cho boss của bạn</h1>
+          <p className="inline-block text-amber-100 text-xl mb-8 px-4 py-2 bg-[#3E5F44] bg-opacity-40 rounded">
             Tìm kiếm nơi an toàn và thoải mái cho thú cưng của bạn trong thời gian bạn vắng nhà
           </p>
           
@@ -379,14 +379,14 @@ const HotelServices: React.FC = () => {
           </div>
           
           {/* Trust indicators */}
-          <div className="mt-10 flex flex-wrap justify-center gap-6 text-white">
-            <div className="flex items-center">
+          <div className="mt-10 flex flex-wrap justify-center gap-6">
+            <div className="flex items-center bg-[#3E5F44] bg-opacity-40 px-4 py-2 rounded text-amber-100">
               <span className="font-bold text-xl mr-2">{hotels.length}+</span> khách sạn
             </div>
-            <div className="flex items-center">
+            <div className="flex items-center bg-[#3E5F44] bg-opacity-40 px-4 py-2 rounded text-amber-100">
               <span className="font-bold text-xl mr-2">50,000+</span> thú cưng hài lòng
             </div>
-            <div className="flex items-center">
+            <div className="flex items-center bg-[#3E5F44] bg-opacity-40 px-4 py-2 rounded text-amber-100">
               <span className="font-bold text-xl mr-2">4.8</span> 
               <Star className="w-5 h-5 fill-current text-yellow-300" /> đánh giá
             </div>
