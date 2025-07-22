@@ -64,6 +64,9 @@ const HotelDetailPage: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
   
+  // Lấy thông tin user từ Redux store
+  const { user } = useSelector((state: RootState) => state.auth);
+  
   // Lấy thông tin khách sạn và phòng từ Redux store
   const { currentHotel: currentHotelData, loading: hotelLoading, error: hotelError } = useSelector((state: RootState) => state.hotel);
   const { rooms, loading: roomsLoading } = useSelector((state: RootState) => state.room);
@@ -127,8 +130,10 @@ const HotelDetailPage: React.FC = () => {
       return;
     }
     
+    // Kiểm tra nếu đã đăng nhập (user) thì điều hướng đến /app/, ngược lại thì /guest/
+    const baseUrl = user ? '/app' : '/guest';
     // Chuyển hướng đến trang đặt phòng khách sạn thú cưng với thông tin phòng đã chọn
-    navigate(`/app/hotel-booking/${selectedRoom.id}`);
+    navigate(`${baseUrl}/hotel-booking/${selectedRoom.id}`);
   };
   
   // Handle quay lại
@@ -374,13 +379,31 @@ const HotelDetailPage: React.FC = () => {
                 </div>
               </div>
               
-              <button
-                onClick={() => navigate(`/app/hotel-booking/${id}`)}
-                className="w-full py-3 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors flex items-center justify-center"
-              >
-                <Calendar className="w-5 h-5 mr-2" />
-                Đặt phòng ngay
-              </button>
+              <div className="space-y-3">
+                <button
+                  onClick={() => {
+                    // Kiểm tra nếu đã đăng nhập (user) thì điều hướng đến /app/, ngược lại thì /guest/
+                    const baseUrl = user ? '/app' : '/guest';
+                    navigate(`${baseUrl}/hotel-booking/${id}`);
+                  }}
+                  className="w-full py-3 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors flex items-center justify-center"
+                >
+                  <Calendar className="w-5 h-5 mr-2" />
+                  Đặt phòng ngay
+                </button>
+                
+                <button
+                  onClick={() => {
+                    // Kiểm tra nếu đã đăng nhập (user) thì điều hướng đến /app/, ngược lại thì /guest/
+                    const baseUrl = user ? '/app' : '/guest';
+                    navigate(`${baseUrl}/hotel-booking-detail/${id}`);
+                  }}
+                  className="w-full py-3 bg-white border border-teal-600 text-teal-600 rounded-lg hover:bg-teal-50 transition-colors flex items-center justify-center"
+                >
+                  <Info className="w-5 h-5 mr-2" />
+                  Xem chi tiết đặt phòng
+                </button>
+              </div>
             </div>
           </div>
         </div>

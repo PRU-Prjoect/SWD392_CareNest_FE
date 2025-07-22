@@ -23,6 +23,7 @@ import OrderHotelRoomManagement from "@/pages/Shop/Order/OrderHotelRoomManagemen
 import OrderHistoryForUser from "@/pages/Shop/Order/OrderHistoryForUser";
 import CurrentOrderForUser from "@/pages/ServiceDetail/components/CurrentOrderForUser";
 import ShopServicesPage from "@/pages/Shop/ShopServices";
+import HotelBookingDetail from "@/pages/ServiceDetail/HotelBookingDetail"; // Import trang chi tiết đặt phòng
 
 import RegisterCustomer from "@/pages/RegisterCustomer"; // Trang đăng ký cho khách hàng
 import AppLayoutForShop from "../layout/AppLayoutForShop"; // Layout cho Shop/Admin
@@ -64,6 +65,7 @@ const AppRoutes = () => {
         <Route path="hotel-services" element={<HotelServices />} />
         <Route path="hotel/:id" element={<HotelDetailPage />} />
         <Route path="hotel-booking/:roomId" element={<PetHotelBooking />} />
+        <Route path="hotel-booking-detail/:id" element={<HotelBookingDetail />} />
         <Route index element={<Navigate to="home" replace />} />
       </Route>
 
@@ -90,6 +92,7 @@ const AppRoutes = () => {
         <Route path="hotel-services" element={<HotelServices />} />
         <Route path="hotel/:id" element={<HotelDetailPage />} />
         <Route path="hotel-booking/:roomId" element={<PetHotelBooking />} />
+        <Route path="hotel-booking-detail/:id" element={<HotelBookingDetail />} />
         <Route index element={<Navigate to="home" replace />} />
       </Route>
 

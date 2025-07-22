@@ -54,6 +54,9 @@ const HotelServices: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
   
+  // Lấy thông tin user từ Redux store để xác định xem người dùng đã đăng nhập chưa
+  const { user } = useSelector((state: RootState) => state.auth);
+
   // State
   const [filters, setFilters] = useState<FilterState>({
     keyword: '',
@@ -224,7 +227,9 @@ const HotelServices: React.FC = () => {
   );
 
   const handleViewHotel = (hotelId: string) => {
-    navigate(`/hotel/${hotelId}`);
+    // Kiểm tra nếu người dùng đã đăng nhập thì điều hướng tới /app/, ngược lại tới /guest/
+    const baseUrl = user ? '/app' : '/guest';
+    navigate(`${baseUrl}/hotel/${hotelId}`);
   };
 
   const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
