@@ -11,6 +11,19 @@ import Alert from '@/components/ui/Alert';
 import { Spinner } from '@/components/ui/Spinner';
 import dayjs from 'dayjs';
 
+// Thêm danh sách hình ảnh cố định cho khách sạn
+const hotelImages = [
+  'https://i.pinimg.com/736x/62/bc/13/62bc13771bf76b97e28f881e2431d03d.jpg',
+  'https://i.pinimg.com/736x/0e/f5/44/0ef544ff32f62a595148c85330645277.jpg'
+];
+
+// Hàm lấy hình ảnh khách sạn dựa trên ID
+const getHotelImage = (id: string): string => {
+  // Chuyển id thành số để có thể sử dụng làm index
+  const idSum = id.split('').reduce((sum, char) => sum + char.charCodeAt(0), 0);
+  return hotelImages[idSum % hotelImages.length];
+};
+
 const PetHotelBooking: React.FC = () => {
   const { roomId } = useParams<{ roomId: string }>();
   const navigate = useNavigate();
@@ -124,7 +137,16 @@ const PetHotelBooking: React.FC = () => {
 
   return (
     <div className="container mx-auto py-8">
-      <h1 className="text-3xl font-bold mb-6">Book Pet Hotel Room</h1>
+      <h1 className="text-3xl font-bold mb-6">Đặt phòng khách sạn thú cưng</h1>
+      
+      {/* Hiển thị hình ảnh khách sạn */}
+      <div className="mb-6 rounded-lg overflow-hidden shadow-md max-w-2xl mx-auto">
+        <img 
+          src={getHotelImage(roomId || '1')} 
+          alt="Pet Hotel Room"
+          className="w-full h-64 object-cover"
+        />
+      </div>
       
       <Card className="p-6 max-w-2xl mx-auto">
         {createError && (

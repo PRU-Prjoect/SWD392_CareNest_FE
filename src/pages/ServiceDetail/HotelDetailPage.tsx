@@ -2,11 +2,26 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { toast, ToastContainer } from 'react-toastify';
-import { MapPin, Star, Calendar, Clock, ChevronLeft, Phone, Info, Home } from 'lucide-react';
+import { MapPin, Star, Calendar, Clock, ChevronLeft, Phone, Info } from 'lucide-react';
 import { getHotelById } from '../../store/slices/hotelSlice';
 import { getRooms } from '../../store/slices/roomSlice';
 import type { AppDispatch, RootState } from '../../store/store';
 import { handleContextualError } from '../../utils/errorHandling';
+
+// Thêm danh sách hình ảnh cố định cho khách sạn
+const hotelImages = [
+  'https://i.pinimg.com/736x/62/bc/13/62bc13771bf76b97e28f881e2431d03d.jpg',
+  'https://i.pinimg.com/736x/0e/f5/44/0ef544ff32f62a595148c85330645277.jpg',
+  'https://i.pinimg.com/1200x/6d/c1/dc/6dc1dc25cb841aaf4eec33e5ca4a5ebd.jpg',
+  'https://i.pinimg.com/736x/19/fb/7f/19fb7f336c6707cb30514e8698bfc31d.jpg'
+];
+
+// Hàm lấy hình ảnh khách sạn dựa trên ID
+const getHotelImage = (id: string): string => {
+  // Chuyển id thành số để có thể sử dụng làm index
+  const idSum = id.split('').reduce((sum, char) => sum + char.charCodeAt(0), 0);
+  return hotelImages[idSum % hotelImages.length];
+};
 
 // Định nghĩa interfaces
 interface Room {
@@ -208,8 +223,15 @@ const HotelDetailPage: React.FC = () => {
           {/* Left column - Hotel info */}
           <div className="lg:col-span-2 space-y-8">
             {/* Hotel images (placeholder) */}
-            <div className="bg-gray-200 h-80 rounded-lg flex items-center justify-center">
-              <Home className="w-16 h-16 text-gray-400" />
+            <div className="bg-gray-200 h-80 rounded-lg flex items-center justify-center overflow-hidden">
+              {/* Hiển thị hình ảnh thực từ URL cố định */}
+              {id && (
+                <img 
+                  src={getHotelImage(id)}
+                  alt={currentHotel.name}
+                  className="w-full h-full object-cover"
+                />
+              )}
             </div>
             
             {/* Hotel description */}

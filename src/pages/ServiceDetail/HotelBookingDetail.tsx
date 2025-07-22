@@ -7,7 +7,20 @@ import { getRooms } from '@/store/slices/roomSlice';
 import type { AppDispatch, RootState } from '@/store/store';
 import { format, parseISO } from 'date-fns';
 import { vi } from 'date-fns/locale';
-import { MapPin, Phone, ArrowLeft, Calendar, Clock, Home, DollarSign } from 'lucide-react';
+import { MapPin, Phone, ArrowLeft, Calendar, Clock, DollarSign } from 'lucide-react';
+
+// Thêm danh sách hình ảnh cố định cho khách sạn
+const hotelImages = [
+  'https://i.pinimg.com/736x/62/bc/13/62bc13771bf76b97e28f881e2431d03d.jpg',
+  'https://i.pinimg.com/736x/0e/f5/44/0ef544ff32f62a595148c85330645277.jpg'
+];
+
+// Hàm lấy hình ảnh khách sạn dựa trên ID
+const getHotelImage = (id: string): string => {
+  // Chuyển id thành số để có thể sử dụng làm index
+  const idSum = id.split('').reduce((sum, char) => sum + char.charCodeAt(0), 0);
+  return hotelImages[idSum % hotelImages.length];
+};
 
 // Map room type từ number về string để hiển thị
 const mapRoomTypeToString = (type: number): string => {
@@ -165,8 +178,15 @@ const HotelBookingDetail: React.FC = () => {
             {/* Left column - Hotel details */}
             <div className="lg:col-span-2 space-y-6">
               {/* Hotel image placeholder */}
-              <div className="bg-gray-200 h-64 rounded-lg flex items-center justify-center">
-                <Home className="w-16 h-16 text-gray-400" />
+              <div className="bg-gray-200 h-64 rounded-lg flex items-center justify-center overflow-hidden">
+                {/* Hiển thị hình ảnh thực từ URL cố định */}
+                {id && (
+                  <img 
+                    src={getHotelImage(id)}
+                    alt={currentHotel.name}
+                    className="w-full h-full object-cover"
+                  />
+                )}
               </div>
               
               {/* Hotel information */}
