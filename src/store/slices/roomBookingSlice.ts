@@ -9,6 +9,8 @@ import { AxiosError } from "axios";
 interface RoomBookingState {
   loading: boolean;
   creating: boolean;
+  updating: boolean;
+  deleting: boolean;
   roomBookings: RoomBookingData[];
   currentBooking: RoomBookingData | null;
   error: {
@@ -16,6 +18,14 @@ interface RoomBookingState {
     message: string;
   } | null;
   createError: {
+    code: number;
+    message: string;
+  } | null;
+  updateError: {
+    code: number;
+    message: string;
+  } | null;
+  deleteError: {
     code: number;
     message: string;
   } | null;
@@ -80,10 +90,14 @@ interface ApiErrorData {
 const initialState: RoomBookingState = {
   loading: false,
   creating: false,
+  updating: false,
+  deleting: false,
   roomBookings: [],
   currentBooking: null,
   error: null,
   createError: null,
+  updateError: null,
+  deleteError: null,
 };
 
 // ✅ 1. Get room bookings with filters
@@ -225,6 +239,178 @@ export const createRoomBooking = createAsyncThunk<
   }
 });
 
+// ✅ 3. Get room booking by ID
+export const getRoomBookingById = createAsyncThunk<
+  RoomBookingData,
+  string,
+  { rejectValue: ErrorResponse }
+>("roomBooking/getRoomBookingById", async (id, { rejectWithValue }) => {
+  try {
+    const response = await api.get(`Room_Booking/${id}`, {
+      headers: {
+        accept: "*/*",
+      },
+    });
+
+    console.log("✅ Get Room Booking By ID Response:", response.data);
+    return response.data;
+  } catch (err) {
+    const error = err as AxiosError<ApiErrorData>;
+    console.error("❌ Get Room Booking By ID Error:", error.response?.data);
+    
+    if (error.response) {
+      const status = error.response.status;
+      const errorData = error.response.data;
+      
+      switch (status) {
+        case 401:
+          return rejectWithValue({
+            error: 401,
+            code: 401,
+            message: "Access denied. Please log in again.",
+          });
+        case 404:
+          return rejectWithValue({
+            error: 404,
+            code: 404,
+            message: "Room booking not found",
+          });
+        default:
+          return rejectWithValue({
+            error: status,
+            code: status,
+            message: errorData?.message || "Failed to get room booking",
+          });
+      }
+    }
+    
+    return rejectWithValue({
+      error: 1,
+      code: 1,
+      message: error instanceof Error ? error.message : "Cannot connect to server",
+    });
+  }
+});
+
+// ✅ 4. Update room booking
+export const updateRoomBooking = createAsyncThunk<
+  SimpleResponse,
+  CreateRoomBookingRequest,
+  { rejectValue: ErrorResponse }
+>("roomBooking/updateRoomBooking", async (bookingData, { rejectWithValue }) => {
+  try {
+    const response = await api.put("Room_Booking", bookingData, {
+      headers: {
+        accept: "*/*",
+        "Content-Type": "application/json",
+      },
+    });
+
+    console.log("✅ Update Room Booking Response:", response.data);
+
+    return {
+      message: "Room booking updated successfully",
+    };
+  } catch (err) {
+    const error = err as AxiosError<ApiErrorData>;
+    console.error("❌ Update Room Booking Error:", error.response?.data);
+    
+    if (error.response) {
+      const status = error.response.status;
+      const errorData = error.response.data;
+      
+      switch (status) {
+        case 401:
+          return rejectWithValue({
+            error: 401,
+            code: 401,
+            message: "Access denied. Please log in again.",
+          });
+        case 400:
+          return rejectWithValue({
+            error: 400,
+            code: 400,
+            message: errorData?.message || "Invalid booking data",
+          });
+        case 404:
+          return rejectWithValue({
+            error: 404,
+            code: 404,
+            message: "Room booking not found",
+          });
+        default:
+          return rejectWithValue({
+            error: status,
+            code: status,
+            message: errorData?.message || "Failed to update room booking",
+          });
+      }
+    }
+    
+    return rejectWithValue({
+      error: 1,
+      code: 1,
+      message: error instanceof Error ? error.message : "Cannot connect to server",
+    });
+  }
+});
+
+// ✅ 5. Delete room booking
+export const deleteRoomBooking = createAsyncThunk<
+  SimpleResponse,
+  string,
+  { rejectValue: ErrorResponse }
+>("roomBooking/deleteRoomBooking", async (id, { rejectWithValue }) => {
+  try {
+    const response = await api.delete(`Room_Booking/${id}`, {
+      headers: {
+        accept: "*/*",
+      },
+    });
+
+    console.log("✅ Delete Room Booking Response:", response.data);
+
+    return {
+      message: "Room booking deleted successfully",
+    };
+  } catch (err) {
+    const error = err as AxiosError<ApiErrorData>;
+    console.error("❌ Delete Room Booking Error:", error.response?.data);
+    
+    if (error.response) {
+      const status = error.response.status;
+      const errorData = error.response.data;
+      
+      switch (status) {
+        case 401:
+          return rejectWithValue({
+            error: 401,
+            code: 401,
+            message: "Access denied. Please log in again.",
+          });
+        case 404:
+          return rejectWithValue({
+            error: 404,
+            code: 404,
+            message: "Room booking not found",
+          });
+        default:
+          return rejectWithValue({
+            error: status,
+            code: status,
+            message: errorData?.message || "Failed to delete room booking",
+          });
+      }
+    }
+    
+    return rejectWithValue({
+      error: 1,
+      code: 1,
+      message: error instanceof Error ? error.message : "Cannot connect to server",
+    });
+  }
+});
+
 // Slice
 const roomBookingSlice = createSlice({
   name: "roomBooking",
@@ -233,6 +419,8 @@ const roomBookingSlice = createSlice({
     clearRoomBookingErrors: (state) => {
       state.error = null;
       state.createError = null;
+      state.updateError = null;
+      state.deleteError = null;
     },
     resetRoomBookingState: () => initialState,
   },
@@ -269,6 +457,58 @@ const roomBookingSlice = createSlice({
         state.createError = action.payload || {
           code: 1,
           message: "Failed to create room booking",
+        };
+      });
+
+    // Get room booking by ID
+    builder
+      .addCase(getRoomBookingById.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(getRoomBookingById.fulfilled, (state, action: PayloadAction<RoomBookingData>) => {
+        state.loading = false;
+        state.currentBooking = action.payload;
+      })
+      .addCase(getRoomBookingById.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload || {
+          code: 1,
+          message: "Failed to load room booking",
+        };
+      });
+
+    // Update room booking
+    builder
+      .addCase(updateRoomBooking.pending, (state) => {
+        state.updating = true;
+        state.updateError = null;
+      })
+      .addCase(updateRoomBooking.fulfilled, (state) => {
+        state.updating = false;
+      })
+      .addCase(updateRoomBooking.rejected, (state, action) => {
+        state.updating = false;
+        state.updateError = action.payload || {
+          code: 1,
+          message: "Failed to update room booking",
+        };
+      });
+
+    // Delete room booking
+    builder
+      .addCase(deleteRoomBooking.pending, (state) => {
+        state.deleting = true;
+        state.deleteError = null;
+      })
+      .addCase(deleteRoomBooking.fulfilled, (state) => {
+        state.deleting = false;
+      })
+      .addCase(deleteRoomBooking.rejected, (state, action) => {
+        state.deleting = false;
+        state.deleteError = action.payload || {
+          code: 1,
+          message: "Failed to delete room booking",
         };
       });
   },

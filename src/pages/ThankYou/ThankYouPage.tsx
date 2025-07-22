@@ -12,18 +12,31 @@ interface BookingData {
   status: AppointmentStatus;
 }
 
+interface RoomBookingData {
+  id: string;
+  room_detail_id: string;
+  check_in_date: string;
+  check_out_date: string;
+  total_night: number;
+  total_amount: number;
+  hotel_name?: string;
+  room_number?: number;
+}
+
 const ThankYouPage: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const bookingData = location.state as BookingData;
+  // Check if the data is a room booking or a service appointment
+  const bookingData = location.state as BookingData | RoomBookingData | undefined;
+  const isRoomBooking = bookingData && 'room_detail_id' in bookingData;
 
   if (!bookingData) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <div className="text-center w-full max-w-md">
           <p className="text-gray-600 mb-4">
-            Không tìm thấy thông tin cuộc hẹn
+            Không tìm thấy thông tin đặt lịch
           </p>
           <button
             onClick={() => navigate("/app/home")}
@@ -44,10 +57,12 @@ const ThankYouPage: React.FC = () => {
           <div className="bg-gradient-to-r from-teal-500 to-green-500 p-4 sm:p-6 text-center text-white">
             <div className="animate-bounce text-3xl sm:text-4xl mb-2 sm:mb-4">🎉</div>
             <h1 className="text-xl sm:text-2xl md:text-3xl font-bold mb-2">
-              Cảm ơn bạn đã đặt lịch hẹn!
+              {isRoomBooking ? 'Cảm ơn bạn đã đặt phòng!' : 'Cảm ơn bạn đã đặt lịch hẹn!'}
             </h1>
             <p className="text-teal-100 text-sm sm:text-base">
-              Cảm ơn bạn đã đặt hàng – chúng tôi rất háo hức được chăm sóc cho thú cưng của bạn!
+              {isRoomBooking 
+                ? 'Cảm ơn bạn đã đặt phòng khách sạn – chúng tôi rất háo hức được chào đón thú cưng của bạn!'
+                : 'Cảm ơn bạn đã đặt hàng – chúng tôi rất háo hức được chăm sóc cho thú cưng của bạn!'}
             </p>
           </div>
 
@@ -60,12 +75,25 @@ const ThankYouPage: React.FC = () => {
                 <h3 className="text-base sm:text-lg font-semibold text-amber-800">Lưu ý:</h3>
               </div>
               <ul className="text-amber-700 space-y-1 sm:space-y-2 text-sm sm:text-base">
-                <li>
-                  • Vui lòng đến đúng giờ để trải nghiệm dịch vụ một cách tốt nhất.
-                </li>
-                <li>
-                  • Nếu có bất kỳ thay đổi nào, bạn có thể chỉnh sửa hoặc hủy lịch trong phần "Lịch hẹn của tôi".
-                </li>
+                {isRoomBooking ? (
+                  <>
+                    <li>
+                      • Vui lòng đến đúng ngày nhận phòng đã đặt.
+                    </li>
+                    <li>
+                      • Hãy mang theo các vật dụng cần thiết cho thú cưng của bạn.
+                    </li>
+                  </>
+                ) : (
+                  <>
+                    <li>
+                      • Vui lòng đến đúng giờ để trải nghiệm dịch vụ một cách tốt nhất.
+                    </li>
+                    <li>
+                      • Nếu có bất kỳ thay đổi nào, bạn có thể chỉnh sửa hoặc hủy lịch trong phần "Lịch hẹn của tôi".
+                    </li>
+                  </>
+                )}
               </ul>
             </div>
 
@@ -73,7 +101,9 @@ const ThankYouPage: React.FC = () => {
             <div className="text-center">
               <div className="text-2xl sm:text-3xl mb-2 sm:mb-4">💌</div>
               <h3 className="text-lg sm:text-xl font-semibold text-gray-800 mb-2">
-                Chúng tôi rất mong được gặp bạn và thú cưng của bạn!
+                {isRoomBooking 
+                  ? 'Chúng tôi rất mong được chào đón bạn và thú cưng của bạn!'
+                  : 'Chúng tôi rất mong được gặp bạn và thú cưng của bạn!'}
               </h3>
               <p className="text-gray-600 text-sm sm:text-base">
                 Nếu bạn cần hỗ trợ, đừng ngần ngại liên hệ với chúng tôi qua{" "}
@@ -109,7 +139,7 @@ const ThankYouPage: React.FC = () => {
                 <span>Quay lại trang chủ</span>
               </button>
               <button
-                onClick={() => navigate("/app/current-order")}
+                onClick={() => navigate(isRoomBooking ? "/app/order-history" : "/app/current-order")}
                 className="w-full px-4 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium flex items-center justify-center space-x-2 text-sm sm:text-base"
               >
                 <svg
@@ -125,7 +155,7 @@ const ThankYouPage: React.FC = () => {
                     d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
                   />
                 </svg>
-                <span>Xem chi tiết cuộc hẹn</span>
+                <span>{isRoomBooking ? 'Xem lịch sử đặt phòng' : 'Xem chi tiết cuộc hẹn'}</span>
               </button>
             </div>
           </div>

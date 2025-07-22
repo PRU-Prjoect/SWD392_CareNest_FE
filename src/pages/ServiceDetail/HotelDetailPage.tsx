@@ -127,20 +127,8 @@ const HotelDetailPage: React.FC = () => {
       return;
     }
     
-    // Chuyển hướng đến trang đặt phòng với thông tin phòng đã chọn
-    navigate('/booking', {
-      state: {
-        hotelId: id,
-        hotelName: currentHotel?.name,
-        roomId: selectedRoom.id,
-        roomNumber: selectedRoom.room_number,
-        roomType: mapRoomTypeToString(selectedRoom.room_type),
-        price: selectedRoom.daily_price,
-        checkInDate: selectedDate,
-        days: bookingDays,
-        totalPrice: selectedRoom.daily_price * bookingDays
-      }
-    });
+    // Chuyển hướng đến trang đặt phòng khách sạn thú cưng với thông tin phòng đã chọn
+    navigate(`/app/hotel-booking/${selectedRoom.id}`);
   };
   
   // Handle quay lại
@@ -387,7 +375,7 @@ const HotelDetailPage: React.FC = () => {
               </div>
               
               <button
-                onClick={() => navigate('/booking', { state: { hotelId: id } })}
+                onClick={() => navigate(`/app/hotel-booking/${id}`)}
                 className="w-full py-3 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors flex items-center justify-center"
               >
                 <Calendar className="w-5 h-5 mr-2" />
