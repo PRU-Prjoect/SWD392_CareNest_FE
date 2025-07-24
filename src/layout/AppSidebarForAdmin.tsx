@@ -27,11 +27,11 @@ const AppSidebarForAdmin: React.FC = () => {
       label: "Quản lý tài khoản",
       icon: "👥",
     },
-    {
-      path: "/admin/shops",
-      label: "Quản lý cửa hàng",
-      icon: "🏪",
-    },
+    // {
+    //   path: "/admin/shops",
+    //   label: "Quản lý cửa hàng",
+    //   icon: "🏪",
+    // },
     {
       path: "/admin/hotels",
       label: "Quản lý khách sạn",
@@ -47,16 +47,16 @@ const AppSidebarForAdmin: React.FC = () => {
       label: "Quản lý lịch hẹn",
       icon: "📅",
     },
-    {
-      path: "/admin/reports",
-      label: "Báo cáo",
-      icon: "📝",
-    },
-    {
-      path: "/admin/settings",
-      label: "Cài đặt hệ thống",
-      icon: "⚙️",
-    },
+    // {
+    //   path: "/admin/reports",
+    //   label: "Báo cáo",
+    //   icon: "📝",
+    // },
+    // {
+    //   path: "/admin/settings",
+    //   label: "Cài đặt hệ thống",
+    //   icon: "⚙️",
+    // },
   ];
 
   return (

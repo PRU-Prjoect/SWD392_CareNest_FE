@@ -3,6 +3,7 @@ import React from 'react';
 interface StatCardProps {
   title: string;
   value: string | number;
+  subtitle?: string;
   icon?: React.ReactNode;
   color?: 'blue' | 'green' | 'orange' | 'purple' | 'red';
   change?: {
@@ -15,6 +16,7 @@ interface StatCardProps {
 const StatCard: React.FC<StatCardProps> = ({
   title,
   value,
+  subtitle,
   icon,
   color = 'blue',
   change,
@@ -61,6 +63,10 @@ const StatCard: React.FC<StatCardProps> = ({
             <div className="h-8 w-24 bg-gray-200 animate-pulse rounded mt-1"></div>
           ) : (
             <p className={`text-2xl font-bold ${text} mt-1`}>{value}</p>
+          )}
+          
+          {subtitle && !isLoading && (
+            <p className="text-xs text-gray-500 mt-1">{subtitle}</p>
           )}
           
           {change && !isLoading && (
