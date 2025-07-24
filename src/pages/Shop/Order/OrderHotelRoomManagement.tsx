@@ -218,6 +218,9 @@ const OrderHotelRoomManagement = () => {
 
   // Calculate progress percentage for stay duration
   const getStayProgress = (booking: EnhancedBooking) => {
+    // Ưu tiên kiểm tra status trước - nếu đã check-out (status=3) thì luôn hiển thị 100%
+    if (booking.status === 3) return 100;
+    
     const now = new Date();
     const checkIn = new Date(booking.check_in_date);
     const checkOut = new Date(booking.check_out_date);
