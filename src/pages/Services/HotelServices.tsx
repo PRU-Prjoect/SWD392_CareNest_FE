@@ -34,6 +34,7 @@ interface HotelWithExtras {
   isVerified?: boolean;
   isTopRated?: boolean;
   quickResponse?: boolean;
+  imageUrl?: string; // Thêm trường imageUrl
 }
 
 interface FilterState {
@@ -54,6 +55,9 @@ const HotelServices: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
   
+  // Lấy thông tin user từ Redux store để xác định xem người dùng đã đăng nhập chưa
+  const { user } = useSelector((state: RootState) => state.auth);
+
   // State
   const [filters, setFilters] = useState<FilterState>({
     keyword: '',
@@ -76,6 +80,14 @@ const HotelServices: React.FC = () => {
   const { shops } = useSelector((state: RootState) => state.shop);
   const { subAddresses } = useSelector((state: RootState) => state.subAddress);
   const { rooms } = useSelector((state: RootState) => state.room);
+
+  // Thêm danh sách hình ảnh cố định cho khách sạn
+  const hotelImages = [
+    'https://i.pinimg.com/736x/62/bc/13/62bc13771bf76b97e28f881e2431d03d.jpg',
+    'https://i.pinimg.com/736x/0e/f5/44/0ef544ff32f62a595148c85330645277.jpg',
+    'https://i.pinimg.com/1200x/6d/c1/dc/6dc1dc25cb841aaf4eec33e5ca4a5ebd.jpg',
+    'https://i.pinimg.com/736x/19/fb/7f/19fb7f336c6707cb30514e8698bfc31d.jpg'
+  ];
 
   // Fetch hotels on component mount and when filters change
   useEffect(() => {
@@ -102,7 +114,7 @@ const HotelServices: React.FC = () => {
 
   // Map API hotels to our extended interface with real data from shops and subAddresses
   const extendedHotels = React.useMemo((): HotelWithExtras[] => {
-    return hotels.map(hotel => {
+    return hotels.map((hotel, index) => {
       // Find related shop
       const relatedShop = shops.find(shop => shop.account_id === hotel.shop_id);
       
@@ -133,6 +145,9 @@ const HotelServices: React.FC = () => {
 
       // Calculate mock rating (in a real app, this would come from the API)
       const mockRating = 4.5 + Math.random() * 0.5;
+      
+      // Gán hình ảnh cố định cho khách sạn (xoay vòng nếu có nhiều khách sạn hơn hình ảnh)
+      const imageUrl = hotelImages[index % hotelImages.length];
 
       return {
         ...hotel,
@@ -148,7 +163,8 @@ const HotelServices: React.FC = () => {
         isFavorite: Math.random() > 0.7,
         isVerified: Math.random() > 0.3,
         isTopRated: mockRating > 4.7,
-        quickResponse: Math.random() > 0.5
+        quickResponse: Math.random() > 0.5,
+        imageUrl: imageUrl // Thêm URL hình ảnh
       };
     });
   }, [hotels, shops, subAddresses, rooms]);
@@ -224,7 +240,9 @@ const HotelServices: React.FC = () => {
   );
 
   const handleViewHotel = (hotelId: string) => {
-    navigate(`/hotel/${hotelId}`);
+    // Kiểm tra nếu người dùng đã đăng nhập thì điều hướng tới /app/, ngược lại tới /guest/
+    const baseUrl = user ? '/app' : '/guest';
+    navigate(`${baseUrl}/hotel/${hotelId}`);
   };
 
   const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -319,11 +337,11 @@ const HotelServices: React.FC = () => {
       <ToastContainer position="top-right" />
       
       {/* Hero Banner */}
-      <div className="relative bg-gradient-to-r from-teal-500 to-blue-500 h-96 flex items-center">
+      <div className="relative bg-cover bg-center h-96 flex items-center" style={{ backgroundImage: `url('/image/hinhnenkhachsan.png')` }}>
         <div className="absolute inset-0 bg-black opacity-30"></div>
         <div className="container mx-auto px-6 relative z-10">
-          <h1 className="text-5xl font-bold text-white mb-4">Ngôi nhà thứ hai cho boss của bạn</h1>
-          <p className="text-white text-xl max-w-2xl mb-8">
+          <h1 className="text-5xl font-bold text-amber-100 mb-4 px-4 py-2 inline-block bg-[#3E5F44] bg-opacity-40 rounded">Ngôi nhà thứ hai cho boss của bạn</h1>
+          <p className="inline-block text-amber-100 text-xl mb-8 px-4 py-2 bg-[#3E5F44] bg-opacity-40 rounded">
             Tìm kiếm nơi an toàn và thoải mái cho thú cưng của bạn trong thời gian bạn vắng nhà
           </p>
           
@@ -361,14 +379,14 @@ const HotelServices: React.FC = () => {
           </div>
           
           {/* Trust indicators */}
-          <div className="mt-10 flex flex-wrap justify-center gap-6 text-white">
-            <div className="flex items-center">
+          <div className="mt-10 flex flex-wrap justify-center gap-6">
+            <div className="flex items-center bg-[#3E5F44] bg-opacity-40 px-4 py-2 rounded text-amber-100">
               <span className="font-bold text-xl mr-2">{hotels.length}+</span> khách sạn
             </div>
-            <div className="flex items-center">
+            <div className="flex items-center bg-[#3E5F44] bg-opacity-40 px-4 py-2 rounded text-amber-100">
               <span className="font-bold text-xl mr-2">50,000+</span> thú cưng hài lòng
             </div>
-            <div className="flex items-center">
+            <div className="flex items-center bg-[#3E5F44] bg-opacity-40 px-4 py-2 rounded text-amber-100">
               <span className="font-bold text-xl mr-2">4.8</span> 
               <Star className="w-5 h-5 fill-current text-yellow-300" /> đánh giá
             </div>
@@ -495,7 +513,12 @@ const HotelServices: React.FC = () => {
                   >
                     {/* Hotel image with badges */}
                     <div className="h-48 bg-gray-300 relative overflow-hidden">
-                      {/* Placeholder for hotel image */}
+                      {/* Hiển thị hình ảnh thực từ URL cố định */}
+                      <img 
+                        src={hotel.imageUrl} 
+                        alt={hotel.name}
+                        className="w-full h-full object-cover"
+                      />
                       <div className="flex justify-between items-start p-3">
                         <div className="flex space-x-1">
                           {hotel.isVerified && (
@@ -602,6 +625,12 @@ const HotelServices: React.FC = () => {
                   >
                     {/* Hotel image */}
                     <div className="w-1/4 bg-gray-300 relative">
+                      {/* Hiển thị hình ảnh thực từ URL cố định */}
+                      <img 
+                        src={hotel.imageUrl} 
+                        alt={hotel.name}
+                        className="w-full h-full object-cover"
+                      />
                       {hotel.isVerified && (
                         <div className="absolute top-2 left-2 bg-teal-100 text-teal-800 text-xs px-2 py-1 rounded-md font-medium">
                           <Check className="w-3 h-3 inline mr-1" /> VERIFIED

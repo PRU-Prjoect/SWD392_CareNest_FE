@@ -17,11 +17,13 @@ import HotelRoomManagement from "@/pages/Shop/Order/HotelRoomManagement";
 import ProfilePage from "../pages/Profile"; // ✅ Import ProfilePage
 import ServicesPage from "@/pages/Services/Service"; // ✅ Thêm import
 import BookingPage from "@/pages/Booking/BookingPage";
+import PetHotelBooking from "@/pages/Booking/PetHotelBooking"; // Import trang đặt phòng pet hotel
 import ThankYouPage from "@/pages/ThankYou/ThankYouPage";
 import OrderHotelRoomManagement from "@/pages/Shop/Order/OrderHotelRoomManagement";
 import OrderHistoryForUser from "@/pages/Shop/Order/OrderHistoryForUser";
 import CurrentOrderForUser from "@/pages/ServiceDetail/components/CurrentOrderForUser";
 import ShopServicesPage from "@/pages/Shop/ShopServices";
+import HotelBookingDetail from "@/pages/ServiceDetail/HotelBookingDetail"; // Import trang chi tiết đặt phòng
 
 import RegisterCustomer from "@/pages/RegisterCustomer"; // Trang đăng ký cho khách hàng
 import AppLayoutForShop from "../layout/AppLayoutForShop"; // Layout cho Shop/Admin
@@ -40,6 +42,19 @@ import AppointmentDetailPage from "@/pages/ServiceDetail/components/AppointmentD
 // Import các trang khách sạn mới
 import HotelServices from "@/pages/Services/HotelServices";
 import HotelDetailPage from "@/pages/ServiceDetail/HotelDetailPage";
+
+// ✅ Import Admin layout và components
+import AppLayoutForAdmin from "../layout/AppLayoutForAdmin";
+import {
+  DashboardPage,
+  AccountsManagement,
+  ShopsManagement,
+  ServicesManagement,
+  ReportsPage,
+  SystemSettings,
+  HotelsManagement,
+  AppointmentsManagement
+} from "@/pages/Admin";
 
 // Component chứa toàn bộ định nghĩa các route
 const AppRoutes = () => {
@@ -62,6 +77,8 @@ const AppRoutes = () => {
         {/* Routes mới cho khách sạn */}
         <Route path="hotel-services" element={<HotelServices />} />
         <Route path="hotel/:id" element={<HotelDetailPage />} />
+        <Route path="hotel-booking/:roomId" element={<PetHotelBooking />} />
+        <Route path="hotel-booking-detail/:id" element={<HotelBookingDetail />} />
         <Route index element={<Navigate to="home" replace />} />
       </Route>
 
@@ -87,6 +104,8 @@ const AppRoutes = () => {
         {/* Routes mới cho khách sạn */}
         <Route path="hotel-services" element={<HotelServices />} />
         <Route path="hotel/:id" element={<HotelDetailPage />} />
+        <Route path="hotel-booking/:roomId" element={<PetHotelBooking />} />
+        <Route path="hotel-booking-detail/:id" element={<HotelBookingDetail />} />
         <Route index element={<Navigate to="home" replace />} />
       </Route>
 
@@ -117,6 +136,26 @@ const AppRoutes = () => {
         </Route>
 
         <Route path="profile" element={<ProfilePage />} />
+        <Route index element={<Navigate to="dashboard" replace />} />
+      </Route>
+
+      {/* --------- Route dành cho Admin --------- */}
+      <Route
+        path="/admin/*"
+        element={
+          <ProtectedRoute requireAdmin={true}>
+            <AppLayoutForAdmin />
+          </ProtectedRoute>
+        }
+      >
+        <Route path="dashboard" element={<DashboardPage />} />
+        <Route path="accounts" element={<AccountsManagement />} />
+        <Route path="shops" element={<ShopsManagement />} />
+        <Route path="hotels" element={<HotelsManagement />} />
+        <Route path="appointments" element={<AppointmentsManagement />} />
+        <Route path="services" element={<ServicesManagement />} />
+        <Route path="reports" element={<ReportsPage />} />
+        <Route path="settings" element={<SystemSettings />} />
         <Route index element={<Navigate to="dashboard" replace />} />
       </Route>
 

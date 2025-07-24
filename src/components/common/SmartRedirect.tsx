@@ -1,62 +1,42 @@
 // src/components/common/SmartRedirect.tsx
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useEffect } from "react";
+import { Navigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import type { RootState } from "@/store/store";
 
-const SmartRedirect = () => {
-  const navigate = useNavigate();
-  const { isAuthenticated, user } = useSelector(
-    (state: RootState) => state.auth
-  );
-  const [isRedirecting, setIsRedirecting] = useState(false);
-
+const SmartRedirect: React.FC = () => {
+  const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
+  
   useEffect(() => {
-    // Tránh trường hợp điều hướng nhiều lần
-    if (isRedirecting) return;
-
-    // Kiểm tra thêm token trong localStorage để đảm bảo người dùng đã đăng nhập thực sự
-    const token = localStorage.getItem("authToken");
-    const userDataStr = localStorage.getItem("user");
-    
-    setIsRedirecting(true);
-    
-    // Chỉ điều hướng đến trang xác thực nếu cả Redux state và localStorage đều có dữ liệu xác thực
-    if (isAuthenticated && user && token && userDataStr) {
-      try {
-        // Kiểm tra thêm dữ liệu người dùng từ localStorage
-        const userData = JSON.parse(userDataStr);
-        
-        // Kiểm tra xem user role có khớp giữa Redux state và localStorage không
-        if (userData.role === user.role) {
-          console.log("✅ SmartRedirect: Điều hướng người dùng đã xác thực với role:", user.role);
-          
-          if (user.role === "Shop") {
-            navigate("/shop/dashboard", { replace: true });
-          } else {
-            navigate("/app/home", { replace: true });
-          }
-          return;
-        }
-      } catch (e) {
-        console.error("❌ SmartRedirect: Lỗi khi xử lý dữ liệu người dùng", e);
-      }
+    // Log để debug
+    console.log("SmartRedirect - isAuthenticated:", isAuthenticated);
+    console.log("SmartRedirect - user:", user);
+  }, [isAuthenticated, user]);
+  
+  if (isAuthenticated) {
+    // Kiểm tra vai trò và điều hướng phù hợp
+    console.log("SmartRedirect - Checking conditions:", {
+      usernameCheck: user?.username === "admin",
+      roleCheckAdmin: user?.role === "Admin",
+      roleCheck4String: user?.role === "4",
+      roleCheck4Number: Number(user?.role) === 4,
+      userRole: user?.role,
+      userRoleType: typeof user?.role
+    });
+     if (user?.username === "admin" ||user?.role === "Admin" ||user?.role === "4" ||  Number(user?.role) === 4) {
+      // Nếu là Admin, chuyển hướng đến trang quản trị Admin
+      return <Navigate to="/admin/dashboard" replace />;
+    } else if (user?.role === "Shop") {
+      // Nếu là Shop Owner, chuyển hướng đến trang quản lý cửa hàng
+      return <Navigate to="/shop/dashboard" replace />;
+    } else {
+      // Nếu là User thông thường, chuyển hướng đến trang chủ người dùng
+      return <Navigate to="/app/home" replace />;
     }
-    
-    // Nếu không có dữ liệu xác thực hợp lệ, chuyển hướng về trang khách
-    console.log("✅ SmartRedirect: Điều hướng về trang khách");
-    navigate("/guest/home", { replace: true });
-  }, [isAuthenticated, user, navigate, isRedirecting]);
-
-  // Hiển thị loading khi đang redirect
-  return (
-    <div className="flex items-center justify-center min-h-screen">
-      <div className="text-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#2A9D8F] mx-auto"></div>
-        <p className="mt-2 text-gray-600">Đang điều hướng...</p>
-      </div>
-    </div>
-  );
+  } else {
+    // Nếu chưa đăng nhập, chuyển hướng đến trang chủ cho khách
+    return <Navigate to="/guest/home" replace />;
+  }
 };
 
 export default SmartRedirect;

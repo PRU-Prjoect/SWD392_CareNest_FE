@@ -16,6 +16,7 @@ import appointmentReducer from "./slices/appointmentSlice";
 import serviceAppointmentReducer from "./slices/serviceAppointmentSlice";
 import hotelReducer from "./slices/hotelSlice";
 import roomReducer from "./slices/roomSlice";
+import roomBookingReducer from "./slices/roomBookingSlice";
 
 const persistConfig = {
   key: "root",
@@ -38,6 +39,7 @@ const rootReducer = combineReducers({
   service_appointment: serviceAppointmentReducer,
   hotel: hotelReducer,
   room: roomReducer,
+  roomBooking: roomBookingReducer,
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);
