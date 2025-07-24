@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { getAllServices, deleteService } from '@/store/slices/serviceSlice';
 import { searchServiceTypes } from '@/store/slices/serviceTypeShopSlice';
+import { getShopById } from '@/store/slices/shopSlice';
 
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
@@ -91,13 +92,14 @@ const ServicesManagement: React.FC = () => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+  const [shopNames, setShopNames] = useState<Record<string, string>>({});
+  const [loadingShopNames, setLoadingShopNames] = useState(false);
 
   const { 
     services, 
     searching, 
     deleting,
-    searchError,
-    deleteError 
+    searchError
   } = useAppSelector((state) => state.service);
   
   const { 
@@ -110,6 +112,34 @@ const ServicesManagement: React.FC = () => {
     dispatch(getAllServices());
     dispatch(searchServiceTypes());
   }, [dispatch]);
+
+  // Fetch shop names for all services
+  useEffect(() => {
+    const fetchShopNames = async () => {
+      setLoadingShopNames(true);
+      const uniqueShopIds = [...new Set(services.map(service => service.shop_id))];
+      const namesMap: Record<string, string> = {};
+      
+      for (const shopId of uniqueShopIds) {
+        try {
+          const result = await dispatch(getShopById(shopId)).unwrap();
+          if (result && result.data) {
+            namesMap[shopId] = result.data.name;
+          }
+        } catch (error) {
+          console.error(`Error fetching shop name for ID ${shopId}:`, error);
+          namesMap[shopId] = 'N/A';
+        }
+      }
+      
+      setShopNames(namesMap);
+      setLoadingShopNames(false);
+    };
+
+    if (services.length > 0) {
+      fetchShopNames();
+    }
+  }, [services, dispatch]);
 
   // Handle search function
   const handleSearch = () => {
@@ -263,7 +293,13 @@ const ServicesManagement: React.FC = () => {
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {service.shop_id.substring(0, 8)}...
+                          {loadingShopNames ? (
+                            <span className="inline-flex items-center">
+                              <Spinner size="sm" className="mr-2" /> Đang tải...
+                            </span>
+                          ) : (
+                            shopNames[service.shop_id] || `${service.shop_id.substring(0, 8)}...`
+                          )}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           {getServiceTypeName(service.service_type_id)}
