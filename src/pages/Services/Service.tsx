@@ -4,6 +4,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import type { AppDispatch, RootState } from "@/store/store";
 import { getAllServices, clearSearchError } from "@/store/slices/serviceSlice";
+import FilterBar from "@/components/common/FilterBar";
 
 const ServicesPage: React.FC = () => {
   const navigate = useNavigate();
@@ -18,6 +19,7 @@ const ServicesPage: React.FC = () => {
   const [currentFilters, setCurrentFilters] = useState<Record<string, string>>(
     {}
   );
+  const [filteredServices, setFilteredServices] = useState(services);
 
   // ✅ Get search info from navigation state
   useEffect(() => {
@@ -40,6 +42,47 @@ const ServicesPage: React.FC = () => {
     }
   }, [location.state, dispatch, services.length]);
 
+  // Apply filters to services whenever services or filters change
+  useEffect(() => {
+    let result = [...services];
+    
+    // Apply price filter
+    if (currentFilters.priceRange) {
+      const [min, max] = currentFilters.priceRange.split('-').map(Number);
+      if (currentFilters.priceRange === '1000+') {
+        result = result.filter(service => (service.price || 0) >= 1000000);
+      } else if (min !== undefined && max !== undefined) {
+        result = result.filter(service => {
+          const price = service.price || 0;
+          return price >= min * 1000 && price <= max * 1000;
+        });
+      }
+    }
+    
+    // Apply sort
+    if (currentFilters.sortBy) {
+      switch(currentFilters.sortBy) {
+        case 'newest':
+          // Since there's no created_at property, sort by ID as a fallback
+          result = [...result].sort((a, b) => b.id.localeCompare(a.id));
+          break;
+        case 'price_asc':
+          result = [...result].sort((a, b) => (a.price || 0) - (b.price || 0));
+          break;
+        case 'price_desc':
+          result = [...result].sort((a, b) => (b.price || 0) - (a.price || 0));
+          break;
+        case 'rating':
+          result = [...result].sort((a, b) => (b.star || 0) - (a.star || 0));
+          break;
+        default:
+          break;
+      }
+    }
+    
+    setFilteredServices(result);
+  }, [services, currentFilters]);
+
   // ✅ Clear errors on unmount
   useEffect(() => {
     return () => {
@@ -47,7 +90,10 @@ const ServicesPage: React.FC = () => {
     };
   }, [dispatch]);
 
-  // ❌ Xóa hàm handleFilter vì không còn sử dụng FilterBar
+  // ✅ Handle filtering
+  const handleFilter = (filters: Record<string, string>) => {
+    setCurrentFilters(filters);
+  };
 
   // ✅ Handle service detail view
   const handleServiceDetail = (id: string, e: React.MouseEvent) => {
@@ -79,6 +125,9 @@ const ServicesPage: React.FC = () => {
         </div>
       )}
 
+      {/* ✅ Add FilterBar component */}
+      <FilterBar onFilter={handleFilter} />
+
       {/* ✅ Show current filters */}
       {Object.keys(currentFilters).length > 0 && (
         <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
@@ -86,7 +135,6 @@ const ServicesPage: React.FC = () => {
         </div>
       )}
 
-      {/* ❌ Xóa FilterBar component */}
       {/* ✅ Error State */}
       {searchError && (
         <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
@@ -112,9 +160,9 @@ const ServicesPage: React.FC = () => {
         </div>
       )}
       {/* ✅ Services Grid - Cập nhật với 2 nút */}
-      {!searching && services.length > 0 && (
+      {!searching && filteredServices.length > 0 && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
-          {services.map((service) => (
+          {filteredServices.map((service) => (
             <div
               key={service.id}
               className="bg-white rounded-lg shadow p-4 flex flex-col hover:shadow-lg transition"
@@ -261,7 +309,7 @@ const ServicesPage: React.FC = () => {
         </div>
       )}
       {/* Empty State */}
-      {!searching && services.length === 0 && !searchError && (
+      {!searching && filteredServices.length === 0 && !searchError && (
         <div className="flex flex-col items-center justify-center py-12">
           <svg
             className="w-16 h-16 text-gray-400 mb-4"

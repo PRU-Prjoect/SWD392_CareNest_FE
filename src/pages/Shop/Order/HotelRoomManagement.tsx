@@ -339,36 +339,7 @@ const HotelManagement: React.FC = () => {
           </div>
         )}
 
-        {/* Thống kê tổng quan */}
-        {!hotelsLoading && hotelsWithRooms.length > 0 && (
-          <div className="mt-8 grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="bg-white p-4 rounded-lg shadow-md">
-              <h3 className="text-sm font-medium text-gray-500">Tổng khách sạn</h3>
-              <p className="text-2xl font-bold text-gray-900">{hotelsWithRooms.length}</p>
-            </div>
-            <div className="bg-white p-4 rounded-lg shadow-md">
-              <h3 className="text-sm font-medium text-gray-500">Tổng phòng</h3>
-              <p className="text-2xl font-bold text-blue-600">
-                {hotelsWithRooms.reduce((sum, hotel) => sum + hotel.total_room, 0)}
-              </p>
-            </div>
-            <div className="bg-white p-4 rounded-lg shadow-md">
-              <h3 className="text-sm font-medium text-gray-500">Phòng trống</h3>
-              <p className="text-2xl font-bold text-green-600">
-                {hotelsWithRooms.reduce((sum, hotel) => sum + hotel.available_room, 0)}
-              </p>
-            </div>
-            <div className="bg-white p-4 rounded-lg shadow-md">
-              <h3 className="text-sm font-medium text-gray-500">Tỷ lệ lấp đầy</h3>
-              <p className="text-2xl font-bold text-purple-600">
-                {hotelsWithRooms.length > 0 ? 
-                  Math.round(((hotelsWithRooms.reduce((sum, hotel) => sum + hotel.total_room, 0) - 
-                  hotelsWithRooms.reduce((sum, hotel) => sum + hotel.available_room, 0)) / 
-                  hotelsWithRooms.reduce((sum, hotel) => sum + hotel.total_room, 0)) * 100) : 0}%
-              </p>
-            </div>
-          </div>
-        )}
+      
       </div>
 
       {/* Modal thêm/sửa khách sạn */}

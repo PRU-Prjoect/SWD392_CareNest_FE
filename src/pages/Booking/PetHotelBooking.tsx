@@ -376,7 +376,7 @@ const PetHotelBooking: React.FC = () => {
             
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-1">
-                Thời gian uống thuốc (nếu có)
+                Thời gian uống thuốc
               </label>
               <DateTimePicker
                 onChange={handleDateChange('medication_schedule')}

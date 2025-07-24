@@ -313,6 +313,9 @@ export const updateRoomBooking = createAsyncThunk<
   { rejectValue: ErrorResponse }
 >("roomBooking/updateRoomBooking", async (bookingData, { rejectWithValue }) => {
   try {
+    console.log("🔄 Calling updateRoomBooking API with data:", bookingData);
+    console.log("🔄 Booking status:", bookingData.status);
+    
     const response = await api.put("Room_Booking", bookingData, {
       headers: {
         accept: "*/*",
@@ -448,6 +451,11 @@ const roomBookingSlice = createSlice({
       .addCase(getRoomBookings.fulfilled, (state, action: PayloadAction<RoomBookingListResponse>) => {
         state.loading = false;
         state.roomBookings = action.payload.data;
+        // Thêm debug log
+        console.log("✅ Room bookings updated in state:", action.payload.data.length);
+        console.log("✅ Status 1:", action.payload.data.filter(b => b.status === 1).length);
+        console.log("✅ Status 2:", action.payload.data.filter(b => b.status === 2).length);
+        console.log("✅ Status 3:", action.payload.data.filter(b => b.status === 3).length);
       })
       .addCase(getRoomBookings.rejected, (state, action) => {
         state.loading = false;

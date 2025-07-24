@@ -6,9 +6,9 @@ import type { AppDispatch, RootState } from "@/store/store";
 import { getAllServices } from "@/store/slices/serviceSlice";
 import NotificationDropdown from "../components/header/NotificationDropdown";
 import UserDropdown from "../components/header/UserDropdown";
-import SearchBar from "../components/common/SearchBar";
+// import SearchBar from "../components/common/SearchBar";
 import { Link } from "react-router-dom";
-import type { SearchField } from "../components/common/SearchBar";
+// import type { SearchField } from "../components/common/SearchBar";
 // ✅ THÊM: Import custom hook
 import { usePendingOrdersCount } from "@/hooks/usePendingOrdersCount";
 
@@ -55,108 +55,108 @@ const AppHeaderForUser: React.FC<HeaderProps> = () => {
     }
   };
 
-  const handleSearch = async (values: Record<string, string>) => {
-    console.log("Filter values:", values);
+  // const handleSearch = async (values: Record<string, string>) => {
+  //   console.log("Filter values:", values);
 
-    try {
-      const searchParams: any = {};
+  //   try {
+  //     const searchParams: any = {};
 
-      if (values.sortBy) {
-        switch (values.sortBy) {
-          case "price_asc":
-            searchParams.sortBy = "price";
-            break;
-          case "price_desc":
-            searchParams.sortBy = "price_desc";
-            break;
-          case "rating":
-            searchParams.sortBy = "star";
-            break;
-          case "newest":
-            searchParams.sortBy = "createdAt";
-            break;
-          default:
-            searchParams.sortBy = "createdAt";
-        }
-      }
+  //     if (values.sortBy) {
+  //       switch (values.sortBy) {
+  //         case "price_asc":
+  //           searchParams.sortBy = "price";
+  //           break;
+  //         case "price_desc":
+  //           searchParams.sortBy = "price_desc";
+  //           break;
+  //         case "rating":
+  //           searchParams.sortBy = "star";
+  //           break;
+  //         case "newest":
+  //           searchParams.sortBy = "createdAt";
+  //           break;
+  //         default:
+  //           searchParams.sortBy = "createdAt";
+  //       }
+  //     }
 
-      if (values.petType) {
-        searchParams.serviceTypeId = "f11909c0-89c2-4c5a-8fd9-21511a619e2c";
-      }
+  //     if (values.petType) {
+  //       searchParams.serviceTypeId = "f11909c0-89c2-4c5a-8fd9-21511a619e2c";
+  //     }
 
-      await dispatch(getAllServices(searchParams));
+  //     await dispatch(getAllServices(searchParams));
 
-      // ✅ Kiểm tra trạng thái đăng nhập để điều hướng đến đường dẫn phù hợp
-      const baseRoute = isAuthenticated ? "/app/services" : "/guest/services";
+  //     // ✅ Kiểm tra trạng thái đăng nhập để điều hướng đến đường dẫn phù hợp
+  //     const baseRoute = isAuthenticated ? "/app/services" : "/guest/services";
 
-      navigate(baseRoute, {
-        state: {
-          filters: values,
-          searchType: "filter",
-        },
-      });
-    } catch (error) {
-      console.error("Filter search error:", error);
-    }
-  };
+  //     navigate(baseRoute, {
+  //       state: {
+  //         filters: values,
+  //         searchType: "filter",
+  //       },
+  //     });
+  //   } catch (error) {
+  //     console.error("Filter search error:", error);
+  //   }
+  // };
 
-  const filterFields: SearchField[] = [
-    {
-      name: "location",
-      label: "Địa điểm",
-      placeholder: "Chọn địa điểm",
-      type: "select",
-      width: "w-1/4",
-      options: [
-        { value: "hanoi", label: "Hà Nội" },
-        { value: "hcm", label: "TP. Hồ Chí Minh" },
-        { value: "danang", label: "Đà Nẵng" },
-        { value: "haiphong", label: "Hải Phòng" },
-      ],
-    },
-    {
-      name: "petType",
-      label: "Loại thú",
-      placeholder: "Chọn loại thú cưng",
-      type: "select",
-      width: "w-1/4",
-      options: [
-        { value: "dog", label: "🐕 Chó" },
-        { value: "cat", label: "🐱 Mèo" },
-        { value: "bird", label: "🐦 Chim" },
-        { value: "fish", label: "🐠 Cá" },
-        { value: "rabbit", label: "🐰 Thỏ" },
-      ],
-    },
-    {
-      name: "sortBy",
-      label: "Sắp xếp",
-      placeholder: "Sắp xếp theo",
-      type: "select",
-      width: "w-1/4",
-      options: [
-        { value: "price_asc", label: "Giá tăng dần" },
-        { value: "price_desc", label: "Giá giảm dần" },
-        { value: "rating", label: "Đánh giá cao nhất" },
-        { value: "distance", label: "Khoảng cách gần nhất" },
-        { value: "newest", label: "Mới nhất" },
-      ],
-    },
-    {
-      name: "priceRange",
-      label: "Khoảng giá",
-      placeholder: "Chọn khoảng giá",
-      type: "select",
-      width: "w-1/4",
-      options: [
-        { value: "0-100", label: "Dưới 100k" },
-        { value: "100-300", label: "100k - 300k" },
-        { value: "300-500", label: "300k - 500k" },
-        { value: "500-1000", label: "500k - 1tr" },
-        { value: "1000+", label: "Trên 1tr" },
-      ],
-    },
-  ];
+  // const filterFields: SearchField[] = [
+  //   {
+  //     name: "location",
+  //     label: "Địa điểm",
+  //     placeholder: "Chọn địa điểm",
+  //     type: "select",
+  //     width: "w-1/4",
+  //     options: [
+  //       { value: "hanoi", label: "Hà Nội" },
+  //       { value: "hcm", label: "TP. Hồ Chí Minh" },
+  //       { value: "danang", label: "Đà Nẵng" },
+  //       { value: "haiphong", label: "Hải Phòng" },
+  //     ],
+  //   },
+  //   {
+  //     name: "petType",
+  //     label: "Loại thú",
+  //     placeholder: "Chọn loại thú cưng",
+  //     type: "select",
+  //     width: "w-1/4",
+  //     options: [
+  //       { value: "dog", label: "🐕 Chó" },
+  //       { value: "cat", label: "🐱 Mèo" },
+  //       { value: "bird", label: "🐦 Chim" },
+  //       { value: "fish", label: "🐠 Cá" },
+  //       { value: "rabbit", label: "🐰 Thỏ" },
+  //     ],
+  //   },
+  //   {
+  //     name: "sortBy",
+  //     label: "Sắp xếp",
+  //     placeholder: "Sắp xếp theo",
+  //     type: "select",
+  //     width: "w-1/4",
+  //     options: [
+  //       { value: "price_asc", label: "Giá tăng dần" },
+  //       { value: "price_desc", label: "Giá giảm dần" },
+  //       { value: "rating", label: "Đánh giá cao nhất" },
+  //       { value: "distance", label: "Khoảng cách gần nhất" },
+  //       { value: "newest", label: "Mới nhất" },
+  //     ],
+  //   },
+  //   {
+  //     name: "priceRange",
+  //     label: "Khoảng giá",
+  //     placeholder: "Chọn khoảng giá",
+  //     type: "select",
+  //     width: "w-1/4",
+  //     options: [
+  //       { value: "0-100", label: "Dưới 100k" },
+  //       { value: "100-300", label: "100k - 300k" },
+  //       { value: "300-500", label: "300k - 500k" },
+  //       { value: "500-1000", label: "500k - 1tr" },
+  //       { value: "1000+", label: "Trên 1tr" },
+  //     ],
+  //   },
+  // ];
 
   return (
     <>
@@ -338,7 +338,7 @@ const AppHeaderForUser: React.FC<HeaderProps> = () => {
         </div>
       </header>
 
-      {/* Thanh Filter - Sticky dính theo header */}
+      {/* Thanh Filter - Sticky dính theo header
       <div className="sticky top-16 lg:top-20 bg-[#2A9D8F] border-t border-white/10 z-40">
         <div className="w-full max-w-8xl mx-auto px-6 lg:px-8 p-2">
           <SearchBar
@@ -347,7 +347,7 @@ const AppHeaderForUser: React.FC<HeaderProps> = () => {
             buttonLabel="Lọc kết quả"
           />
         </div>
-      </div>
+      </div> */}
 
       {/* MOBILE DROPDOWN MENU */}
       {isApplicationMenuOpen && (
