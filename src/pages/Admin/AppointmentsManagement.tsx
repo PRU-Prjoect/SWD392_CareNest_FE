@@ -7,6 +7,8 @@ import {
   getAppointmentReport,
 } from '@/store/slices/appointmentSlice';
 import { getCustomerById } from '@/store/slices/customerSlice';
+import { getAllServiceAppointments } from '@/store/slices/serviceAppointmentSlice';
+import { getServiceById } from '@/store/slices/serviceSlice';
 import { AppointmentStatus } from '@/types/enums';
 
 import Card from '@/components/ui/Card';
@@ -16,7 +18,35 @@ import Badge from '@/components/ui/Badge';
 import AdminPageHeader from './components/AdminPageHeader';
 import TableActions from './components/TableActions';
 import StatCard from './components/StatCard';
-import { FaCalendarAlt, FaSearch, FaChartBar, FaEye } from 'react-icons/fa';
+import { FaCalendarAlt, FaSearch, FaChartBar, FaEye, FaShoppingCart } from 'react-icons/fa';
+
+// Define service appointment and service types
+interface ServiceAppointment {
+  id: string;
+  service_id: string;
+  appointment_id: string;
+  rating_id: string | null;
+  serviceDetails?: ServiceDetails | null;
+}
+
+interface ServiceDetails {
+  id: string;
+  name: string;
+  is_active: boolean;
+  shop_id: string;
+  description: string;
+  discount_percent: number;
+  price?: number; 
+  Price?: number;
+  limit_per_hour: number;
+  duration_type: number;
+  star: number;
+  purchases: number;
+  service_type_id: string;
+  img_url?: string;
+  img_url_id?: string;
+  img?: null;
+}
 
 // Simple table component as fallback for missing Table component
 const Table: React.FC<React.PropsWithChildren> = ({ children }) => {
@@ -143,6 +173,14 @@ const formatDate = (dateString: string) => {
   });
 };
 
+// Format currency
+const formatCurrency = (amount: number) => {
+  return new Intl.NumberFormat('vi-VN', {
+    style: 'currency',
+    currency: 'VND',
+  }).format(amount);
+};
+
 const AppointmentsManagement: React.FC = () => {
   const dispatch = useAppDispatch();
   const [customerId, setCustomerId] = useState('');
@@ -155,6 +193,10 @@ const AppointmentsManagement: React.FC = () => {
   const [customerMap, setCustomerMap] = useState<Record<string, { full_name: string }>>({});
   // Use a ref to track which customer IDs have already been requested
   const fetchedCustomerIds = React.useRef<Set<string>>(new Set());
+  // Map to store service appointments by appointment ID
+  const [serviceAppointmentsMap, setServiceAppointmentsMap] = useState<Record<string, ServiceAppointment[]>>({});
+  // Map to store service details by service ID
+  const [servicesMap, setServicesMap] = useState<Record<string, ServiceDetails>>({});
 
   const {
     appointments,
@@ -170,9 +212,15 @@ const AppointmentsManagement: React.FC = () => {
     reportError,
   } = useAppSelector((state) => state.appointment);
 
+  const { serviceAppointments, searching: searchingServiceAppointments } = useAppSelector(
+    (state) => state.service_appointment
+  );
+
   useEffect(() => {
     // Load appointments when component mounts
     dispatch(getAllAppointments({}));
+    // Load all service appointments for later use
+    dispatch(getAllServiceAppointments({}));
   }, [dispatch]);
 
   // Fetch customer information when appointments change
@@ -201,7 +249,47 @@ const AppointmentsManagement: React.FC = () => {
     if (appointments.length > 0) {
       fetchCustomers();
     }
-  }, [appointments, dispatch]);
+  }, [appointments, dispatch, customerMap]);
+
+  // Organize service appointments by appointment ID when they're loaded
+  useEffect(() => {
+    if (serviceAppointments.length > 0) {
+      const serviceApptsMap: Record<string, ServiceAppointment[]> = {};
+      
+      serviceAppointments.forEach((sa: ServiceAppointment) => {
+        const appointmentId = sa.appointment_id;
+        if (!serviceApptsMap[appointmentId]) {
+          serviceApptsMap[appointmentId] = [];
+        }
+        serviceApptsMap[appointmentId].push(sa);
+      });
+      
+      setServiceAppointmentsMap(serviceApptsMap);
+    }
+  }, [serviceAppointments]);
+
+  // Fetch service details when viewing an appointment
+  const fetchServiceDetailsForAppointment = async (appointmentId: string) => {
+    if (serviceAppointmentsMap[appointmentId]) {
+      const serviceIds = serviceAppointmentsMap[appointmentId].map(sa => sa.service_id);
+      
+      for (const serviceId of serviceIds) {
+        if (!servicesMap[serviceId]) {
+          try {
+            const result = await dispatch(getServiceById(serviceId)).unwrap();
+            if (result.data) {
+              setServicesMap(prev => ({
+                ...prev,
+                [serviceId]: result.data
+              }));
+            }
+          } catch (error) {
+            console.error(`Failed to fetch service ${serviceId}:`, error);
+          }
+        }
+      }
+    }
+  };
 
   const handleSearch = () => {
     const params: AppointmentSearchParams = {};
@@ -244,13 +332,15 @@ const AppointmentsManagement: React.FC = () => {
     }
   };
 
-  const handleViewAppointment = (appointmentId: string) => {
-    dispatch(getAppointmentById(appointmentId))
-      .unwrap()
-      .then(() => {
-        setSelectedAppointmentId(appointmentId);
-        setIsDetailModalOpen(true);
-      });
+  const handleViewAppointment = async (appointmentId: string) => {
+    try {
+      await dispatch(getAppointmentById(appointmentId)).unwrap();
+      setSelectedAppointmentId(appointmentId);
+      await fetchServiceDetailsForAppointment(appointmentId);
+      setIsDetailModalOpen(true);
+    } catch (error) {
+      console.error("Failed to fetch appointment details:", error);
+    }
   };
 
   const handleOpenReportModal = () => {
@@ -278,6 +368,29 @@ const AppointmentsManagement: React.FC = () => {
     ).length;
   };
 
+  // Get services for current appointment
+  const getCurrentAppointmentServices = () => {
+    if (!currentAppointment) return [];
+    
+    const serviceAppts = serviceAppointmentsMap[currentAppointment.id] || [];
+    return serviceAppts.map(sa => {
+      const serviceData = servicesMap[sa.service_id];
+      return {
+        ...sa,
+        serviceDetails: serviceData || null
+      };
+    });
+  };
+
+  // Calculate total services count in appointments
+  const getTotalServicesCount = () => {
+    let total = 0;
+    Object.values(serviceAppointmentsMap).forEach(services => {
+      total += services.length;
+    });
+    return total;
+  };
+
   return (
     <div className="container mx-auto px-4 py-6">
       <AdminPageHeader
@@ -285,7 +398,7 @@ const AppointmentsManagement: React.FC = () => {
         description="Quản lý tất cả các lịch hẹn trong hệ thống"
       />
 
-      <div className="mb-6 grid md:grid-cols-3 gap-4">
+      <div className="mb-6 grid md:grid-cols-4 gap-4">
         <StatCard
           title="Tổng số lịch hẹn"
           value={appointments.length}
@@ -297,6 +410,12 @@ const AppointmentsManagement: React.FC = () => {
           value={getFinishedAppointmentsCount()}
           icon={<FaCalendarAlt />}
           color="green"
+        />
+        <StatCard
+          title="Tổng số dịch vụ đã đặt"
+          value={getTotalServicesCount()}
+          icon={<FaShoppingCart />}
+          color="purple"
         />
         <Button 
           onClick={handleOpenReportModal} 
@@ -343,7 +462,7 @@ const AppointmentsManagement: React.FC = () => {
             </div>
           </div>
 
-          {searching ? (
+          {searching || searchingServiceAppointments ? (
             <div className="flex justify-center my-8">
               <Spinner size="lg" />
             </div>
@@ -356,6 +475,7 @@ const AppointmentsManagement: React.FC = () => {
                     <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Khách hàng</th>
                     <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Thời gian thực hiện</th>
                     <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trạng thái</th>
+                    <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Số dịch vụ</th>
                     <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hành động</th>
                   </tr>
                 </thead>
@@ -370,6 +490,9 @@ const AppointmentsManagement: React.FC = () => {
                           <Badge color={getStatusBadgeColor(appointment.status)}>
                             {formatStatus(appointment.status)}
                           </Badge>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {serviceAppointmentsMap[appointment.id]?.length || 0}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center">
@@ -390,7 +513,7 @@ const AppointmentsManagement: React.FC = () => {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={5} className="px-6 py-4 text-center">
+                      <td colSpan={6} className="px-6 py-4 text-center">
                         {searchError ? searchError.message : 'Không có lịch hẹn nào'}
                       </td>
                     </tr>
@@ -432,6 +555,7 @@ const AppointmentsManagement: React.FC = () => {
         isOpen={isDetailModalOpen}
         onClose={() => setIsDetailModalOpen(false)}
         title="Chi tiết lịch hẹn"
+        size="lg"
       >
         <div className="p-4">
           {loading ? (
@@ -440,48 +564,92 @@ const AppointmentsManagement: React.FC = () => {
             </div>
           ) : currentAppointment ? (
             <div className="space-y-4">
-              <div>
-                <p className="text-sm text-gray-500">ID lịch hẹn</p>
-                <p className="font-medium">{currentAppointment.id}</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-500">Khách hàng</p>
-                <p className="font-medium">
-                  {customerMap[currentAppointment.customer_id]?.full_name ? (
-                    <>
-                      {customerMap[currentAppointment.customer_id].full_name}
-                      <span className="text-xs text-gray-500 ml-2">({currentAppointment.customer_id})</span>
-                    </>
-                  ) : (
-                    currentAppointment.customer_id
-                  )}
-                </p>
-              </div>
-              {currentAppointment.location_type && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm text-gray-500">Loại địa điểm</p>
-                  <p className="font-medium">{currentAppointment.location_type}</p>
+                  <p className="text-sm text-gray-500">ID lịch hẹn</p>
+                  <p className="font-medium">{currentAppointment.id}</p>
                 </div>
-              )}
-              <div>
-                <p className="text-sm text-gray-500">Trạng thái</p>
-                <Badge color={getStatusBadgeColor(currentAppointment.status)}>
-                  {formatStatus(currentAppointment.status)}
-                </Badge>
-              </div>
-              <div>
-                <p className="text-sm text-gray-500">Thời gian bắt đầu</p>
-                <p className="font-medium">{formatDate(currentAppointment.start_time)}</p>
-              </div>
-              {currentAppointment.end_time && (
                 <div>
-                  <p className="text-sm text-gray-500">Thời gian kết thúc</p>
-                  <p className="font-medium">{formatDate(currentAppointment.end_time)}</p>
+                  <p className="text-sm text-gray-500">Khách hàng</p>
+                  <p className="font-medium">
+                    {customerMap[currentAppointment.customer_id]?.full_name ? (
+                      <>
+                        {customerMap[currentAppointment.customer_id].full_name}
+                        <span className="text-xs text-gray-500 ml-2">({currentAppointment.customer_id})</span>
+                      </>
+                    ) : (
+                      currentAppointment.customer_id
+                    )}
+                  </p>
                 </div>
-              )}
+                {currentAppointment.location_type && (
+                  <div>
+                    <p className="text-sm text-gray-500">Loại địa điểm</p>
+                    <p className="font-medium">{currentAppointment.location_type}</p>
+                  </div>
+                )}
+                <div>
+                  <p className="text-sm text-gray-500">Trạng thái</p>
+                  <Badge color={getStatusBadgeColor(currentAppointment.status)}>
+                    {formatStatus(currentAppointment.status)}
+                  </Badge>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Thời gian bắt đầu</p>
+                  <p className="font-medium">{formatDate(currentAppointment.start_time)}</p>
+                </div>
+                {currentAppointment.end_time && (
+                  <div>
+                    <p className="text-sm text-gray-500">Thời gian kết thúc</p>
+                    <p className="font-medium">{formatDate(currentAppointment.end_time)}</p>
+                  </div>
+                )}
+              </div>
+
               <div>
                 <p className="text-sm text-gray-500">Ghi chú</p>
                 <p className="font-medium">{currentAppointment.notes || 'Không có ghi chú'}</p>
+              </div>
+
+              {/* Services Section */}
+              <div className="mt-8">
+                <h3 className="text-lg font-semibold mb-3">Dịch vụ đã đặt</h3>
+                {getCurrentAppointmentServices().length > 0 ? (
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <thead>
+                        <tr>
+                          <th className="px-4 py-2 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID Dịch vụ</th>
+                          <th className="px-4 py-2 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tên dịch vụ</th>
+                          <th className="px-4 py-2 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Giá</th>
+                          <th className="px-4 py-2 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Giảm giá</th>
+                          <th className="px-4 py-2 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Thời gian</th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {getCurrentAppointmentServices().map((serviceAppt) => (
+                          <tr key={serviceAppt.id}>
+                            <td className="px-4 py-2 whitespace-nowrap">{serviceAppt.service_id.substring(0, 8)}...</td>
+                            <td className="px-4 py-2 whitespace-nowrap">
+                              {serviceAppt.serviceDetails?.name || 'Đang tải...'}
+                            </td>
+                            <td className="px-4 py-2 whitespace-nowrap">
+                              {serviceAppt.serviceDetails ? formatCurrency(serviceAppt.serviceDetails.price || serviceAppt.serviceDetails.Price || 0) : 'Đang tải...'}
+                            </td>
+                            <td className="px-4 py-2 whitespace-nowrap">
+                              {serviceAppt.serviceDetails ? `${serviceAppt.serviceDetails.discount_percent}%` : 'Đang tải...'}
+                            </td>
+                            <td className="px-4 py-2 whitespace-nowrap">
+                              {serviceAppt.serviceDetails ? `${serviceAppt.serviceDetails.duration_type} phút` : 'Đang tải...'}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </Table>
+                  </div>
+                ) : (
+                  <p className="text-center py-4 text-gray-500">Không có dịch vụ nào được đặt</p>
+                )}
               </div>
             </div>
           ) : (
@@ -536,11 +704,16 @@ const AppointmentsManagement: React.FC = () => {
                 />
               </div>
 
-              <div className="grid md:grid-cols-1 gap-4 mb-6">
+              <div className="grid md:grid-cols-2 gap-4 mb-6">
                 <StatCard
                   title="Chưa xử lý"
                   value={reportData.noProgress}
                   color="purple"
+                />
+                <StatCard
+                  title="Tổng số dịch vụ đã đặt"
+                  value={getTotalServicesCount()}
+                  color="blue"
                 />
               </div>
               <div className="grid md:grid-cols-2 gap-4 mb-6">
