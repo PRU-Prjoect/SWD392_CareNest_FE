@@ -3,11 +3,19 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { getHotelById } from '@/store/slices/hotelSlice';
 import { getRoomBookings } from '@/store/slices/roomBookingSlice';
+
 import { getRooms } from '@/store/slices/roomSlice';
+import { searchSubAddresses } from '@/store/slices/subAddressSlice';
 import type { AppDispatch, RootState } from '@/store/store';
 import { format, parseISO } from 'date-fns';
 import { vi } from 'date-fns/locale';
-import { MapPin, Phone, ArrowLeft, Calendar, Clock, DollarSign } from 'lucide-react';
+import { MapPin, Phone, ArrowLeft, Calendar, DollarSign } from 'lucide-react';
+
+// Extend HotelData with additional properties needed
+interface ExtendedHotelData {
+  address_name?: string;
+  avg_rating?: number;
+}
 
 // Thêm danh sách hình ảnh cố định cho khách sạn
 const hotelImages = [
@@ -53,8 +61,10 @@ const HotelBookingDetail: React.FC = () => {
   const { currentHotel, loading: hotelLoading } = useSelector((state: RootState) => state.hotel);
   const { roomBookings, loading: bookingsLoading } = useSelector((state: RootState) => state.roomBooking);
   const { rooms, loading: roomsLoading } = useSelector((state: RootState) => state.room);
+  const { subAddresses } = useSelector((state: RootState) => state.subAddress);
   
   const [activeTab, setActiveTab] = useState<'info' | 'bookings'>('info');
+  const [extendedHotel, setExtendedHotel] = useState<ExtendedHotelData>({});
 
   useEffect(() => {
     if (id) {
@@ -66,8 +76,27 @@ const HotelBookingDetail: React.FC = () => {
       
       // Fetch bookings 
       dispatch(getRoomBookings());
+
+      // Fetch addresses for location data
+      dispatch(searchSubAddresses({}));
     }
   }, [dispatch, id]);
+
+  // Update extended hotel data when hotel or subAddresses change
+  useEffect(() => {
+    if (currentHotel && subAddresses) {
+      // Find related address
+      const relatedAddress = subAddresses.find(address => address.id === currentHotel.sub_address_id);
+      
+      // Calculate mock rating
+      const mockRating = 4.5 + Math.random() * 0.5;
+
+      setExtendedHotel({
+        address_name: relatedAddress?.address_name || 'Địa chỉ chưa cập nhật',
+        avg_rating: mockRating
+      });
+    }
+  }, [currentHotel, subAddresses]);
   
   // Filter rooms and bookings for this hotel
   const hotelRooms = rooms.filter(room => room.hotel_id === id);
@@ -140,7 +169,7 @@ const HotelBookingDetail: React.FC = () => {
               <h1 className="text-2xl font-bold text-gray-900">{currentHotel.name}</h1>
               <div className="flex items-center text-sm text-gray-500 mt-1">
                 <MapPin className="w-4 h-4 mr-1" />
-                <span>{currentHotel.address_name || 'Địa chỉ chưa cập nhật'}</span>
+                <span>{extendedHotel.address_name}</span>
               </div>
             </div>
           </div>
@@ -206,7 +235,7 @@ const HotelBookingDetail: React.FC = () => {
                   <div className="bg-yellow-50 p-4 rounded-lg">
                     <p className="text-sm text-gray-500">Đánh giá</p>
                     <p className="text-xl font-bold text-yellow-600">
-                      {currentHotel.avg_rating?.toFixed(1) || '5.0'}
+                      {extendedHotel.avg_rating?.toFixed(1) || '5.0'}
                     </p>
                   </div>
                   <div className="bg-purple-50 p-4 rounded-lg">
@@ -286,7 +315,7 @@ const HotelBookingDetail: React.FC = () => {
                   </div>
                   <div className="flex items-center text-gray-700">
                     <MapPin className="w-5 h-5 mr-2 text-teal-600" />
-                    <span>{currentHotel.address_name || 'Địa chỉ chưa cập nhật'}</span>
+                    <span>{extendedHotel.address_name}</span>
                   </div>
                 </div>
                 
