@@ -232,7 +232,7 @@ const PetHotelBooking: React.FC = () => {
 
       console.log('Submitting booking with data:', apiData);
       
-      const resultAction = await dispatch(createRoomBooking(apiData));
+      const resultAction = await dispatch(createRoomBooking(apiData));//abc
       if (createRoomBooking.fulfilled.match(resultAction)) {
         // Navigate to thank you page with booking information and include the descriptions
         navigate('/app/thank-you', {
