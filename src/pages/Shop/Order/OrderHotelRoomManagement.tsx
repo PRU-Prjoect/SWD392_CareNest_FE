@@ -1,241 +1,187 @@
 import { useState, useEffect } from "react";
+import { useDispatch, useSelector } from 'react-redux';
+import type { AppDispatch, RootState } from '../../../store/store';
+import { getRoomBookings, updateRoomBooking } from '../../../store/slices/roomBookingSlice';
+import { getRooms } from '../../../store/slices/roomSlice';
+import { searchHotels } from '../../../store/slices/hotelSlice';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
-interface Pet {
-  id: number;
-  name: string;
-  type: string;
-  age: number;
-  avatar?: string;
-  specialRequirements?: string[];
+// Use the actual room booking type from roomBookingSlice
+interface RoomBooking {
+  id: string;
+  room_detail_id: string;
+  customer_id: string;
+  check_in_date: string;
+  check_out_date: string;
+  total_night: number;
+  total_amount: number;
+  feeding_schedule: string;
+  medication_schedule: string;
+  status: number; // 1 = not checked in, 2 = checked in, 3 = checked out
 }
 
-interface HotelBooking {
-  id: string;
-  roomNumber: string;
-  roomType: "VIP" | "Suite" | "Standard" | "Economy";
-  customerName: string;
-  customerPhone: string;
-  pets: Pet[];
-  checkInDate: string;
-  checkInTime: string;
-  checkOutDate: string;
-  checkOutTime: string;
-  duration: { days: number; nights: number };
-  status:
-    | "arriving-today"
-    | "in-house"
-    | "departing-soon"
-    | "checked-out"
-    | "cancelled";
-  dailyPrice: number;
-  addOns: { name: string; price: number }[];
-  totalAmount: number;
-  specialNote?: string;
-  careChecklist?: {
-    date: string;
-    fed: boolean;
-    walked: boolean;
-    medication: boolean;
-    playtime: boolean;
-  }[];
-  createdAt: string;
+// Additional interface for enhanced booking data
+interface EnhancedBooking extends RoomBooking {
+  roomNumber?: number;
+  roomType?: number;
+  customerName?: string;
+  customerPhone?: string;
+  hotelName?: string;
+  hotelId?: string;
+  // Status helpers
+  statusText?: string;
+  statusIcon?: string;
+  statusColor?: string;
+  statusBadge?: string;
 }
 
 const OrderHotelRoomManagement = () => {
-  const [activeTab, setActiveTab] = useState<
-    | "arriving-today"
-    | "in-house"
-    | "departing-soon"
-    | "checked-out"
-    | "cancelled"
-    | "all"
-  >("arriving-today");
-  const [bookings, setBookings] = useState<HotelBooking[]>([]);
-  // State để lưu thông tin về tình trạng lưu trú
-  const [hotelOccupancy] = useState({
-    totalRooms: 10,
-    occupiedRooms: 6,
-    upcomingBookings: 3,
-  });
+  const dispatch = useDispatch<AppDispatch>();
+  const [activeTab, setActiveTab] = useState<string>("1"); // 1 = not checked in, 2 = checked in, 3 = checked out
+  const [enhancedBookings, setEnhancedBookings] = useState<EnhancedBooking[]>([]);
+  const [selectedHotelId, setSelectedHotelId] = useState<string>("");
+  
+  // Get data from Redux store
+  const { roomBookings, loading: bookingsLoading, error: bookingsError } = useSelector((state: RootState) => state.roomBooking);
+  const { rooms, loading: roomsLoading } = useSelector((state: RootState) => state.room);
+  const { hotels, loading: hotelsLoading } = useSelector((state: RootState) => state.hotel);
+  const { user } = useSelector((state: RootState) => state.auth);
 
-  // Dữ liệu mẫu cho hotel bookings
-  const mockBookings: HotelBooking[] = [
-    {
-      id: "HTL001234",
-      roomNumber: "A01",
-      roomType: "VIP",
-      customerName: "Nguyễn Văn A",
-      customerPhone: "0901234567",
-      pets: [
-        {
-          id: 1,
-          name: "Max",
-          type: "Golden Retriever",
-          age: 3,
-          avatar:
-            "https://i.pinimg.com/736x/cb/af/5b/cbaf5b442f87104b60fd1bc38fdc7db6.jpg",
-          specialRequirements: ["Medication 2x/day", "Vegetarian diet"],
-        },
-      ],
-      checkInDate: "29/06/2025",
-      checkInTime: "14:00",
-      checkOutDate: "01/07/2025",
-      checkOutTime: "11:00",
-      duration: { days: 3, nights: 2 },
-      status: "arriving-today",
-      dailyPrice: 500000,
-      addOns: [
-        { name: "Grooming premium", price: 200000 },
-        { name: "Special food", price: 100000 },
-      ],
-      totalAmount: 1800000,
-      specialNote: "Max cần thuốc mỗi sáng và tối",
-      careChecklist: [
-        {
-          date: "29/06",
-          fed: true,
-          walked: true,
-          medication: true,
-          playtime: false,
-        },
-      ],
-      createdAt: "2025-06-28T10:00:00Z",
-    },
-    {
-      id: "HTL001235",
-      roomNumber: "B05",
-      roomType: "Standard",
-      customerName: "Trần Thị B",
-      customerPhone: "0987654321",
-      pets: [
-        {
-          id: 2,
-          name: "Luna",
-          type: "Persian Cat",
-          age: 2,
-          avatar:
-            "https://i.pinimg.com/736x/85/15/45/85154540f095922c15ffcdf3f83b6523.jpg",
-          specialRequirements: ["Daily brushing"],
-        },
-        {
-          id: 3,
-          name: "Milo",
-          type: "Maine Coon",
-          age: 1,
-          avatar:
-            "https://i.pinimg.com/736x/35/f5/1f/35f51f284152dbd89d07a6ec54a89785.jpg",
-        },
-      ],
-      checkInDate: "28/06/2025",
-      checkInTime: "15:00",
-      checkOutDate: "30/06/2025",
-      checkOutTime: "12:00",
-      duration: { days: 2, nights: 1 },
-      status: "in-house",
-      dailyPrice: 300000,
-      addOns: [],
-      totalAmount: 600000,
-      careChecklist: [
-        {
-          date: "28/06",
-          fed: true,
-          walked: true,
-          medication: false,
-          playtime: true,
-        },
-        {
-          date: "29/06",
-          fed: true,
-          walked: true,
-          medication: false,
-          playtime: true,
-        },
-      ],
-      createdAt: "2025-06-27T16:00:00Z",
-    },
-  ];
+  // Calculate occupancy statistics
+  const occupancyStats = {
+    totalRooms: hotels.reduce((sum, hotel) => sum + hotel.total_room, 0),
+    occupiedRooms: hotels.reduce((sum, hotel) => sum + (hotel.total_room - hotel.available_room), 0),
+    upcomingBookings: roomBookings.filter(booking => booking.status === 1).length
+  };
 
+  // Fetch data when component mounts
   useEffect(() => {
-    setBookings(mockBookings);
-  }, []);
+    if (user && user.id) {
+      // Fetch hotels owned by this shop
+      dispatch(searchHotels({ shopId: user.id }));
+      // Fetch all room bookings (can be filtered by customer or other params if needed)
+      dispatch(getRoomBookings());
+    }
+  }, [dispatch, user]);
+
+  // Fetch rooms after hotels are loaded
+  useEffect(() => {
+    if (hotels.length > 0) {
+      // Get all rooms in hotels owned by this shop
+      dispatch(getRooms());
+    }
+  }, [dispatch, hotels]);
+
+  // Process and enhance bookings with additional data
+  useEffect(() => {
+    if (roomBookings.length > 0 && rooms.length > 0) {
+      const enhanced = roomBookings.map(booking => {
+        // Find room details
+        const room = rooms.find(r => r.id === booking.room_detail_id);
+        // Find hotel details if room exists
+        const hotel = room ? hotels.find(h => h.id === room.hotel_id) : null;
+        
+        // Status config
+        const statusConfig = getStatusConfig(booking.status);
+        
+        return {
+          ...booking,
+          roomNumber: room?.room_number,
+          roomType: room?.room_type,
+          hotelName: hotel?.name,
+          hotelId: hotel?.id,
+          statusText: statusConfig.text,
+          statusIcon: statusConfig.icon,
+          statusColor: statusConfig.color,
+          statusBadge: statusConfig.badge,
+          // Customer details would come from API or be joined from another source
+          customerName: "Waiting for customer data...",
+          customerPhone: "Waiting for customer data..."
+        };
+      });
+      
+      setEnhancedBookings(enhanced);
+    }
+  }, [roomBookings, rooms, hotels]);
+
+  // Check for errors
+  useEffect(() => {
+    if (bookingsError) {
+      toast.error(`Error loading bookings: ${bookingsError.message}`);
+    }
+  }, [bookingsError]);
 
   // Get status configuration for hotel bookings
-  const getStatusConfig = (status: string) => {
+  const getStatusConfig = (status: number) => {
     switch (status) {
-      case "arriving-today":
+      case 1: // Not checked in yet
         return {
           color: "border-l-4 border-blue-500 bg-blue-50",
           badge: "bg-blue-100 text-blue-800 border-blue-200",
-          text: "Arriving today",
+          text: "Chưa nhận phòng",
           icon: "🏨",
         };
-      case "in-house":
+      case 2: // Checked in
         return {
           color: "border-l-4 border-green-500 bg-green-50",
           badge: "bg-green-100 text-green-800 border-green-200",
-          text: "In house",
+          text: "Đã nhận phòng",
           icon: "🏠",
         };
-      case "departing-soon":
-        return {
-          color: "border-l-4 border-yellow-500 bg-yellow-50",
-          badge: "bg-yellow-100 text-yellow-800 border-yellow-200",
-          text: "Departing soon",
-          icon: "🚪",
-        };
-      case "checked-out":
+      case 3: // Checked out
         return {
           color: "border-l-4 border-gray-500 bg-gray-50",
           badge: "bg-gray-100 text-gray-800 border-gray-200",
-          text: "Checked out",
+          text: "Đã trả phòng",
           icon: "✅",
-        };
-      case "cancelled":
-        return {
-          color: "border-l-4 border-red-300 bg-red-50",
-          badge: "bg-red-100 text-red-800 border-red-200",
-          text: "Cancelled",
-          icon: "❌",
         };
       default:
         return {
           color: "border-l-4 border-gray-300 bg-white",
           badge: "bg-gray-100 text-gray-800 border-gray-200",
-          text: status,
+          text: "Không xác định",
           icon: "❓",
         };
     }
   };
 
   // Get room type styling
-  const getRoomTypeStyle = (roomType: string) => {
+  const getRoomTypeStyle = (roomType?: number) => {
+    if (roomType === undefined) return "bg-gray-100 text-gray-800 border-gray-200";
+    
     switch (roomType) {
-      case "VIP":
+      case 3: // VIP
         return "bg-gradient-to-r from-yellow-100 to-amber-100 text-amber-800 border-amber-200";
-      case "Suite":
+      case 2: // Suite
         return "bg-gradient-to-r from-purple-100 to-pink-100 text-purple-800 border-purple-200";
-      case "Standard":
+      case 1: // Standard
         return "bg-gradient-to-r from-blue-100 to-cyan-100 text-blue-800 border-blue-200";
-      case "Economy":
+      case 0: // Economy
         return "bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 border-green-200";
       default:
         return "bg-gray-100 text-gray-800 border-gray-200";
     }
   };
 
+  // Map room type to string
+  const mapRoomTypeToString = (type?: number): string => {
+    if (type === undefined) return "Không xác định";
+    
+    switch (type) {
+      case 0: return 'Economy';
+      case 1: return 'Standard';
+      case 2: return 'Suite';
+      case 3: return 'VIP';
+      default: return 'Standard';
+    }
+  };
+
   // Calculate progress percentage for stay duration
-  const getStayProgress = (booking: HotelBooking) => {
+  const getStayProgress = (booking: EnhancedBooking) => {
     const now = new Date();
-    const checkIn = new Date(
-      `${booking.checkInDate.split("/").reverse().join("-")}T${
-        booking.checkInTime
-      }`
-    );
-    const checkOut = new Date(
-      `${booking.checkOutDate.split("/").reverse().join("-")}T${
-        booking.checkOutTime
-      }`
-    );
+    const checkIn = new Date(booking.check_in_date);
+    const checkOut = new Date(booking.check_out_date);
 
     if (now < checkIn) return 0;
     if (now > checkOut) return 100;
@@ -245,58 +191,138 @@ const OrderHotelRoomManagement = () => {
     return Math.round((elapsed / totalDuration) * 100);
   };
 
-  // Filter bookings
+  // Format dates to display format (DD/MM/YYYY)
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()}`;
+  };
+
+  // Filter bookings based on activeTab and selectedHotelId
   const filteredBookings = () => {
-    switch (activeTab) {
-      case "arriving-today":
-        return bookings.filter(
-          (booking) => booking.status === "arriving-today"
-        );
-      case "in-house":
-        return bookings.filter((booking) => booking.status === "in-house");
-      case "departing-soon":
-        return bookings.filter(
-          (booking) => booking.status === "departing-soon"
-        );
-      case "checked-out":
-        return bookings.filter((booking) => booking.status === "checked-out");
-      case "cancelled":
-        return bookings.filter((booking) => booking.status === "cancelled");
-      default:
-        return bookings;
-    }
+    const statusFilter = parseInt(activeTab);
+    return enhancedBookings.filter(booking => {
+      // Status filter is always applied
+      const statusMatches = booking.status === statusFilter;
+      
+      // Apply hotel filter if one is selected
+      const hotelMatches = selectedHotelId ? booking.hotelId === selectedHotelId : true;
+      
+      return statusMatches && hotelMatches;
+    });
+  };
+
+  // Add hotel filter after hotel list
+  const renderHotelSelector = () => {
+    if (hotels.length <= 1) return null;
+    
+    return (
+      <div className="mb-4">
+        <label htmlFor="hotel-filter" className="block text-sm font-medium text-gray-700 mb-1">
+          Lọc theo khách sạn
+        </label>
+        <select
+          id="hotel-filter"
+          value={selectedHotelId}
+          onChange={(e) => setSelectedHotelId(e.target.value)}
+          className="w-full sm:w-auto border border-gray-300 rounded-md py-2 px-4 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+        >
+          <option value="">Tất cả khách sạn</option>
+          {hotels.map(hotel => (
+            <option key={hotel.id} value={hotel.id}>{hotel.name}</option>
+          ))}
+        </select>
+      </div>
+    );
   };
 
   // Action handlers
   const handleCheckIn = (bookingId: string) => {
-    setBookings((prev) =>
-      prev.map((booking) =>
-        booking.id === bookingId
-          ? { ...booking, status: "in-house" as const }
-          : booking
-      )
-    );
-    alert(`Đã check-in cho booking ${bookingId}`);
+    // Find the booking that needs to be updated
+    const booking = enhancedBookings.find(b => b.id === bookingId);
+    
+    if (booking) {
+      // Update booking status to 2 (checked in) via API
+      dispatch(updateRoomBooking({
+        ...booking,
+        status: 2 // Update to "checked in" status
+      }))
+      .unwrap()
+      .then(() => {
+        toast.success(`Khách hàng đã được check-in thành công!`);
+        // Refresh bookings list
+        dispatch(getRoomBookings());
+      })
+      .catch((error) => {
+        toast.error(`Lỗi khi check-in: ${error.message}`);
+      });
+    } else {
+      toast.error("Không tìm thấy thông tin booking");
+    }
+  };
+
+  // Handle checkout action
+  const handleCheckOut = (bookingId: string) => {
+    // Find the booking that needs to be updated
+    const booking = enhancedBookings.find(b => b.id === bookingId);
+    
+    if (booking) {
+      // Update booking status to 3 (checked out) via API
+      dispatch(updateRoomBooking({
+        ...booking,
+        status: 3 // Update to "checked out" status
+      }))
+      .unwrap()
+      .then(() => {
+        toast.success(`Khách hàng đã được check-out thành công!`);
+        // Refresh bookings list
+        dispatch(getRoomBookings());
+      })
+      .catch((error) => {
+        toast.error(`Lỗi khi check-out: ${error.message}`);
+      });
+    } else {
+      toast.error("Không tìm thấy thông tin booking");
+    }
   };
 
   const handleRoomService = (bookingId: string) => {
-    alert(`Đặt room service cho booking ${bookingId}`);
+    // This would ideally open a form or detailed view with room service options
+    toast.info(`Đã mở dịch vụ phòng cho booking #${bookingId}`);
   };
 
-  const handleDailyReport = (booking: HotelBooking) => {
-    alert(
-      `Báo cáo hàng ngày cho ${booking.pets
-        .map((p) => p.name)
-        .join(", ")} - Phòng ${booking.roomNumber}`
-    );
+  const handleDailyReport = (booking: EnhancedBooking) => {
+    // This would ideally open a daily care report form or view
+    toast.info(`Báo cáo chăm sóc hàng ngày cho booking #${booking.id}`);
+    
+    // Example would be a modal with checkboxes for feeding, medication, etc.
   };
 
-  const handleRoomStatus = (roomNumber: string) => {
-    alert(`Trạng thái phòng ${roomNumber}`);
+  const handleViewDetails = (booking: EnhancedBooking) => {
+    // This would navigate to a detailed view of the booking
+    toast.info(`Xem chi tiết booking #${booking.id}`);
+  };
+
+  const handleRoomStatus = (roomNumber?: number) => {
+    toast.info(`Checking status for room ${roomNumber || 'Unknown'}`);
+  };
+
+  // Get room stars display (based on room type)
+  const getRoomStars = (roomType?: number) => {
+    if (roomType === undefined) return 3;
+    
+    switch (roomType) {
+      case 0: return 2; // Economy
+      case 1: return 3; // Standard
+      case 2: return 4; // Suite
+      case 3: return 5; // VIP
+      default: return 3;
+    }
   };
 
   return (
     <div className="p-4 md:p-6 bg-gray-50 min-h-screen">
+      <ToastContainer position="top-right" autoClose={5000} hideProgressBar={false} closeOnClick draggable pauseOnHover />
+      
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center space-x-4">
@@ -305,7 +331,7 @@ const OrderHotelRoomManagement = () => {
               Quản lý đặt phòng khách sạn 🐾
             </h1>
             <p className="text-sm md:text-base text-gray-600">
-              Pet Paradise Hotel - Chi nhánh Vinhomes
+              {hotels.length > 0 ? `${hotels[0].name}` : 'Khách sạn thú cưng'}
             </p>
           </div>
         </div>
@@ -320,13 +346,13 @@ const OrderHotelRoomManagement = () => {
           <div className="flex items-center space-x-4">
             <div className="text-center">
               <div className="text-2xl font-bold text-purple-600">
-                {hotelOccupancy.occupiedRooms}
+                {occupancyStats.occupiedRooms}
               </div>
               <div className="text-sm text-gray-500">Phòng đang sử dụng</div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-gray-400">
-                {hotelOccupancy.totalRooms - hotelOccupancy.occupiedRooms}
+                {occupancyStats.totalRooms - occupancyStats.occupiedRooms}
               </div>
               <div className="text-sm text-gray-500">Phòng trống</div>
             </div>
@@ -335,19 +361,16 @@ const OrderHotelRoomManagement = () => {
             <div className="flex justify-between text-sm text-gray-600 mb-1">
               <span>Occupancy Rate</span>
               <span>
-                {Math.round(
-                  (hotelOccupancy.occupiedRooms / hotelOccupancy.totalRooms) * 100
-                )}
-                %
+                {occupancyStats.totalRooms > 0 ? 
+                  Math.round((occupancyStats.occupiedRooms / occupancyStats.totalRooms) * 100) : 0}%
               </span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-3">
               <div
                 className="bg-gradient-to-r from-purple-500 to-pink-500 h-3 rounded-full transition-all duration-500"
                 style={{
-                  width: `${
-                    (hotelOccupancy.occupiedRooms / hotelOccupancy.totalRooms) * 100
-                  }%`,
+                  width: `${occupancyStats.totalRooms > 0 ? 
+                    (occupancyStats.occupiedRooms / occupancyStats.totalRooms) * 100 : 0}%`,
                 }}
               ></div>
             </div>
@@ -355,43 +378,34 @@ const OrderHotelRoomManagement = () => {
         </div>
       </div>
 
+      {/* Hotel selector */}
+      {renderHotelSelector()}
+
       {/* Quick Filters */}
       <div className="grid grid-cols-2 md:flex md:space-x-2 gap-2 mb-6">
         {[
           {
-            key: "arriving-today",
-            label: "Check-in hôm nay",
+            key: "1",
+            label: "Chưa nhận phòng",
             color: "bg-blue-500",
-            count: bookings.filter((b) => b.status === "arriving-today").length,
+            count: enhancedBookings.filter(b => b.status === 1).length,
           },
           {
-            key: "in-house",
+            key: "2",
             label: "Đang ở",
             color: "bg-green-500",
-            count: bookings.filter((b) => b.status === "in-house").length,
+            count: enhancedBookings.filter(b => b.status === 2).length,
           },
           {
-            key: "departing-soon",
-            label: "Sắp check-out",
-            color: "bg-yellow-500",
-            count: bookings.filter((b) => b.status === "departing-soon").length,
-          },
-          {
-            key: "checked-out",
-            label: "Đã check-out",
+            key: "3",
+            label: "Đã trả phòng",
             color: "bg-gray-500",
-            count: bookings.filter((b) => b.status === "checked-out").length,
-          },
-          {
-            key: "all",
-            label: "Tất cả",
-            color: "bg-purple-500",
-            count: bookings.length,
-          },
+            count: enhancedBookings.filter(b => b.status === 3).length,
+          }
         ].map((tab) => (
           <button
             key={tab.key}
-            onClick={() => setActiveTab(tab.key as any)}
+            onClick={() => setActiveTab(tab.key)}
             className={`relative px-3 py-2 md:px-4 md:py-2 rounded-lg font-medium transition-all duration-200 text-sm md:text-base ${
               activeTab === tab.key
                 ? `${tab.color} text-white shadow-lg scale-105`
@@ -414,9 +428,17 @@ const OrderHotelRoomManagement = () => {
         ))}
       </div>
 
+      {/* Loading indicator */}
+      {(bookingsLoading || roomsLoading || hotelsLoading) && (
+        <div className="text-center py-10">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-teal-600"></div>
+          <p className="mt-2 text-gray-500">Đang tải dữ liệu...</p>
+        </div>
+      )}
+
       {/* Hotel Booking Cards */}
       <div className="space-y-4">
-        {filteredBookings().length === 0 ? (
+        {!bookingsLoading && !roomsLoading && !hotelsLoading && filteredBookings().length === 0 ? (
           <div className="text-center py-12">
             <div className="w-24 h-24 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
               <span className="text-4xl">🏨</span>
@@ -428,55 +450,53 @@ const OrderHotelRoomManagement = () => {
           </div>
         ) : (
           filteredBookings().map((booking) => {
-            const statusConfig = getStatusConfig(booking.status);
-            const roomTypeStyle = getRoomTypeStyle(booking.roomType);
             const stayProgress = getStayProgress(booking);
 
             return (
               <div
                 key={booking.id}
-                className={`bg-white rounded-xl shadow-sm border overflow-hidden hover:shadow-md transition-all duration-200 ${statusConfig.color}`}
+                className={`bg-white rounded-xl shadow-sm border overflow-hidden hover:shadow-md transition-all duration-200 ${booking.statusColor}`}
               >
                 {/* Card Header */}
                 <div className="p-4 md:p-6">
                   <div className="flex flex-col md:flex-row md:items-center justify-between mb-4">
                     <div className="flex items-center space-x-3 mb-2 md:mb-0">
                       <div
-                        className={`px-3 py-1 rounded-lg font-bold text-lg ${roomTypeStyle}`}
+                        className={`px-3 py-1 rounded-lg font-bold text-lg ${getRoomTypeStyle(booking.roomType)}`}
                       >
-                        Phòng {booking.roomType} {booking.roomNumber}
+                        Phòng {mapRoomTypeToString(booking.roomType)} {booking.roomNumber}
                       </div>
                       <span
-                        className={`px-3 py-1 text-xs font-medium rounded-full border ${statusConfig.badge}`}
+                        className={`px-3 py-1 text-xs font-medium rounded-full border ${booking.statusBadge}`}
                       >
-                        {statusConfig.icon} {statusConfig.text}
+                        {booking.statusIcon} {booking.statusText}
                       </span>
                     </div>
-                    <div className="text-sm text-gray-500">#{booking.id}</div>
+                    <div className="text-sm text-gray-500 flex items-center">
+                      <div className="mr-2">#{booking.id}</div>
+                      <div className="flex">
+                        {Array.from({ length: getRoomStars(booking.roomType) }).map((_, i) => (
+                          <span key={i} className="text-yellow-400">⭐</span>
+                        ))}
+                      </div>
+                    </div>
                   </div>
 
                   {/* Duration Badge */}
                   <div className="flex items-center space-x-2 mb-4">
                     <span className="bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full text-sm font-medium">
-                      📅 {booking.duration.days} ngày {booking.duration.nights}{" "}
-                      đêm
+                      📅 {booking.total_night} đêm
                     </span>
-                    {booking.pets.length > 1 && (
-                      <span className="bg-orange-100 text-orange-800 px-3 py-1 rounded-full text-sm font-medium">
-                        🐾 {booking.pets.length} thú cưng
-                      </span>
-                    )}
                   </div>
 
                   {/* Timeline Visual */}
                   <div className="bg-gray-50 rounded-lg p-4 mb-4">
                     <div className="flex items-center justify-between text-sm text-gray-600 mb-2">
                       <span className="font-medium">
-                        Check-in: {booking.checkInDate} - {booking.checkInTime}
+                        Check-in: {formatDate(booking.check_in_date)}
                       </span>
                       <span className="font-medium">
-                        Check-out: {booking.checkOutDate} -{" "}
-                        {booking.checkOutTime}
+                        Check-out: {formatDate(booking.check_out_date)}
                       </span>
                     </div>
                     <div className="relative">
@@ -494,31 +514,21 @@ const OrderHotelRoomManagement = () => {
                     </div>
                   </div>
 
-                  {/* Pet & Guest Info */}
+                  {/* Customer Info */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                     <div className="space-y-3">
                       <div className="flex items-center space-x-2">
                         <span className="text-gray-500">👤</span>
                         <span className="font-medium text-gray-800">
-                          {booking.customerName}
+                          {booking.customerName || "Customer data loading..."}
                         </span>
                       </div>
                       <div className="flex items-center space-x-2">
                         <span className="text-gray-500">📞</span>
                         <span className="text-gray-600">
-                          {booking.customerPhone}
+                          {booking.customerPhone || "Phone data loading..."}
                         </span>
                       </div>
-                    </div>
-                    <div className="space-y-2">
-                      {booking.pets.map((pet) => (
-                        <div
-                          key={pet.id}
-                          className="inline-block bg-purple-100 rounded-full px-3 py-1 text-xs text-purple-800 mr-2 mb-2"
-                        >
-                          {pet.name} ({pet.type})
-                        </div>
-                      ))}
                     </div>
                   </div>
 
@@ -526,106 +536,49 @@ const OrderHotelRoomManagement = () => {
                   <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-4 mb-4">
                     <div className="space-y-2">
                       <div className="flex justify-between items-center">
-                        <span className="text-gray-700">
-                          Phòng ({booking.duration.days} ngày ×{" "}
-                          {booking.dailyPrice.toLocaleString("vi-VN")}đ)
-                        </span>
-                        <span className="font-medium">
-                          {(
-                            booking.duration.days * booking.dailyPrice
-                          ).toLocaleString("vi-VN")}
-                          đ
-                        </span>
-                      </div>
-                      {booking.addOns.map((addon, index) => (
-                        <div
-                          key={index}
-                          className="flex justify-between items-center text-sm"
-                        >
-                          <span className="text-gray-600">{addon.name}</span>
-                          <span className="text-gray-700">
-                            +{addon.price.toLocaleString("vi-VN")}đ
-                          </span>
-                        </div>
-                      ))}
-                      <div className="border-t border-gray-200 pt-2 flex justify-between items-center">
                         <span className="font-bold text-gray-800">
                           Tổng cộng
                         </span>
                         <span className="font-bold text-green-600 text-lg">
-                          {booking.totalAmount.toLocaleString("vi-VN")}đ
+                          {booking.total_amount.toLocaleString("vi-VN")}đ
                         </span>
                       </div>
                     </div>
                   </div>
 
-                  {/* Daily Care Checklist */}
-                  {booking.careChecklist &&
-                    booking.careChecklist.length > 0 && (
-                      <div className="bg-blue-50 rounded-lg p-4 mb-4">
-                        <h4 className="font-medium text-gray-800 mb-2">
-                          📋 Daily Care Progress
-                        </h4>
-                        <div className="space-y-2">
-                          {booking.careChecklist.map((day, index) => (
-                            <div
-                              key={index}
-                              className="flex items-center justify-between"
-                            >
-                              <span className="text-sm text-gray-600">
-                                {day.date}
-                              </span>
-                              <div className="flex space-x-2">
-                                <span
-                                  className={`text-xs px-2 py-1 rounded ${
-                                    day.fed
-                                      ? "bg-green-100 text-green-700"
-                                      : "bg-gray-100 text-gray-500"
-                                  }`}
-                                >
-                                  🍽️ {day.fed ? "✓" : "⏳"}
-                                </span>
-                                <span
-                                  className={`text-xs px-2 py-1 rounded ${
-                                    day.walked
-                                      ? "bg-green-100 text-green-700"
-                                      : "bg-gray-100 text-gray-500"
-                                  }`}
-                                >
-                                  🚶 {day.walked ? "✓" : "⏳"}
-                                </span>
-                                <span
-                                  className={`text-xs px-2 py-1 rounded ${
-                                    day.medication
-                                      ? "bg-green-100 text-green-700"
-                                      : "bg-gray-100 text-gray-500"
-                                  }`}
-                                >
-                                  💊 {day.medication ? "✓" : "⏳"}
-                                </span>
-                                <span
-                                  className={`text-xs px-2 py-1 rounded ${
-                                    day.playtime
-                                      ? "bg-green-100 text-green-700"
-                                      : "bg-gray-100 text-gray-500"
-                                  }`}
-                                >
-                                  🎾 {day.playtime ? "✓" : "⏳"}
-                                </span>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
+                  {/* Feeding Schedule */}
+                  {booking.feeding_schedule ? (
+                    <div className="bg-blue-50 rounded-lg p-4 mb-4">
+                      <h4 className="font-medium text-gray-800 mb-2">
+                        🍽️ Lịch cho ăn
+                      </h4>
+                      <p className="text-sm text-gray-700">{booking.feeding_schedule}</p>
+                    </div>
+                  ) : (
+                    <div className="bg-gray-50 rounded-lg p-4 mb-4">
+                      <h4 className="font-medium text-gray-800 mb-2">
+                        🍽️ Lịch cho ăn
+                      </h4>
+                      <p className="text-sm text-gray-500">Chưa có thông tin lịch cho ăn</p>
+                    </div>
+                  )}
 
-                  {/* Special Notes */}
-                  {booking.specialNote && (
+                  {/* Medication Schedule */}
+                  {booking.medication_schedule ? (
                     <div className="bg-yellow-50 border-l-4 border-yellow-400 p-3 mb-4">
                       <div className="flex items-start space-x-2">
-                        <span className="text-yellow-600 mt-0.5">💬</span>
-                        <span className="text-yellow-800 text-sm italic">
-                          "{booking.specialNote}"
+                        <span className="text-yellow-600 mt-0.5">💊</span>
+                        <span className="text-yellow-800 text-sm">
+                          {booking.medication_schedule}
+                        </span>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="bg-gray-50 border-l-4 border-gray-200 p-3 mb-4">
+                      <div className="flex items-start space-x-2">
+                        <span className="text-gray-500 mt-0.5">💊</span>
+                        <span className="text-gray-500 text-sm">
+                          Không có lịch sử dụng thuốc
                         </span>
                       </div>
                     </div>
@@ -633,7 +586,7 @@ const OrderHotelRoomManagement = () => {
 
                   {/* Action Buttons */}
                   <div className="flex flex-wrap gap-2">
-                    {booking.status === "arriving-today" && (
+                    {booking.status === 1 && (
                       <button
                         onClick={() => handleCheckIn(booking.id)}
                         className="flex-1 md:flex-none px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium text-sm"
@@ -641,9 +594,17 @@ const OrderHotelRoomManagement = () => {
                         🏨 Check-in
                       </button>
                     )}
+                    
+                    {booking.status === 2 && (
+                      <button
+                        onClick={() => handleCheckOut(booking.id)}
+                        className="flex-1 md:flex-none px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-medium text-sm"
+                      >
+                        🚪 Check-out
+                      </button>
+                    )}
 
-                    {(booking.status === "in-house" ||
-                      booking.status === "arriving-today") && (
+                    {(booking.status === 2 || booking.status === 1) && (
                       <button
                         onClick={() => handleRoomService(booking.id)}
                         className="flex-1 md:flex-none px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors font-medium text-sm"
@@ -660,6 +621,13 @@ const OrderHotelRoomManagement = () => {
                     </button>
 
                     <button
+                      onClick={() => handleViewDetails(booking)}
+                      className="flex-1 md:flex-none px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors font-medium text-sm"
+                    >
+                      🔍 View Details
+                    </button>
+
+                    <button
                       onClick={() => handleRoomStatus(booking.roomNumber)}
                       className="flex-1 md:flex-none px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors font-medium text-sm"
                     >
@@ -668,7 +636,7 @@ const OrderHotelRoomManagement = () => {
 
                     <button
                       onClick={() =>
-                        window.open(`tel:${booking.customerPhone}`)
+                        booking.customerPhone ? window.open(`tel:${booking.customerPhone}`) : toast.info("Phone number not available")
                       }
                       className="flex-1 md:flex-none px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors font-medium text-sm"
                     >
