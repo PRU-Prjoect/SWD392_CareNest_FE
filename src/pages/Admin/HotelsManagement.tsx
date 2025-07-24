@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import {
   searchHotels,
-  getHotelById,
   deleteHotel,
   getHotelReport,
 } from '@/store/slices/hotelSlice';
@@ -119,10 +118,6 @@ const HotelsManagement: React.FC = () => {
 
   const handleSearch = () => {
     dispatch(searchHotels({ nameFilter: searchTerm }));
-  };
-
-  const handleViewDetail = (hotelId: string) => {
-    dispatch(getHotelById(hotelId));
   };
 
   const handleOpenDeleteModal = (hotelId: string) => {
@@ -244,8 +239,8 @@ const HotelsManagement: React.FC = () => {
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center">
                             <TableActions 
-                              onView={() => handleViewDetail(hotel.id)}
                               onDelete={() => handleOpenDeleteModal(hotel.id)}
+                              // Bỏ prop onView để ẩn nút xem chi tiết (icon mắt)
                             />
                             <button 
                               onClick={() => {
