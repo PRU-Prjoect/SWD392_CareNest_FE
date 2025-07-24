@@ -242,7 +242,6 @@ const DashboardPage: React.FC = () => {
                     <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tên dịch vụ</th>
                     <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Loại</th>
                     <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Giá</th>
-                    <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Lượt mua</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
@@ -264,15 +263,12 @@ const DashboardPage: React.FC = () => {
                             <td className="px-4 py-3 whitespace-nowrap text-sm text-right">
                               {formatCurrency(service.price || 0)}
                             </td>
-                            <td className="px-4 py-3 whitespace-nowrap text-sm text-right">
-                              {service.purchases}
-                            </td>
                           </tr>
                         );
                       })
                   ) : (
                     <tr>
-                      <td colSpan={4} className="px-4 py-4 text-sm text-center text-gray-500">
+                      <td colSpan={3} className="px-4 py-4 text-sm text-center text-gray-500">
                         Chưa có dữ liệu
                       </td>
                     </tr>

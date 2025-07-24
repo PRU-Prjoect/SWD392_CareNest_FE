@@ -62,8 +62,13 @@ const AppSidebarForAdmin: React.FC = () => {
   return (
     <aside className="w-64 bg-white shadow-md">
       <div className="p-4">
-        <h2 className="text-xl font-bold text-gray-800">Admin Panel</h2>
-      </div>
+  <h2 className="text-xl font-bold text-gray-800">Admin</h2>
+  <h2 className="text-xl font-bold">
+    <span className="text-gray-800">Care</span>
+    <span className="text-orange-500">Nest</span>
+  </h2>
+</div>
+
 
       <nav className="mt-4">
         <ul className="space-y-1">
