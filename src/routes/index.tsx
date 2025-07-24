@@ -52,7 +52,8 @@ import {
   ServicesManagement,
   ReportsPage,
   SystemSettings,
-  HotelsManagement
+  HotelsManagement,
+  AppointmentsManagement
 } from "@/pages/Admin";
 
 // Component chứa toàn bộ định nghĩa các route
@@ -151,6 +152,7 @@ const AppRoutes = () => {
         <Route path="accounts" element={<AccountsManagement />} />
         <Route path="shops" element={<ShopsManagement />} />
         <Route path="hotels" element={<HotelsManagement />} />
+        <Route path="appointments" element={<AppointmentsManagement />} />
         <Route path="services" element={<ServicesManagement />} />
         <Route path="reports" element={<ReportsPage />} />
         <Route path="settings" element={<SystemSettings />} />

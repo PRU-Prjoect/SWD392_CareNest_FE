@@ -5,4 +5,5 @@ export { default as ServicesManagement } from './ServicesManagement';
 export { default as ReportsPage } from './ReportsPage';
 export { default as SystemSettings } from './SystemSettings';
 export { default as AccountsManagement } from './AccountsManagement';
-export { default as HotelsManagement } from './HotelsManagement'; 
+export { default as HotelsManagement } from './HotelsManagement';
+export { default as AppointmentsManagement } from './AppointmentsManagement'; 
