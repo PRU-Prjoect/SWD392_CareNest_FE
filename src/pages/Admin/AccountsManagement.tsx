@@ -48,11 +48,6 @@ const AccountsManagement: React.FC = () => {
     setCurrentPage(1);
   };
 
-  const handleRoleFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setRoleFilter(e.target.value);
-    setCurrentPage(1);
-  };
-
   const openDeleteModal = (accountId: string) => {
     setAccountToDelete(accountId);
     setIsDeleteModalOpen(true);
@@ -113,17 +108,7 @@ const AccountsManagement: React.FC = () => {
           <span className="absolute left-3 top-2.5 text-gray-400">🔍</span>
         </div>
         
-        <select 
-          value={roleFilter}
-          onChange={handleRoleFilterChange}
-          className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-        >
-          <option value="">Tất cả vai trò</option>
-          <option value="ADMIN">Quản trị viên</option>
-          <option value="CUSTOMER">Khách hàng</option>
-          <option value="SHOP">Cửa hàng</option>
-          <option value="STAFF">Nhân viên</option>
-        </select>
+      
       </div>
       
       {searchError && (
@@ -304,11 +289,14 @@ const AccountsManagement: React.FC = () => {
       {isDeleteModalOpen && (
         <div className="fixed inset-0 z-10 overflow-y-auto">
           <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            {/* Overlay */}
             <div className="fixed inset-0 transition-opacity" aria-hidden="true">
-              <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
+              <div className="absolute inset-0 bg-gray-500 opacity-75 pointer-events-none"></div>
             </div>
 
-            <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+            {/* Modal content */}
+            <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full z-20 relative">
+              {/* Modal body */}
               <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                 <div className="sm:flex sm:items-start">
                   <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
@@ -354,11 +342,14 @@ const AccountsManagement: React.FC = () => {
       {isDetailsModalOpen && accountDetails && (
         <div className="fixed inset-0 z-10 overflow-y-auto">
           <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            {/* Overlay */}
             <div className="fixed inset-0 transition-opacity" aria-hidden="true">
-              <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
+              <div className="absolute inset-0 bg-gray-500 opacity-75 pointer-events-none"></div>
             </div>
 
-            <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+            {/* Modal content */}
+            <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full z-20 relative">
+              {/* Modal body */}
               <div className="bg-white px-4 pt-5 pb-4 sm:p-6">
                 <div className="flex justify-between items-start">
                   <h3 className="text-lg leading-6 font-medium text-gray-900">
