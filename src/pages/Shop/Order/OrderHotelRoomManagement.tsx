@@ -231,29 +231,6 @@ const OrderHotelRoomManagement = () => {
     }
   };
 
-  // Calculate progress percentage for stay duration
-  const getStayProgress = (booking: EnhancedBooking) => {
-    // Ưu tiên kiểm tra status trước - nếu đã check-out (status=3) thì luôn hiển thị 100%
-    if (booking.status === 3) return 100;
-    
-    const now = new Date();
-    const checkIn = new Date(booking.check_in_date);
-    const checkOut = new Date(booking.check_out_date);
-
-    if (now < checkIn) return 0;
-    if (now > checkOut) return 100;
-
-    const totalDuration = checkOut.getTime() - checkIn.getTime();
-    const elapsed = now.getTime() - checkIn.getTime();
-    return Math.round((elapsed / totalDuration) * 100);
-  };
-
-  // Format dates to display format (DD/MM/YYYY)
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()}`;
-  };
-
   // Filter bookings based on activeTab and selectedHotelId
   const filteredBookings = () => {
     const statusFilter = parseInt(activeTab);
@@ -564,7 +541,6 @@ const OrderHotelRoomManagement = () => {
           </div>
         ) : (
           filteredBookings().map((booking) => {
-            const stayProgress = getStayProgress(booking);
             const isLoadingCustomer = loadingCustomers[booking.customer_id];
 
             return (
@@ -600,31 +576,6 @@ const OrderHotelRoomManagement = () => {
                     <span className="bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full text-sm font-medium">
                       📅 {booking.total_night} đêm
                     </span>
-                  </div>
-
-                  {/* Timeline Visual */}
-                  <div className="bg-gray-50 rounded-lg p-4 mb-4">
-                    <div className="flex items-center justify-between text-sm text-gray-600 mb-2">
-                      <span className="font-medium">
-                        Check-in: {formatDate(booking.check_in_date)}
-                      </span>
-                      <span className="font-medium">
-                        Check-out: {formatDate(booking.check_out_date)}
-                      </span>
-                    </div>
-                    <div className="relative">
-                      <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div
-                          className="bg-gradient-to-r from-blue-500 to-green-500 h-2 rounded-full transition-all duration-500"
-                          style={{ width: `${stayProgress}%` }}
-                        ></div>
-                      </div>
-                      <div className="flex justify-between text-xs text-gray-500 mt-1">
-                        <span>Bắt đầu</span>
-                        <span>{stayProgress}% completed</span>
-                        <span>Kết thúc</span>
-                      </div>
-                    </div>
                   </div>
 
                   {/* Customer Info */}
