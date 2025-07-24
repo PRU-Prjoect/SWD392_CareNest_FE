@@ -55,13 +55,25 @@ const OrderHotelRoomManagement = () => {
   // Calculate occupancy statistics
   const occupancyStats = {
     totalRooms: hotels.reduce((sum, hotel) => sum + hotel.total_room, 0),
-    occupiedRooms: hotels.reduce((sum, hotel) => sum + (hotel.total_room - hotel.available_room), 0),
-    upcomingBookings: roomBookings.filter(booking => booking.status === 1).length
+    occupiedRooms: enhancedBookings.filter(booking => booking.status === 2).length,
+    availableRooms: hotels.reduce((sum, hotel) => sum + hotel.total_room, 0) - enhancedBookings.filter(booking => booking.status === 2).length,
+    upcomingBookings: enhancedBookings.filter(booking => booking.status === 1).length
   };
+
+  // Debug logs để kiểm tra dữ liệu
+  console.log("Total room bookings:", roomBookings.length);
+  console.log("Status 1 (chưa nhận phòng):", roomBookings.filter(booking => booking.status === 1).length);
+  console.log("Status 2 (đang sử dụng):", roomBookings.filter(booking => booking.status === 2).length);
+  console.log("Status 3 (đã trả phòng):", roomBookings.filter(booking => booking.status === 3).length);
+  console.log("Total enhanced bookings:", enhancedBookings.length);
+  console.log("Enhanced Status 1:", enhancedBookings.filter(booking => booking.status === 1).length);
+  console.log("Enhanced Status 2:", enhancedBookings.filter(booking => booking.status === 2).length);
+  console.log("Enhanced Status 3:", enhancedBookings.filter(booking => booking.status === 3).length);
 
   // Fetch data when component mounts
   useEffect(() => {
     if (user && user.id) {
+      console.log("Đang gọi API lấy danh sách hotel và room bookings...");
       // Fetch hotels owned by this shop
       dispatch(searchHotels({ shopId: user.id }));
       // Fetch all room bookings (can be filtered by customer or other params if needed)
@@ -72,6 +84,7 @@ const OrderHotelRoomManagement = () => {
   // Fetch rooms after hotels are loaded
   useEffect(() => {
     if (hotels.length > 0) {
+      console.log("Đang gọi API lấy danh sách rooms...");
       // Get all rooms in hotels owned by this shop
       dispatch(getRooms());
     }
@@ -80,6 +93,7 @@ const OrderHotelRoomManagement = () => {
   // Process and enhance bookings with additional data
   useEffect(() => {
     if (roomBookings.length > 0 && rooms.length > 0) {
+      console.log("Đang xử lý và cập nhật danh sách enhanced bookings...");
       const enhanced = roomBookings.map(booking => {
         // Find room details
         const room = rooms.find(r => r.id === booking.room_detail_id);
@@ -108,6 +122,7 @@ const OrderHotelRoomManagement = () => {
       });
       
       setEnhancedBookings(enhanced);
+      console.log("Đã cập nhật enhancedBookings với", enhanced.length, "booking.");
       
       // Fetch customer data for each booking
       enhanced.forEach(booking => {
@@ -278,12 +293,14 @@ const OrderHotelRoomManagement = () => {
   };
 
   // Action handlers
+  // Handle check-in action
   const handleCheckIn = (bookingId: string) => {
     // Find the booking that needs to be updated
     const booking = enhancedBookings.find(b => b.id === bookingId);
     
     if (booking) {
       // Update booking status to 2 (checked in) via API
+      console.log("🔄 Bắt đầu check-in cho booking:", bookingId);
       dispatch(updateRoomBooking({
         ...booking,
         status: 2 // Update to "checked in" status
@@ -291,11 +308,32 @@ const OrderHotelRoomManagement = () => {
       .unwrap()
       .then(() => {
         toast.success(`Khách hàng đã được check-in thành công!`);
-        // Refresh bookings list
-        dispatch(getRoomBookings());
+        console.log("✅ Check-in thành công, đang refresh dữ liệu...");
+        
+        // Cách 1: Trực tiếp cập nhật lại state
+        setEnhancedBookings(prevBookings => 
+          prevBookings.map(prevBooking => 
+            prevBooking.id === bookingId 
+              ? { 
+                  ...prevBooking, 
+                  status: 2,
+                  statusText: "Đã nhận phòng",
+                  statusIcon: "🏠",
+                  statusColor: "border-l-4 border-green-500 bg-green-50",
+                  statusBadge: "bg-green-100 text-green-800 border-green-200",
+                } 
+              : prevBooking
+          )
+        );
+        
+        // Cách 2: Refresh toàn bộ dữ liệu
+        setTimeout(() => {
+          dispatch(getRoomBookings());
+        }, 500);
       })
       .catch((error) => {
         toast.error(`Lỗi khi check-in: ${error.message}`);
+        console.error("❌ Lỗi check-in:", error);
       });
     } else {
       toast.error("Không tìm thấy thông tin booking");
@@ -309,6 +347,7 @@ const OrderHotelRoomManagement = () => {
     
     if (booking) {
       // Update booking status to 3 (checked out) via API
+      console.log("🔄 Bắt đầu check-out cho booking:", bookingId);
       dispatch(updateRoomBooking({
         ...booking,
         status: 3 // Update to "checked out" status
@@ -316,16 +355,49 @@ const OrderHotelRoomManagement = () => {
       .unwrap()
       .then(() => {
         toast.success(`Khách hàng đã được check-out thành công!`);
-        // Refresh bookings list
-        dispatch(getRoomBookings());
+        console.log("✅ Check-out thành công, đang refresh dữ liệu...");
+        
+        // Cách 1: Trực tiếp cập nhật lại state
+        setEnhancedBookings(prevBookings => 
+          prevBookings.map(prevBooking => 
+            prevBooking.id === bookingId 
+              ? { 
+                  ...prevBooking, 
+                  status: 3,
+                  statusText: "Đã trả phòng",
+                  statusIcon: "✅",
+                  statusColor: "border-l-4 border-gray-500 bg-gray-50",
+                  statusBadge: "bg-gray-100 text-gray-800 border-gray-200",
+                } 
+              : prevBooking
+          )
+        );
+        
+        // Cách 2: Refresh toàn bộ dữ liệu
+        setTimeout(() => {
+          dispatch(getRoomBookings());
+        }, 500);
       })
       .catch((error) => {
         toast.error(`Lỗi khi check-out: ${error.message}`);
+        console.error("❌ Lỗi check-out:", error);
       });
     } else {
       toast.error("Không tìm thấy thông tin booking");
     }
   };
+
+  // Thêm useEffect để theo dõi khi enhancedBookings thay đổi và cập nhật lại số liệu thống kê
+  useEffect(() => {
+    if (enhancedBookings.length > 0) {
+      console.log("📊 Cập nhật lại thống kê từ enhancedBookings:", enhancedBookings.length);
+      const status1Count = enhancedBookings.filter(b => b.status === 1).length;
+      const status2Count = enhancedBookings.filter(b => b.status === 2).length;
+      const status3Count = enhancedBookings.filter(b => b.status === 3).length;
+      
+      console.log("Số liệu từ enhancedBookings - Status 1:", status1Count, "Status 2:", status2Count, "Status 3:", status3Count);
+    }
+  }, [enhancedBookings]);
 
   const handleRoomService = (bookingId: string) => {
     // This would ideally open a form or detailed view with room service options
@@ -394,7 +466,7 @@ const OrderHotelRoomManagement = () => {
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-gray-400">
-                {occupancyStats.totalRooms - occupancyStats.occupiedRooms}
+                {occupancyStats.availableRooms}
               </div>
               <div className="text-sm text-gray-500">Phòng trống</div>
             </div>
@@ -516,13 +588,11 @@ const OrderHotelRoomManagement = () => {
                       </span>
                     </div>
                     <div className="text-sm text-gray-500 flex items-center">
-                      <div className="mr-2">#{booking.id}</div>
-                      <div className="flex">
-                        {Array.from({ length: getRoomStars(booking.roomType) }).map((_, i) => (
-                          <span key={i} className="text-yellow-400">⭐</span>
-                        ))}
-                      </div>
-                    </div>
+  <div className="mr-2">#{booking.id}</div>
+  <div className="flex">
+    <span className="text-[#000000]">Mã đơn hàng</span>
+  </div>
+</div>
                   </div>
 
                   {/* Duration Badge */}
