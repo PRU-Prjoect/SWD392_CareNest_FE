@@ -4,6 +4,7 @@ import type { AppDispatch, RootState } from '../../../store/store';
 import { getRoomBookings, updateRoomBooking } from '../../../store/slices/roomBookingSlice';
 import { getRooms } from '../../../store/slices/roomSlice';
 import { searchHotels } from '../../../store/slices/hotelSlice';
+import { getCustomerById } from '../../../store/slices/customerSlice';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -27,6 +28,8 @@ interface EnhancedBooking extends RoomBooking {
   roomType?: number;
   customerName?: string;
   customerPhone?: string;
+  customerEmail?: string;
+  customerImage?: string;
   hotelName?: string;
   hotelId?: string;
   // Status helpers
@@ -41,6 +44,7 @@ const OrderHotelRoomManagement = () => {
   const [activeTab, setActiveTab] = useState<string>("1"); // 1 = not checked in, 2 = checked in, 3 = checked out
   const [enhancedBookings, setEnhancedBookings] = useState<EnhancedBooking[]>([]);
   const [selectedHotelId, setSelectedHotelId] = useState<string>("");
+  const [loadingCustomers, setLoadingCustomers] = useState<Record<string, boolean>>({});
   
   // Get data from Redux store
   const { roomBookings, loading: bookingsLoading, error: bookingsError } = useSelector((state: RootState) => state.roomBooking);
@@ -95,15 +99,50 @@ const OrderHotelRoomManagement = () => {
           statusIcon: statusConfig.icon,
           statusColor: statusConfig.color,
           statusBadge: statusConfig.badge,
-          // Customer details would come from API or be joined from another source
-          customerName: "Waiting for customer data...",
-          customerPhone: "Waiting for customer data..."
+          // Default values for customer data
+          customerName: "Đang tải dữ liệu...",
+          customerPhone: "Đang tải dữ liệu...",
+          customerEmail: "",
+          customerImage: ""
         };
       });
       
       setEnhancedBookings(enhanced);
+      
+      // Fetch customer data for each booking
+      enhanced.forEach(booking => {
+        if (booking.customer_id) {
+          setLoadingCustomers(prev => ({ ...prev, [booking.customer_id]: true }));
+          dispatch(getCustomerById(booking.customer_id))
+            .unwrap()
+            .then((response) => {
+              const customer = response.data;
+              
+              setEnhancedBookings(prevBookings => 
+                prevBookings.map(prevBooking => 
+                  prevBooking.customer_id === booking.customer_id 
+                    ? { 
+                        ...prevBooking, 
+                        customerName: customer.full_name || "Không có tên",
+                        customerEmail: "Email không khả dụng", // Email not directly available in CustomerProfile
+                        // Other customer details would come from the account object 
+                        // but getCustomerById doesn't return account details directly
+                      } 
+                    : prevBooking
+                )
+              );
+            })
+            .catch(error => {
+              console.error("Error fetching customer:", error);
+              toast.error(`Không thể tải thông tin khách hàng: ${error.message}`);
+            })
+            .finally(() => {
+              setLoadingCustomers(prev => ({ ...prev, [booking.customer_id]: false }));
+            });
+        }
+      });
     }
-  }, [roomBookings, rooms, hotels]);
+  }, [roomBookings, rooms, hotels, dispatch]);
 
   // Check for errors
   useEffect(() => {
@@ -451,6 +490,7 @@ const OrderHotelRoomManagement = () => {
         ) : (
           filteredBookings().map((booking) => {
             const stayProgress = getStayProgress(booking);
+            const isLoadingCustomer = loadingCustomers[booking.customer_id];
 
             return (
               <div
@@ -518,15 +558,13 @@ const OrderHotelRoomManagement = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                     <div className="space-y-3">
                       <div className="flex items-center space-x-2">
-                        <span className="text-gray-500">👤</span>
+                        <span className="text-gray-500 font-bold">👤Khách hàng:</span>
                         <span className="font-medium text-gray-800">
-                          {booking.customerName || "Customer data loading..."}
-                        </span>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <span className="text-gray-500">📞</span>
-                        <span className="text-gray-600">
-                          {booking.customerPhone || "Phone data loading..."}
+                          {isLoadingCustomer ? (
+                            <span className="inline-block w-24 h-4 bg-gray-200 animate-pulse rounded"></span>
+                          ) : (
+                            booking.customerName
+                          )}
                         </span>
                       </div>
                     </div>
@@ -567,7 +605,7 @@ const OrderHotelRoomManagement = () => {
                   {booking.medication_schedule ? (
                     <div className="bg-yellow-50 border-l-4 border-yellow-400 p-3 mb-4">
                       <div className="flex items-start space-x-2">
-                        <span className="text-yellow-600 mt-0.5">💊</span>
+                        <span className="text-yellow-600 mt-0.5 font-bold">💊 Lịch sử dụng thuốc:</span>
                         <span className="text-yellow-800 text-sm">
                           {booking.medication_schedule}
                         </span>
@@ -603,45 +641,6 @@ const OrderHotelRoomManagement = () => {
                         🚪 Check-out
                       </button>
                     )}
-
-                    {(booking.status === 2 || booking.status === 1) && (
-                      <button
-                        onClick={() => handleRoomService(booking.id)}
-                        className="flex-1 md:flex-none px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors font-medium text-sm"
-                      >
-                        🍽️ Room Service
-                      </button>
-                    )}
-
-                    <button
-                      onClick={() => handleDailyReport(booking)}
-                      className="flex-1 md:flex-none px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors font-medium text-sm"
-                    >
-                      📋 Daily Report
-                    </button>
-
-                    <button
-                      onClick={() => handleViewDetails(booking)}
-                      className="flex-1 md:flex-none px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors font-medium text-sm"
-                    >
-                      🔍 View Details
-                    </button>
-
-                    <button
-                      onClick={() => handleRoomStatus(booking.roomNumber)}
-                      className="flex-1 md:flex-none px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors font-medium text-sm"
-                    >
-                      🏠 Room Status
-                    </button>
-
-                    <button
-                      onClick={() =>
-                        booking.customerPhone ? window.open(`tel:${booking.customerPhone}`) : toast.info("Phone number not available")
-                      }
-                      className="flex-1 md:flex-none px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors font-medium text-sm"
-                    >
-                      💬 Contact
-                    </button>
                   </div>
                 </div>
               </div>
