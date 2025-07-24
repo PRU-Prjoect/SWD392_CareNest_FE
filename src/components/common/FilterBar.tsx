@@ -27,31 +27,8 @@ const FilterBar: React.FC<FilterBarProps> = ({ onFilter }) => {
 
   // Cấu hình các filter
   const filterConfigs: FilterConfig[] = [
-    {
-      name: "location",
-      label: "Địa điểm",
-      placeholder: "Chọn địa điểm",
-      options: [
-        { value: "", label: "Tất cả địa điểm" },
-        { value: "hanoi", label: "Hà Nội" },
-        { value: "hcm", label: "TP. Hồ Chí Minh" },
-        { value: "danang", label: "Đà Nẵng" },
-        { value: "haiphong", label: "Hải Phòng" },
-      ],
-    },
-    {
-      name: "petType",
-      label: "Loại thú",
-      placeholder: "Chọn loại thú",
-      options: [
-        { value: "", label: "Tất cả loại thú" },
-        { value: "dog", label: "🐕 Chó" },
-        { value: "cat", label: "🐱 Mèo" },
-        { value: "bird", label: "🐦 Chim" },
-        { value: "fish", label: "🐠 Cá" },
-        { value: "rabbit", label: "🐰 Thỏ" },
-      ],
-    },
+    
+   
     {
       name: "sortBy",
       label: "Sắp xếp",
