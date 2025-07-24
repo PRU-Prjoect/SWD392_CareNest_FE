@@ -9,7 +9,7 @@ const AccountsManagement: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { accounts, searching, deleting, activating, searchError } = useSelector((state: RootState) => state.account);
   const [searchTerm, setSearchTerm] = useState('');
-  const [roleFilter, setRoleFilter] = useState('');
+  const [roleFilter] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [accountToDelete, setAccountToDelete] = useState<string | null>(null);
