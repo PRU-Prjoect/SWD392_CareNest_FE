@@ -33,6 +33,11 @@ const AppSidebarForAdmin: React.FC = () => {
       icon: "🏪",
     },
     {
+      path: "/admin/hotels",
+      label: "Quản lý khách sạn",
+      icon: "🏨",
+    },
+    {
       path: "/admin/services",
       label: "Quản lý dịch vụ",
       icon: "🧩",
