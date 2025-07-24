@@ -5,6 +5,7 @@ import { toast, ToastContainer } from 'react-toastify';
 import { MapPin, Star, Calendar, Clock, ChevronLeft, Phone, Info } from 'lucide-react';
 import { getHotelById } from '../../store/slices/hotelSlice';
 import { getRooms } from '../../store/slices/roomSlice';
+import { searchSubAddresses } from '../../store/slices/subAddressSlice';
 import type { AppDispatch, RootState } from '../../store/store';
 import { handleContextualError } from '../../utils/errorHandling';
 
@@ -85,6 +86,7 @@ const HotelDetailPage: React.FC = () => {
   // Lấy thông tin khách sạn và phòng từ Redux store
   const { currentHotel: currentHotelData, loading: hotelLoading, error: hotelError } = useSelector((state: RootState) => state.hotel);
   const { rooms, loading: roomsLoading } = useSelector((state: RootState) => state.room);
+  const { subAddresses } = useSelector((state: RootState) => state.subAddress);
   
   // Sử dụng type assertion để chuyển đổi currentHotel thành HotelDataExtended
   const currentHotel = currentHotelData as unknown as HotelDataExtended;
@@ -94,6 +96,7 @@ const HotelDetailPage: React.FC = () => {
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
   const [bookingDays, setBookingDays] = useState(1);
   const [showBookingModal, setShowBookingModal] = useState(false);
+  const [hotelAddress, setHotelAddress] = useState<string>('Địa chỉ chưa cập nhật');
   
   // Lấy thông tin khách sạn và phòng khi component được mount
   useEffect(() => {
@@ -102,6 +105,7 @@ const HotelDetailPage: React.FC = () => {
         .unwrap()
         .then(() => {
           dispatch(getRooms());
+          dispatch(searchSubAddresses({}));
         })
         .catch((error) => {
           handleContextualError(error, "fetch");
@@ -115,6 +119,16 @@ const HotelDetailPage: React.FC = () => {
       handleContextualError(hotelError, "fetch");
     }
   }, [hotelError]);
+
+  // Tìm và cập nhật địa chỉ khi có dữ liệu
+  useEffect(() => {
+    if (currentHotel && currentHotel.sub_address_id && subAddresses.length > 0) {
+      const relatedAddress = subAddresses.find(address => address.id === currentHotel.sub_address_id);
+      if (relatedAddress && relatedAddress.address_name) {
+        setHotelAddress(relatedAddress.address_name);
+      }
+    }
+  }, [currentHotel, subAddresses]);
   
   // Filter phòng theo khách sạn hiện tại
   const hotelRooms = rooms.filter(room => room.hotel_id === id);
@@ -210,7 +224,7 @@ const HotelDetailPage: React.FC = () => {
               <h1 className="text-2xl font-bold text-gray-900">{currentHotel.name}</h1>
               <div className="flex items-center text-sm text-gray-500 mt-1">
                 <MapPin className="w-4 h-4 mr-1" />
-                <span>{currentHotel.address_name || 'Địa chỉ chưa cập nhật'}</span>
+                <span>{hotelAddress}</span>
               </div>
             </div>
           </div>
@@ -369,7 +383,7 @@ const HotelDetailPage: React.FC = () => {
                 </div>
                 <div className="flex items-center text-gray-700">
                   <MapPin className="w-5 h-5 mr-2 text-teal-600" />
-                  <span>{currentHotel.address_name || 'Địa chỉ chưa cập nhật'}</span>
+                  <span>{hotelAddress}</span>
                 </div>
               </div>
               
