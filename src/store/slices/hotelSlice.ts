@@ -13,9 +13,11 @@ interface HotelState {
   deleting: boolean;
   creating: boolean;
   reportLoading: boolean;
+  hotelReportByIdLoading: boolean;
   hotels: HotelData[];
   currentHotel: HotelData | null;
   hotelReport: HotelReportData | null;
+  hotelReportById: HotelReportData | null;
   error: {
     code: number;
     message: string;
@@ -37,6 +39,10 @@ interface HotelState {
     message: string;
   } | null;
   reportError: {
+    code: number;
+    message: string;
+  } | null;
+  reportByIdError: {
     code: number;
     message: string;
   } | null;
@@ -110,6 +116,11 @@ interface HotelReportResponse {
   data: HotelReportData;
 }
 
+interface HotelReportByIdResponse {
+  message: string;
+  data: HotelReportData;
+}
+
 interface SimpleResponse {
   message: string;
 }
@@ -128,15 +139,18 @@ const initialState: HotelState = {
   deleting: false,
   creating: false,
   reportLoading: false,
+  hotelReportByIdLoading: false,
   hotels: [],
   currentHotel: null,
   hotelReport: null,
+  hotelReportById: null,
   error: null,
   searchError: null,
   updateError: null,
   deleteError: null,
   createError: null,
   reportError: null,
+  reportByIdError: null,
 };
 
 // ✅ 1. Search hotels with filters
@@ -511,6 +525,65 @@ export const getHotelReport = createAsyncThunk<
   }
 });
 
+// ✅ 7. Get hotel report by hotel ID
+
+export const getHotelReportById = createAsyncThunk<
+  HotelReportByIdResponse,
+  string,
+  { rejectValue: ErrorResponse }
+>("hotel/getReportById", async (hotelId, { rejectWithValue }) => {
+  try {
+    const response = await api.get(`Hotel/${hotelId}/report`, {
+      headers: {
+        accept: "*/*",
+      },
+    });
+
+    console.log("✅ Get Hotel Report By ID Response:", response.data);
+
+    if (!response.data) {
+      return rejectWithValue({
+        error: 1,
+        message: "Phản hồi từ server không hợp lệ",
+      });
+    }
+
+    return response.data;
+  } catch (err: any) {
+    console.error("❌ Get Hotel Report By ID Error:", err.response?.data);
+    if (err.response) {
+      const status = err.response.status;
+      const errorData = err.response.data;
+      switch (status) {
+        case 401:
+          return rejectWithValue({
+            error: 401,
+            message: "Không có quyền truy cập. Vui lòng đăng nhập lại.",
+          });
+        case 404:
+          return rejectWithValue({
+            error: 404,
+            message: "Không tìm thấy báo cáo khách sạn",
+          });
+        case 400:
+          return rejectWithValue({
+            error: 400,
+            message: errorData?.message || "ID khách sạn không hợp lệ",
+          });
+        default:
+          return rejectWithValue({
+            error: status,
+            message: errorData?.message || "Lấy báo cáo khách sạn thất bại",
+          });
+      }
+    }
+    return rejectWithValue({
+      error: 1,
+      message: err.message || "Không thể kết nối đến máy chủ",
+    });
+  }
+});
+
 // Hotel slice
 
 const hotelSlice = createSlice({
@@ -535,6 +608,9 @@ const hotelSlice = createSlice({
     clearReportError: (state) => {
       state.reportError = null;
     },
+    clearReportByIdError: (state) => {
+      state.reportByIdError = null;
+    },
     clearAllHotelErrors: (state) => {
       state.error = null;
       state.searchError = null;
@@ -542,6 +618,7 @@ const hotelSlice = createSlice({
       state.deleteError = null;
       state.createError = null;
       state.reportError = null;
+      state.reportByIdError = null;
     },
     resetHotelState: (state) => {
       Object.assign(state, initialState);
@@ -551,6 +628,9 @@ const hotelSlice = createSlice({
     },
     clearHotelReport: (state) => {
       state.hotelReport = null;
+    },
+    clearHotelReportById: (state) => {
+      state.hotelReportById = null;
     },
     setCurrentHotel: (state, action: PayloadAction<HotelData | null>) => {
       state.currentHotel = action.payload;
@@ -738,6 +818,35 @@ const hotelSlice = createSlice({
             message: action.error.message || "Lấy báo cáo khách sạn thất bại",
           };
         }
+      })
+
+      // ✅ Get hotel report by ID cases
+      .addCase(getHotelReportById.pending, (state) => {
+        state.hotelReportByIdLoading = true;
+        state.reportByIdError = null;
+      })
+      .addCase(
+        getHotelReportById.fulfilled,
+        (state, action: PayloadAction<HotelReportByIdResponse>) => {
+          state.hotelReportByIdLoading = false;
+          state.hotelReportById = action.payload.data;
+          state.reportByIdError = null;
+          console.log("✅ Retrieved hotel report by ID:", action.payload.data);
+        }
+      )
+      .addCase(getHotelReportById.rejected, (state, action) => {
+        state.hotelReportByIdLoading = false;
+        if (action.payload) {
+          state.reportByIdError = {
+            code: action.payload.error,
+            message: action.payload.message,
+          };
+        } else {
+          state.reportByIdError = {
+            code: 1,
+            message: action.error.message || "Lấy báo cáo khách sạn thất bại",
+          };
+        }
       });
   },
 });
@@ -749,10 +858,12 @@ export const {
   clearDeleteError,
   clearCreateError,
   clearReportError,
+  clearReportByIdError,
   clearAllHotelErrors,
   resetHotelState,
   clearHotelsList,
   clearHotelReport,
+  clearHotelReportById,
   setCurrentHotel,
 } = hotelSlice.actions;
 
