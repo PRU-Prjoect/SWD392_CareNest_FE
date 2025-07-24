@@ -30,12 +30,13 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
           position="top-right"
           autoClose={3000}
           hideProgressBar={false}
-          newestOnTop={false}
+          newestOnTop={true}
           closeOnClick
           rtl={false}
           pauseOnFocusLoss
           draggable
           pauseOnHover
+          limit={1}
           style={{ zIndex: 99999 }}
           toastStyle={{ zIndex: 99999 }}
         />
