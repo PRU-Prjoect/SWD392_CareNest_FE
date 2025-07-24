@@ -8,8 +8,12 @@ import AppSidebarForAdmin from "./AppSidebarForAdmin";
 const AppLayoutForAdmin: React.FC = () => {
   const { user } = useSelector((state: RootState) => state.auth);
 
-  // Kiểm tra quyền Admin - nếu không phải admin thì chuyển hướng
-  if (user?.role !== "Admin") {
+  // Kiểm tra quyền Admin hoặc tài khoản đặc biệt
+  const isSpecialAdmin = user?.username === 'admin' || user?.name === 'admin';
+  const hasAdminRole = user?.role === 'Admin' || Number(user?.role) === 4;
+
+  // Nếu không phải admin và không phải tài khoản đặc biệt thì chuyển hướng
+  if (!isSpecialAdmin && !hasAdminRole) {
     return <Navigate to="/" replace />;
   }
 
