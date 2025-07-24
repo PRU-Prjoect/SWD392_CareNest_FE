@@ -23,8 +23,8 @@ const AppSidebarForAdmin: React.FC = () => {
       icon: "📊",
     },
     {
-      path: "/admin/users",
-      label: "Quản lý người dùng",
+      path: "/admin/accounts",
+      label: "Quản lý tài khoản",
       icon: "👥",
     },
     {

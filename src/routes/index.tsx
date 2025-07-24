@@ -47,7 +47,7 @@ import HotelDetailPage from "@/pages/ServiceDetail/HotelDetailPage";
 import AppLayoutForAdmin from "../layout/AppLayoutForAdmin";
 import {
   DashboardPage,
-  UsersManagement,
+  AccountsManagement,
   ShopsManagement,
   ServicesManagement,
   ReportsPage,
@@ -147,7 +147,7 @@ const AppRoutes = () => {
         }
       >
         <Route path="dashboard" element={<DashboardPage />} />
-        <Route path="users" element={<UsersManagement />} />
+        <Route path="accounts" element={<AccountsManagement />} />
         <Route path="shops" element={<ShopsManagement />} />
         <Route path="services" element={<ServicesManagement />} />
         <Route path="reports" element={<ReportsPage />} />
