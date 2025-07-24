@@ -8,9 +8,6 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
 } from "recharts";
 import type { RootState } from "@/store/store";
 
@@ -78,33 +75,6 @@ const AdminDashboard = () => {
     { name: "T6", value: 350 },
     { name: "T7", value: 220 },
   ];
-
-  // Dữ liệu cho biểu đồ tròn dịch vụ (giữ nguyên)
-  const servicePieData = [
-    { name: "Thành công", value: 70, color: "#4ECDC4" },
-    { name: "Đang xử lý", value: 18, color: "#45B7D1" },
-    { name: "Đơn hủy", value: 8, color: "#2E3A59" },
-    { name: "Chưa xử lý", value: 4, color: "#96CEB4" },
-  ];
-
-  // Màu sắc cho biểu đồ tròn (giữ nguyên)
-  const COLORS = ["#4ECDC4", "#45B7D1", "#2E3A59", "#96CEB4"];
-
-  // Component Legend tùy chỉnh (giữ nguyên)
-  const CustomLegend = ({ data }: { data: any[] }) => (
-    <div className="flex flex-col space-y-2 ml-4">
-      {data.map((item, index) => (
-        <div key={index} className="flex items-center space-x-2">
-          <div
-            className="w-3 h-3 rounded-sm"
-            style={{ backgroundColor: item.color }}
-          />
-          <span className="text-sm text-gray-700 font-medium">{item.name}</span>
-          <span className="text-sm text-gray-500">{item.value}%</span>
-        </div>
-      ))}
-    </div>
-  );
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
@@ -199,46 +169,6 @@ const AdminDashboard = () => {
               <Bar dataKey="value" fill="#eab308" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
-        </div>
-
-        {/* Biểu đồ tỷ lệ thành công của đơn hàng và dịch vụ */}
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          <h3 className="text-lg font-semibold mb-4 text-gray-800">
-            Biểu đồ tỷ lệ thành công của đơn hàng và dịch vụ
-          </h3>
-
-          {/* Biểu đồ tròn Dịch vụ */}
-          <div className="text-center">
-            <h4 className="text-md font-medium mb-2 text-gray-700">Dịch vụ</h4>
-            <div className="flex items-center justify-center">
-              <ResponsiveContainer width={180} height={180}>
-                <PieChart>
-                  <Pie
-                    data={servicePieData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={30}
-                    outerRadius={70}
-                    paddingAngle={2}
-                    dataKey="value"
-                  >
-                    {servicePieData.map((_, index) => (
-                      <Cell
-                        key={`cell-${index}`}
-                        fill={COLORS[index % COLORS.length]}
-                      />
-                    ))}
-                  </Pie>
-                  <Tooltip formatter={(value) => [`${value}%`, "Tỷ lệ"]} />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-        </div>
-
-        {/* Legend chung */}
-        <div className="mt-4 flex justify-center">
-          <CustomLegend data={servicePieData} />
         </div>
       </div>
     </div>
