@@ -61,7 +61,7 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, size = 
     >
       <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
         <div 
-          className="fixed inset-0 bg-[#00000080] bg-opacity-75 transition-opacity" 
+          className="fixed inset-0 bg-[#00000080] transition-opacity" 
           aria-hidden="true" 
         ></div>
         <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
@@ -94,6 +94,8 @@ const HotelsManagement: React.FC = () => {
   const [selectedHotelId, setSelectedHotelId] = useState<string | null>(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  // Debugging logs for modal state
+  console.log("Modal states:", { isReportModalOpen, isDeleteModalOpen });
 
   const {
     hotels,
@@ -105,6 +107,11 @@ const HotelsManagement: React.FC = () => {
     deleteError,
     reportError,
   } = useAppSelector((state) => state.hotel);
+
+  // Debug log for hotel report data
+  useEffect(() => {
+    console.log("Hotel report data:", hotelReport);
+  }, [hotelReport]);
 
   useEffect(() => {
     dispatch(searchHotels());
@@ -135,6 +142,7 @@ const HotelsManagement: React.FC = () => {
   };
 
   const handleOpenReportModal = (shopId: string) => {
+    console.log("Opening report modal for shop ID:", shopId);
     dispatch(getHotelReport(shopId));
     setIsReportModalOpen(true);
   };
@@ -240,9 +248,13 @@ const HotelsManagement: React.FC = () => {
                               onDelete={() => handleOpenDeleteModal(hotel.id)}
                             />
                             <button 
-                              onClick={() => handleOpenReportModal(hotel.shop_id)}
+                              onClick={() => {
+                                console.log("Report button clicked for shop ID:", hotel.shop_id);
+                                handleOpenReportModal(hotel.shop_id);
+                              }}
                               className="p-1 rounded-full text-blue-500 hover:bg-blue-50 ml-2"
                               title="Báo cáo"
+                              type="button"
                             >
                               <FaChartBar className="h-5 w-5" />
                             </button>
