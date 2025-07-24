@@ -376,39 +376,6 @@ const OrderHotelRoomManagement = () => {
     }
   }, [enhancedBookings]);
 
-  const handleRoomService = (bookingId: string) => {
-    // This would ideally open a form or detailed view with room service options
-    toast.info(`Đã mở dịch vụ phòng cho booking #${bookingId}`);
-  };
-
-  const handleDailyReport = (booking: EnhancedBooking) => {
-    // This would ideally open a daily care report form or view
-    toast.info(`Báo cáo chăm sóc hàng ngày cho booking #${booking.id}`);
-    
-    // Example would be a modal with checkboxes for feeding, medication, etc.
-  };
-
-  const handleViewDetails = (booking: EnhancedBooking) => {
-    // This would navigate to a detailed view of the booking
-    toast.info(`Xem chi tiết booking #${booking.id}`);
-  };
-
-  const handleRoomStatus = (roomNumber?: number) => {
-    toast.info(`Checking status for room ${roomNumber || 'Unknown'}`);
-  };
-
-  // Get room stars display (based on room type)
-  const getRoomStars = (roomType?: number) => {
-    if (roomType === undefined) return 3;
-    
-    switch (roomType) {
-      case 0: return 2; // Economy
-      case 1: return 3; // Standard
-      case 2: return 4; // Suite
-      case 3: return 5; // VIP
-      default: return 3;
-    }
-  };
 
   return (
     <div className="p-4 md:p-6 bg-gray-50 min-h-screen">
