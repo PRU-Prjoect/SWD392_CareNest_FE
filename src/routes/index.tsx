@@ -43,6 +43,17 @@ import AppointmentDetailPage from "@/pages/ServiceDetail/components/AppointmentD
 import HotelServices from "@/pages/Services/HotelServices";
 import HotelDetailPage from "@/pages/ServiceDetail/HotelDetailPage";
 
+// ✅ Import Admin layout và components
+import AppLayoutForAdmin from "../layout/AppLayoutForAdmin";
+import {
+  DashboardPage,
+  UsersManagement,
+  ShopsManagement,
+  ServicesManagement,
+  ReportsPage,
+  SystemSettings
+} from "@/pages/Admin";
+
 // Component chứa toàn bộ định nghĩa các route
 const AppRoutes = () => {
   return (
@@ -123,6 +134,24 @@ const AppRoutes = () => {
         </Route>
 
         <Route path="profile" element={<ProfilePage />} />
+        <Route index element={<Navigate to="dashboard" replace />} />
+      </Route>
+
+      {/* --------- Route dành cho Admin --------- */}
+      <Route
+        path="/admin/*"
+        element={
+          <ProtectedRoute requireAdmin={true}>
+            <AppLayoutForAdmin />
+          </ProtectedRoute>
+        }
+      >
+        <Route path="dashboard" element={<DashboardPage />} />
+        <Route path="users" element={<UsersManagement />} />
+        <Route path="shops" element={<ShopsManagement />} />
+        <Route path="services" element={<ServicesManagement />} />
+        <Route path="reports" element={<ReportsPage />} />
+        <Route path="settings" element={<SystemSettings />} />
         <Route index element={<Navigate to="dashboard" replace />} />
       </Route>
 
