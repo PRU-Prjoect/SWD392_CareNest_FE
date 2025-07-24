@@ -80,7 +80,7 @@ const PetHotelBooking: React.FC = () => {
     medication_schedule: dayjs().utc().format('YYYY-MM-DDTHH:mm:ss.SSS[Z]'), // Đảm bảo UTC
     total_night: 1,
     total_amount: 0,
-    status: true,
+    status: 1, // Changed from boolean true to number 1 (not checked in)
   });
 
   // Store the feeding schedule description separately for any additional notes

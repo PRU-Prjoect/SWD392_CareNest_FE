@@ -6,6 +6,8 @@ import {
   deleteAppointment,
   getAppointmentReport,
 } from '@/store/slices/appointmentSlice';
+import { getCustomerById } from '@/store/slices/customerSlice';
+import { AppointmentStatus } from '@/types/enums';
 
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
@@ -90,7 +92,7 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, size = 
 // Interface for appointment search request for our local use
 interface AppointmentSearchParams {
   customerId?: string;
-  status?: string;
+  status?: AppointmentStatus;
   startTime?: string;
   endTime?: string;
   locationTy?: string;
@@ -149,6 +151,10 @@ const AppointmentsManagement: React.FC = () => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  // Map to store customer information by ID
+  const [customerMap, setCustomerMap] = useState<Record<string, { full_name: string }>>({});
+  // Use a ref to track which customer IDs have already been requested
+  const fetchedCustomerIds = React.useRef<Set<string>>(new Set());
 
   const {
     appointments,
@@ -169,13 +175,57 @@ const AppointmentsManagement: React.FC = () => {
     dispatch(getAllAppointments({}));
   }, [dispatch]);
 
+  // Fetch customer information when appointments change
+  useEffect(() => {
+    const fetchCustomers = async () => {
+      const uniqueCustomerIds = [...new Set(appointments.map(app => app.customer_id))];
+      
+      for (const id of uniqueCustomerIds) {
+        if (!customerMap[id] && !fetchedCustomerIds.current.has(id)) {
+          fetchedCustomerIds.current.add(id); // Mark this ID as requested
+          try {
+            const result = await dispatch(getCustomerById(id)).unwrap();
+            if (result.data) {
+              setCustomerMap(prev => ({
+                ...prev,
+                [id]: { full_name: result.data.full_name }
+              }));
+            }
+          } catch (error) {
+            console.error(`Failed to fetch customer ${id}:`, error);
+          }
+        }
+      }
+    };
+
+    if (appointments.length > 0) {
+      fetchCustomers();
+    }
+  }, [appointments, dispatch]);
+
   const handleSearch = () => {
     const params: AppointmentSearchParams = {};
     if (customerId) params.customerId = customerId;
-    if (status) params.status = status;
+    if (status) {
+      // Convert status string to AppointmentStatus enum
+      switch (status) {
+        case 'finish':
+          params.status = AppointmentStatus.Finish;
+          break;
+        case 'cancel':
+          params.status = AppointmentStatus.Cancel;
+          break;
+        case 'inprogress':
+          params.status = AppointmentStatus.InProgress;
+          break;
+        case 'noprogress':
+          params.status = AppointmentStatus.NoProgress;
+          break;
+      }
+    }
     
-    // Use type assertion to work around the type incompatibility
-    dispatch(getAllAppointments(params as any));
+    // Use a properly typed parameter object
+    dispatch(getAllAppointments(params));
   };
 
   const handleOpenDeleteModal = (appointmentId: string) => {
@@ -304,8 +354,7 @@ const AppointmentsManagement: React.FC = () => {
                   <tr>
                     <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
                     <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Khách hàng</th>
-                    <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Thời gian bắt đầu</th>
-                    <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Thời gian kết thúc</th>
+                    <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Thời gian thực hiện</th>
                     <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trạng thái</th>
                     <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hành động</th>
                   </tr>
@@ -315,9 +364,8 @@ const AppointmentsManagement: React.FC = () => {
                     appointments.map((appointment) => (
                       <tr key={appointment.id}>
                         <td className="px-6 py-4 whitespace-nowrap">{appointment.id.substring(0, 8)}...</td>
-                        <td className="px-6 py-4 whitespace-nowrap">{appointment.customer_id}</td>
+                        <td className="px-6 py-4 whitespace-nowrap">{customerMap[appointment.customer_id]?.full_name || appointment.customer_id}</td>
                         <td className="px-6 py-4 whitespace-nowrap">{formatDate(appointment.start_time)}</td>
-                        <td className="px-6 py-4 whitespace-nowrap">{appointment.end_time ? formatDate(appointment.end_time) : '-'}</td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <Badge color={getStatusBadgeColor(appointment.status)}>
                             {formatStatus(appointment.status)}
@@ -342,7 +390,7 @@ const AppointmentsManagement: React.FC = () => {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={6} className="px-6 py-4 text-center">
+                      <td colSpan={5} className="px-6 py-4 text-center">
                         {searchError ? searchError.message : 'Không có lịch hẹn nào'}
                       </td>
                     </tr>
@@ -397,8 +445,17 @@ const AppointmentsManagement: React.FC = () => {
                 <p className="font-medium">{currentAppointment.id}</p>
               </div>
               <div>
-                <p className="text-sm text-gray-500">ID khách hàng</p>
-                <p className="font-medium">{currentAppointment.customer_id}</p>
+                <p className="text-sm text-gray-500">Khách hàng</p>
+                <p className="font-medium">
+                  {customerMap[currentAppointment.customer_id]?.full_name ? (
+                    <>
+                      {customerMap[currentAppointment.customer_id].full_name}
+                      <span className="text-xs text-gray-500 ml-2">({currentAppointment.customer_id})</span>
+                    </>
+                  ) : (
+                    currentAppointment.customer_id
+                  )}
+                </p>
               </div>
               {currentAppointment.location_type && (
                 <div>

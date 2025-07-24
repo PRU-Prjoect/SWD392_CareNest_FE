@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { getHotelById } from '@/store/slices/hotelSlice';
-import { getRoomBookings } from '@/store/slices/roomBookingSlice';
+import { getRoomBookings, formatBookingStatus } from '@/store/slices/roomBookingSlice';
 
 import { getRooms } from '@/store/slices/roomSlice';
 import { searchSubAddresses } from '@/store/slices/subAddressSlice';
@@ -41,16 +41,18 @@ const mapRoomTypeToString = (type: number): string => {
   }
 };
 
-// Map booking status to display string
-const getBookingStatusLabel = (status: boolean) => {
-  return status ? 'Đang hoạt động' : 'Đã hủy';
-};
-
 // Map booking status to color
-const getBookingStatusColor = (status: boolean) => {
-  return status 
-    ? 'bg-green-100 text-green-800 border-green-200' 
-    : 'bg-red-100 text-red-800 border-red-200';
+const getBookingStatusColor = (status: number) => {
+  switch(status) {
+    case 1: // Chưa nhận phòng
+      return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+    case 2: // Đã nhận phòng
+      return 'bg-blue-100 text-blue-800 border-blue-200';
+    case 3: // Đã trả phòng
+      return 'bg-green-100 text-green-800 border-green-200';
+    default:
+      return 'bg-gray-100 text-gray-800 border-gray-200';
+  }
 };
 
 const HotelBookingDetail: React.FC = () => {
@@ -105,7 +107,7 @@ const HotelBookingDetail: React.FC = () => {
   const roomsMap = hotelRooms.reduce((map, room) => {
     map[room.id] = room;
     return map;
-  }, {} as Record<string, any>);
+  }, {} as Record<string, typeof hotelRooms[0]>);
   
   // Get all bookings for rooms in this hotel
   const hotelBookings = roomBookings.filter(booking => {
@@ -402,7 +404,7 @@ const HotelBookingDetail: React.FC = () => {
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <span className={`px-2 py-1 text-xs rounded-full border ${getBookingStatusColor(booking.status)}`}>
-                              {getBookingStatusLabel(booking.status)}
+                              {formatBookingStatus(booking.status)}
                             </span>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">

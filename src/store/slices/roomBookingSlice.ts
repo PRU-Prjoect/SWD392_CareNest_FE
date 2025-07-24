@@ -5,6 +5,20 @@ import type { PayloadAction } from "@reduxjs/toolkit";
 import api from "@/config/axios";
 import { AxiosError } from "axios";
 
+// Helper function to format booking status
+export const formatBookingStatus = (status: number): string => {
+  switch(status) {
+    case 1:
+      return "Chưa nhận phòng";
+    case 2:
+      return "Đã nhận phòng";
+    case 3:
+      return "Đã trả phòng";
+    default:
+      return "Không xác định";
+  }
+};
+
 // Interfaces
 interface RoomBookingState {
   loading: boolean;
@@ -41,7 +55,7 @@ interface RoomBookingData {
   total_amount: number;
   feeding_schedule: string;
   medication_schedule: string;
-  status: boolean;
+  status: number; // Changed from boolean to number: 1 = not checked in, 2 = checked in, 3 = checked out
 }
 
 // Request interfaces
@@ -50,7 +64,7 @@ interface GetRoomBookingsRequest {
   customerId?: string;
   checkInDate?: string;
   checkOutDate?: string;
-  status?: boolean;
+  status?: number; // Changed from boolean to number
 }
 
 interface CreateRoomBookingRequest {
@@ -63,7 +77,7 @@ interface CreateRoomBookingRequest {
   total_amount: number;
   feeding_schedule: string;
   medication_schedule: string;
-  status: boolean;
+  status: number; // Changed from boolean to number
 }
 
 // Response interfaces
