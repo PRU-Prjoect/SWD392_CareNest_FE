@@ -47,6 +47,21 @@ interface CurrentOrder {
   };
 }
 
+
+
+interface AppointmentData {
+  id: string;
+  customer_id: string;
+  status: AppointmentStatus;
+  notes: string;
+  start_time: string;
+}
+
+// Interface cho Service Appointment
+interface ServiceAppointmentData {
+  service_id: string;
+}
+
 // ✅ Interface cho Hotel Booking
 interface HotelBookingDetail {
   id: string;
@@ -70,6 +85,20 @@ interface HotelBookingDetail {
     id: string;
     name: string;
   };
+}
+
+// Interface cho Room Booking
+interface RoomBookingData {
+  id: string;
+  room_detail_id: string;
+  customer_id: string;
+  check_in_date: string;
+  check_out_date: string;
+  total_night: number;
+  total_amount: number;
+  feeding_schedule: string;
+  medication_schedule: string;
+  status: number;
 }
 
 // Map room type từ number về string để hiển thị
@@ -257,8 +286,8 @@ const CurrentOrderForUser = () => {
         );
 
         const allCurrentAppointments = appointmentResults
-          .filter((result) => result.status === "fulfilled")
-          .flatMap((result) => (result as any).value.data);
+          .filter((result): result is PromiseFulfilledResult<{data: AppointmentData[]}> => result.status === "fulfilled")
+          .flatMap((result) => result.value.data);
 
         if (allCurrentAppointments.length === 0) {
           console.log("ℹ️ No current appointments found");
@@ -269,7 +298,7 @@ const CurrentOrderForUser = () => {
 
         // ✅ Process appointments tương tự OrderHistoryForUser
         const orderPromises = allCurrentAppointments.map(
-          async (appointment: any) => {
+          async (appointment: AppointmentData) => {
             try {
               const serviceAppointmentsResult = await dispatch(
                 getAllServiceAppointments({ appointmentId: appointment.id })
@@ -278,7 +307,7 @@ const CurrentOrderForUser = () => {
               const serviceAppointments = serviceAppointmentsResult.data;
 
               const servicePromises = serviceAppointments.map(
-                async (sa: any): Promise<ServiceDetail | null> => {
+                async (sa: ServiceAppointmentData): Promise<ServiceDetail | null> => {
                   try {
                     const serviceResult = await dispatch(
                       getServiceById(sa.service_id)
@@ -405,24 +434,36 @@ const CurrentOrderForUser = () => {
           return;
         }
 
+        console.log("Fetched room bookings:", result.data);
+
         // Xử lý dữ liệu để thêm thông tin phòng và khách sạn
         const bookingsWithDetails = await Promise.all(
-          result.data.map(async (booking: any) => {
+          result.data.map(async (booking: RoomBookingData) => {
             try {
               // Lấy thông tin chi tiết về phòng
               const roomResult = await dispatch(
                 getRoomById(booking.room_detail_id)
               ).unwrap();
 
+              console.log("Room data for booking:", roomResult);
+              
               const room = roomResult.data;
               let hotel = null;
 
               // Lấy thông tin về khách sạn từ room.hotel_id
               if (room && room.hotel_id) {
+                console.log("Fetching hotel with ID:", room.hotel_id);
                 const hotelResult = await dispatch(
                   getHotelById(room.hotel_id)
                 ).unwrap();
-                hotel = hotelResult;
+                
+                console.log("Hotel result:", hotelResult);
+                
+                // Chắc chắn là chúng ta truy cập đúng trường
+                hotel = {
+                  id: hotelResult.data.id || "",
+                  name: hotelResult.data.name || "Khách sạn không xác định"
+                };
               }
 
               return {
@@ -437,7 +478,8 @@ const CurrentOrderForUser = () => {
           })
         );
 
-        setHotelBookings(bookingsWithDetails);
+        console.log("Processed bookings:", bookingsWithDetails);
+        setHotelBookings(bookingsWithDetails as HotelBookingDetail[]);
         console.log(
           `✅ Successfully loaded ${bookingsWithDetails.length} hotel bookings`
         );
@@ -665,7 +707,7 @@ const CurrentOrderForUser = () => {
             ].map((tab) => (
               <button
                 key={tab.key}
-                onClick={() => setActiveTab(tab.key as any)}
+                onClick={() => setActiveTab(tab.key as "all" | "pending" | "in-progress" | "cancelled")}
                 className={`relative px-3 py-2 md:px-4 md:py-2 rounded-lg font-medium transition-all duration-200 text-sm md:text-base ${
                   activeTab === tab.key
                     ? `${tab.color} text-white shadow-lg scale-105`
