@@ -30,7 +30,13 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   if (requireAdmin) {
     // Cho phép tài khoản với username là 'admin' hoặc role là Admin hoặc role=4
     const isSpecialAdmin = user?.username === 'admin' || user?.name === 'admin';
-    const hasAdminRole = user?.role === 'Admin' || Number(user?.role) === 4;
+    console.log("ProtectedRoute - Checking conditions:", {
+      usernameCheck: user?.username === "admin",
+      nameCheck: user?.name === "admin",
+      roleCheck: user?.role === "Admin" || user?.role === "4" || Number(user?.role) === 4,
+      user: user
+    });
+    const hasAdminRole = user?.role === 'Admin' || user?.role === "4" ||Number(user?.role) === 4;
 
     if (!isSpecialAdmin && !hasAdminRole) {
       return <Navigate to="/" replace />;

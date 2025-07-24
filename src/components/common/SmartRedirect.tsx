@@ -14,13 +14,16 @@ const SmartRedirect: React.FC = () => {
   }, [isAuthenticated, user]);
   
   if (isAuthenticated) {
-    // Kiểm tra tài khoản admin đặc biệt
-    if (user?.username === "admin" || Number(user?.role) === 4) {
-      // Nếu username là "admin" hoặc role là 4, luôn chuyển hướng đến trang admin
-      return <Navigate to="/admin/dashboard" replace />;
-    }
     // Kiểm tra vai trò và điều hướng phù hợp
-    else if (user?.role === "Admin") {
+    console.log("SmartRedirect - Checking conditions:", {
+      usernameCheck: user?.username === "admin",
+      roleCheckAdmin: user?.role === "Admin",
+      roleCheck4String: user?.role === "4",
+      roleCheck4Number: Number(user?.role) === 4,
+      userRole: user?.role,
+      userRoleType: typeof user?.role
+    });
+     if (user?.username === "admin" ||user?.role === "Admin" ||user?.role === "4" ||  Number(user?.role) === 4) {
       // Nếu là Admin, chuyển hướng đến trang quản trị Admin
       return <Navigate to="/admin/dashboard" replace />;
     } else if (user?.role === "Shop") {

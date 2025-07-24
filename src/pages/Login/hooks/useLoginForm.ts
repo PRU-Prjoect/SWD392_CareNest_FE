@@ -77,7 +77,10 @@ export const useLoginForm = () => {
       console.log("🔄 Redirecting user with role:", user.role);
 
       setTimeout(() => {
-        if (user.role === "Shop") {
+        // Kiểm tra nếu là Admin hoặc role 4 hoặc username là admin
+        if (user.username === "admin" || user.role === "Admin" || user.role === "4" || Number(user.role) === 4) {
+          navigate("/admin/dashboard", { replace: true });
+        } else if (user.role === "Shop") {
           navigate("/shop/dashboard", { replace: true });
         } else {
           navigate("/app/home", { replace: true });
