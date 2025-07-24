@@ -87,31 +87,42 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, size = 
   );
 };
 
+// Interface for appointment search request for our local use
+interface AppointmentSearchParams {
+  customerId?: string;
+  status?: string;
+  startTime?: string;
+  endTime?: string;
+  locationTy?: string;
+  limit?: number;
+  offset?: number;
+}
+
 // Get status badge color
-const getStatusBadgeColor = (status: string) => {
-  switch(status) {
+const getStatusBadgeColor = (status: string): "primary" | "success" | "error" | "warning" | "info" => {
+  switch(status.toLowerCase()) {
     case 'finish':
       return 'success';
     case 'cancel':
       return 'error';
-    case 'inProgress':
+    case 'inprogress':
       return 'warning';
-    case 'noProgress':
+    case 'noprogress':
     default:
-      return 'secondary';
+      return 'info';
   }
 };
 
 // Format status for display
 const formatStatus = (status: string) => {
-  switch(status) {
+  switch(status.toLowerCase()) {
     case 'finish':
       return 'Hoàn thành';
     case 'cancel':
       return 'Đã hủy';
-    case 'inProgress':
+    case 'inprogress':
       return 'Đang xử lý';
-    case 'noProgress':
+    case 'noprogress':
       return 'Chưa xử lý';
     default:
       return status;
@@ -159,11 +170,12 @@ const AppointmentsManagement: React.FC = () => {
   }, [dispatch]);
 
   const handleSearch = () => {
-    const params: any = {};
+    const params: AppointmentSearchParams = {};
     if (customerId) params.customerId = customerId;
     if (status) params.status = status;
     
-    dispatch(getAllAppointments(params));
+    // Use type assertion to work around the type incompatibility
+    dispatch(getAllAppointments(params as any));
   };
 
   const handleOpenDeleteModal = (appointmentId: string) => {
@@ -209,6 +221,13 @@ const AppointmentsManagement: React.FC = () => {
     }
   }, [searchError, deleteError, reportError, error]);
 
+  // Function to count finished appointments
+  const getFinishedAppointmentsCount = () => {
+    return appointments.filter(appointment => 
+      appointment.status.toLowerCase() === 'finish'
+    ).length;
+  };
+
   return (
     <div className="container mx-auto px-4 py-6">
       <AdminPageHeader
@@ -225,7 +244,7 @@ const AppointmentsManagement: React.FC = () => {
         />
         <StatCard
           title="Lịch hẹn hoàn thành"
-          value={appointments.filter(appointment => appointment.status === 'finish').length}
+          value={getFinishedAppointmentsCount()}
           icon={<FaCalendarAlt />}
           color="green"
         />
@@ -261,8 +280,8 @@ const AppointmentsManagement: React.FC = () => {
                   <option value="">Tất cả trạng thái</option>
                   <option value="finish">Hoàn thành</option>
                   <option value="cancel">Đã hủy</option>
-                  <option value="inProgress">Đang xử lý</option>
-                  <option value="noProgress">Chưa xử lý</option>
+                  <option value="inprogress">Đang xử lý</option>
+                  <option value="noprogress">Chưa xử lý</option>
                 </select>
               </div>
               <Button
@@ -446,20 +465,17 @@ const AppointmentsManagement: React.FC = () => {
                 <StatCard
                   title="Hoàn thành"
                   value={reportData.finish}
-                  subValue={`${reportData.finishPercent.toFixed(1)}%`}
                   color="green"
                 />
                 <StatCard
                   title="Đã hủy"
                   value={reportData.cancel}
-                  subValue={`${reportData.cancelPercent.toFixed(1)}%`}
                   color="red"
                 />
                 <StatCard
                   title="Đang xử lý"
                   value={reportData.inProgress}
-                  subValue={`${reportData.inProgressPercent.toFixed(1)}%`}
-                  color="yellow"
+                  color="orange"
                 />
               </div>
 
@@ -467,9 +483,18 @@ const AppointmentsManagement: React.FC = () => {
                 <StatCard
                   title="Chưa xử lý"
                   value={reportData.noProgress}
-                  subValue={`${reportData.noProgressPercent.toFixed(1)}%`}
-                  color="gray"
+                  color="purple"
                 />
+              </div>
+              <div className="grid md:grid-cols-2 gap-4 mb-6">
+                <div>
+                  <p className="text-sm font-medium">Tỷ lệ hoàn thành: {reportData.finishPercent.toFixed(1)}%</p>
+                  <p className="text-sm font-medium">Tỷ lệ hủy: {reportData.cancelPercent.toFixed(1)}%</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium">Tỷ lệ đang xử lý: {reportData.inProgressPercent.toFixed(1)}%</p>
+                  <p className="text-sm font-medium">Tỷ lệ chưa xử lý: {reportData.noProgressPercent.toFixed(1)}%</p>
+                </div>
               </div>
             </div>
           ) : (
