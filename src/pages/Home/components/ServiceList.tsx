@@ -99,7 +99,10 @@ const ServiceList: React.FC = () => {
             variant="outline"
             size="md"
             className="border-[#87A96B] text-[#87A96B] hover:bg-[#87A96B] hover:text-white"
-            onClick={() => navigate('/app/services')}
+            onClick={() => {
+              const targetRoute = isAuthenticated ? '/app/services' : '/guest/services';
+              navigate(targetRoute);
+            }}
           >
             Xem thêm dịch vụ
           </Button>

@@ -1,7 +1,19 @@
 // pages/Home/components/HeroBanner.tsx
 import React from "react";
+import { useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
+import type { RootState } from "@/store/store";
 
 const HeroBanner: React.FC = () => {
+  const navigate = useNavigate();
+  const { isAuthenticated } = useSelector((state: RootState) => state.auth);
+  
+  const handleBookingClick = () => {
+    // Điều hướng tới đường dẫn phù hợp dựa trên trạng thái đăng nhập
+    const targetRoute = isAuthenticated ? "/app/services" : "/guest/services";
+    navigate(targetRoute);
+  };
+
   return (
     <section className="relative bg-gradient-to-b from-green-50 to-white min-h-[600px] lg:min-h-[700px] flex items-center overflow-hidden">
       {/* Background Decorations */}
@@ -92,7 +104,9 @@ const HeroBanner: React.FC = () => {
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
               {/* Primary CTA */}
-              <button className="group bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white px-8 py-4 rounded-full font-bold text-lg shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300 flex items-center justify-center gap-3">
+              <button 
+                onClick={handleBookingClick}
+                className="group bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white px-8 py-4 rounded-full font-bold text-lg shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300 flex items-center justify-center gap-3">
                 <span>📅</span>
                 <span>Đặt lịch ngay</span>
                 <svg
@@ -109,10 +123,10 @@ const HeroBanner: React.FC = () => {
               </button>
 
               {/* Secondary CTA */}
-              <button className="bg-white text-green-700 border-2 border-green-300 hover:border-green-500 hover:bg-green-50 px-8 py-4 rounded-full font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center gap-2">
+              {/* <button className="bg-white text-green-700 border-2 border-green-300 hover:border-green-500 hover:bg-green-50 px-8 py-4 rounded-full font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center gap-2">
                 <span>📞</span>
                 <span>Tư vấn miễn phí</span>
-              </button>
+              </button> */}
             </div>
 
             {/* Trust Indicator */}
